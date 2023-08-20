@@ -141,11 +141,13 @@ class Pew:
 
 # ENVIRONMENT
 class Planet:
-    def __init__(self,x,y,num,scale):
-        self.planet_surf = planet_surfs[num]
-        self.planet_surf = pygame.transform.scale(self.planet_surf,(self.planet_surf.get_width()*scale,self.planet_surf.get_height()*scale))
-        self.x = x
-        self.y = y
+    def __init__(self):
+        self.num = random.randint(0,len(planet_surfs)-1)
+        self.planet_surf = planet_surfs[self.num]
+        self.scale = random.randint(5,15)/10
+        self.planet_surf = pygame.transform.scale(self.planet_surf,(self.planet_surf.get_width()*self.scale,self.planet_surf.get_height()*self.scale))
+        self.x = WIDTH+500
+        self.y = random.randrange(0,HEIGHT/2)
         self.velocity = 0.5
     
     def update(self,player):
@@ -159,14 +161,13 @@ class Planet:
         screen.blit(self.planet_surf, self.planet_rect)
     
     def spawn():
-        planets.append(Planet(WIDTH+500, random.randrange(0,HEIGHT/2,),random.randint(0,len(planet_surfs)-1),random.randint(5,15)/10))
+        planets.append(Planet())
 
 class SpaceJunk:
-    def __init__(self,x,y,num,rotate,scale):
+    def __init__(self,num,rotate,scale):
         self.img = pygame.image.load(os.getcwd() + spacejunkfiles[num][0]).convert_alpha()
         self.img = pygame.transform.scale(self.img,(self.img.get_width()*scale,self.img.get_height()*scale))
-        self.x = x
-        self.y = y
+        self.x, self.y = WIDTH+50, random.randrange(0,HEIGHT/2)
         self.velocity = 8
         self.rotate = 0
         self.rotate_rate = rotate / 10
@@ -189,20 +190,20 @@ class SpaceJunk:
     def spawn():
         whichjunk = random.randint(0,len(spacejunkfiles)-1)
         junksize = random.randrange(2,10)
-        spacejunk.append(SpaceJunk(WIDTH,random.randrange(0,HEIGHT/2),whichjunk,random.randrange(-10,10),junksize*0.1))
+        spacejunk.append(SpaceJunk(whichjunk,random.randrange(-10,10),junksize*0.1))
         junkobject = pygame.mixer.Sound(os.getcwd() + spacejunkfiles[whichjunk][1])
         junkobject.set_volume(junksize*0.1)
         pygame.mixer.Sound.play(junkobject)
 
 class Star:
-    def __init__(self,x,y,fade,kana,gamemode):
+    def __init__(self):
         self.depth = random.randrange(1,9)
-        self.x, self.y = x, y
-        self.gamemode = gamemode
-        self.fade = fade
-        self.kana = kana
+        self.x, self.y = WIDTH, random.randrange(50,HEIGHT-50)
+        self.gamemode = Variables.gamemode
+        self.fade = 1
+        self.kana = random.randint(0,45)
         self.velocity = float(self.depth)
-        self.startext = star_font.render(Variables.commasep[self.kana][(gamemode+1)%2], True, WHITE)
+        self.startext = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], True, WHITE)
         if Variables.lives <= 0: self.startext = star_font.render('GAME OVER', True, WHITE)
 
     def update(self,player):
@@ -214,7 +215,7 @@ class Star:
         screen.blit(self.startext, (self.x,self.y))
 
     def spawn():
-        starfield.append(Star(WIDTH,random.randrange(50,HEIGHT-50),1,random.randint(0,45),Variables.gamemode))
+        starfield.append(Star())
 
 class Bridge:
     def __init__(self,x,y,image):

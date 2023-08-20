@@ -105,8 +105,7 @@ class MenuState:
                 exit()
 
             # Stars Timer
-            if event.type == USEREVENT+2:
-                starfield.append(Star(WIDTH,random.randrange(0,HEIGHT),1,random.randint(0,45),Variables.gamemode))
+            if event.type == USEREVENT+2: Star.spawn()
 
             # Incorrect Kana Timer
             if event.type == USEREVENT+1:
