@@ -13,6 +13,8 @@ laserpowerups = []
 speedpowerups = []
 planets = []
 spacejunk = []
+warnings = []
+biglasers = []
 
 #spritegroups
 explosion_group = pygame.sprite.Group()

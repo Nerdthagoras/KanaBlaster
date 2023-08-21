@@ -3,7 +3,7 @@ from pygame.locals import USEREVENT
 # from Constants import BLACK,WHITE,GAME_OVER_font,ui_font,question_font,question_position,WIDTH,HEIGHT,clock,off_screen_offset,min_kana_alpha,spacejunkfiles,explosion_surfs,shiphit,goodhit,badhit,speed_powerup_surf,laser_powerup_surf,spaceship_surf,enginesound,debug_locationx,debug_locationy
 from Constants import *
 from graphicgroups import *
-from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp
+from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaser,BigLaserWarning
 from spritesheet import PlayAnimation
 from debug import debug
 
@@ -154,9 +154,9 @@ class MenuState:
                     pygame.display.toggle_fullscreen()
 
             # Junk Timer
-            if event.type == USEREVENT+5:
-                whichjunk = random.randint(0,len(spacejunkfiles)-1)
-                spacejunk.append(SpaceJunk(WIDTH,random.randrange(0,HEIGHT/2),whichjunk,random.randrange(-10,10),random.randrange(2,8)*0.1))
+            # if event.type == USEREVENT+5:
+            #     whichjunk = random.randint(0,len(spacejunkfiles)-1)
+            #     spacejunk.append(SpaceJunk(WIDTH,random.randrange(0,HEIGHT/2),whichjunk,random.randrange(-10,10),random.randrange(2,8)*0.1))
 
             # Bridge Timer
             if event.type == USEREVENT+3:
@@ -216,6 +216,22 @@ class GameState:
         for star in starfield:
             star.update(player)
             star.draw(screen)
+
+        # WARNING for BIG LASER
+        for warning in warnings:
+            warning.draw(screen)
+
+        # BIG LASER
+        for biglaser in biglasers:
+            biglaser.draw(screen)
+
+            #if laser hits player
+            if biglaser.collide(player.spaceship_rect):
+                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
+                explosion_group.add(ship_explosion)
+                pygame.mixer.Sound.play(shiphit)
+                Variables.lives -= 1
+                player.x, player.y = 0, HEIGHT-128
 
         # BULLETS
         for bullet in bullets:
@@ -422,6 +438,7 @@ class GameState:
                     else:
                         Variables.debugwindow = True
                 if event.key == ord('b'): Bridge.spawn()
+                if event.key == ord('r'): BigLaserWarning.spawn()
             #endregion
             
 class GameOverState:

@@ -197,21 +197,25 @@ class SpaceJunk:
 
 class Star:
     def __init__(self):
-        self.depth = random.randrange(1,9)
+        self.depth = random.randrange(1,10)
         self.x, self.y = WIDTH, random.randrange(50,HEIGHT-50)
         self.gamemode = Variables.gamemode
-        self.fade = 1
         self.kana = random.randint(0,45)
         self.velocity = float(self.depth)
-        self.startext = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], True, WHITE)
+        fontsize = 15
+        star_font = pygame.font.SysFont(font_name, fontsize)
+        self.startext = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], False, WHITE)
         if Variables.lives <= 0: self.startext = star_font.render('GAME OVER', True, WHITE)
+
+        # scale = (self.depth*2)/fontsize
+        # self.startext = pygame.transform.scale(self.startext,(self.startext.get_width()*scale,self.startext.get_height()*scale))
 
     def update(self,player):
         self.x -= self.velocity + 1 * (player.x/100)
-        if self.x < 0: starfield.pop(starfield.index(self))
+        if self.x < -100: starfield.pop(starfield.index(self))
 
     def draw(self,screen):
-        self.startext.set_alpha(self.depth*20)
+        self.startext.set_alpha(self.depth/9*255)
         screen.blit(self.startext, (self.x,self.y))
 
     def spawn():
@@ -274,6 +278,71 @@ class CutOffLine:
 
     def spawn():
         cuttoffline.append(CutOffLine(WIDTH+off_screen_offset,0,Variables.gamekana[Variables.level][Variables.kananum][2],Variables.gamekana[Variables.last_level][Variables.last_kananum][2]))
+
+class BigLaser:
+    def __init__(self,x,y):
+        self.x, self.y = x, y
+        self.image = pew_surf
+        self.velocity = 120
+    
+    def update(self):
+        self.x -= self.velocity
+        if self.x < -512:
+            biglasers.pop(biglasers.index(self))
+            self.laserdelay = 100
+
+    def draw(self,screen):
+        self.update()
+        self.image = pygame.transform.scale(self.image,(2048,256))
+        self.biglaser_rect = self.image.get_rect(center = (self.x, self.y))
+        screen.blit(self.image, self.biglaser_rect)
+
+        self.hitbox = self.biglaser_rect
+        if Variables.hitboxshow:
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+    def spawn(y):
+        biglasers.append(BigLaser(WIDTH,y))
+        pygame.mixer.Sound.play(biglaser_sound)
+
+class BigLaserWarning:
+    def __init__(self,y):
+        self.last_warn_timer = 0
+        self.opacity = True
+        self.y = y
+        self.image_flash_delay = 100
+        self.warning_length = 10
+        self.image = biglaser_warning_surf
+
+    def update(self):
+        if self.warning_length > 0:
+            if pygame.time.get_ticks() - self.last_warn_timer >= self.image_flash_delay:
+                if self.opacity == True:
+                    self.opacity = False
+                else:
+                    self.opacity = True
+                self.warning_length -= 1
+                self.last_warn_timer = pygame.time.get_ticks()
+                pygame.mixer.Sound.play(warning_sound)
+        if self.warning_length <= 0:
+            pygame.mixer.Sound.stop(warning_sound)
+            BigLaser.spawn(self.y)
+            warnings.pop(warnings.index(self))
+
+    def draw(self,screen):
+        self.update()
+        if self.opacity == True:
+            self.warning_rect = self.image.get_rect(center = (WIDTH-128, self.y))
+            screen.blit(self.image, self.warning_rect)
+
+    def spawn():
+        warnings.append(BigLaserWarning(random.randint(128,HEIGHT-128)))
 
 # INTERACTABLES
 class Kana:

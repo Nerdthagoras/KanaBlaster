@@ -25,7 +25,6 @@ font_name = "MSGothic"
 kana_font = pygame.font.SysFont(font_name, 60)
 question_font = pygame.font.SysFont(font_name, 50)
 ui_font = pygame.font.SysFont(font_name, 30)
-star_font = pygame.font.SysFont(font_name, 10)
 GAME_OVER_font = pygame.font.SysFont(font_name, 200)
 
 # Create the window and define screen dimensions
@@ -41,6 +40,7 @@ pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha(
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'laserpowerup.png')).convert_alpha()
 speed_powerup_surf = pygame.image.load(os.path.join('images', 'speedpowerup.png')).convert_alpha()
+biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
 explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 ship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 
@@ -62,6 +62,8 @@ goodhit = pygame.mixer.Sound(os.path.join('sounds','goodhit.wav'))
 badhit = pygame.mixer.Sound(os.path.join('sounds','badhit.wav'))
 bridgewhoosh = pygame.mixer.Sound(os.path.join('sounds','bridgewhoosh.wav'))
 shiphit = pygame.mixer.Sound(os.path.join('sounds','ShipHit.wav'))
+biglaser_sound = pygame.mixer.Sound(os.path.join('sounds','biglaser.wav'))
+warning_sound = pygame.mixer.Sound(os.path.join('sounds','WarningBeep.wav'))
 
 # Timings
 pygame.time.set_timer(USEREVENT+1, random.randrange(1000, 2000)) # Incorrect Kana
