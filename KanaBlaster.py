@@ -6,7 +6,7 @@ import os
 
 # Initialize pygame
 pygame.init()
-pygame.mixer.music.set_volume(.1)
+pygame.mixer.music.set_volume(.4)
 music = pygame.mixer.music.load(os.path.join('sounds','GameIntro.wav'))
 pygame.mixer.music.play(-1)
 
@@ -33,4 +33,4 @@ while not current_state.done:
             pygame.mixer.music.play(-1)
 
 # Quit
-pygame.quit()
+pygame.quit() 

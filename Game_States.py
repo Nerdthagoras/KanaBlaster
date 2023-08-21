@@ -165,6 +165,8 @@ class MenuState:
 class GameState:
     def __init__(self):
         self.done = False
+        self.biglaser_timer = 0
+        self.biglaser_randomness = 6000
 
     def update(self,screen):
         if Variables.lives <= 0:
@@ -405,6 +407,14 @@ class GameState:
                 elif powerup_type == 1:
                     PowerUp.spawn(laser_powerup_surf,"laser")
             #endregion
+
+            # Big Laser Timer
+            if Variables.level >= 2:
+                if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
+                    BigLaserWarning.spawn()
+                    self.biglaser_timer = pygame.time.get_ticks()
+                    self.biglaser_randomness = random.randint(2000,20000)
+
 
             # Bridge Timer
             if event.type == USEREVENT+3: Bridge.spawn()

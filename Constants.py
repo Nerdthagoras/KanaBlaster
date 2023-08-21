@@ -41,6 +41,7 @@ bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_al
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'laserpowerup.png')).convert_alpha()
 speed_powerup_surf = pygame.image.load(os.path.join('images', 'speedpowerup.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
+biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
 explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 ship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 

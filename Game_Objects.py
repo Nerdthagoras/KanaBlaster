@@ -14,7 +14,7 @@ class Ship:
         self.image = image
         self.spaceship_rect = self.image.get_rect(center = (self.x, self.y))
         self.movex, self.movey = 0, 0
-        self.speed = 5
+        self.speed = 7
         self.pullback = 1.5
         self.last_pewtimer = 0
         self.maxnumpew = 2
@@ -76,10 +76,10 @@ class Ship:
         self.x = int(self.x) # Convert X position to integer
 
         if self.speedboost and self.speedboostcounter > 0:
-            self.speed = 8
+            self.speed = 9
             self.speedboostcounter -= 1
         else:
-            self.speed = 5
+            self.speed = 6
             self.speedboost = False
 
         if self.lasersight and self.lasersightcounter > 200:
@@ -282,7 +282,7 @@ class CutOffLine:
 class BigLaser:
     def __init__(self,x,y):
         self.x, self.y = x, y
-        self.image = pew_surf
+        self.image = biglaser_surf
         self.velocity = 120
     
     def update(self):
@@ -308,7 +308,7 @@ class BigLaser:
         return False
 
     def spawn(y):
-        biglasers.append(BigLaser(WIDTH,y))
+        biglasers.append(BigLaser(WIDTH+1000,y))
         pygame.mixer.Sound.play(biglaser_sound)
 
 class BigLaserWarning:
@@ -327,9 +327,9 @@ class BigLaserWarning:
                     self.opacity = False
                 else:
                     self.opacity = True
+                    pygame.mixer.Sound.play(warning_sound)
                 self.warning_length -= 1
                 self.last_warn_timer = pygame.time.get_ticks()
-                pygame.mixer.Sound.play(warning_sound)
         if self.warning_length <= 0:
             pygame.mixer.Sound.stop(warning_sound)
             BigLaser.spawn(self.y)
@@ -338,11 +338,11 @@ class BigLaserWarning:
     def draw(self,screen):
         self.update()
         if self.opacity == True:
-            self.warning_rect = self.image.get_rect(center = (WIDTH-128, self.y))
+            self.warning_rect = self.image.get_rect(midright = (WIDTH, self.y))
             screen.blit(self.image, self.warning_rect)
 
     def spawn():
-        warnings.append(BigLaserWarning(random.randint(128,HEIGHT-128)))
+        warnings.append(BigLaserWarning(random.randint(64,HEIGHT-300)))
 
 # INTERACTABLES
 class Kana:
