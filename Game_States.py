@@ -3,7 +3,7 @@ from pygame.locals import USEREVENT
 # from Constants import BLACK,WHITE,GAME_OVER_font,ui_font,question_font,question_position,WIDTH,HEIGHT,clock,off_screen_offset,min_kana_alpha,spacejunkfiles,explosion_surfs,shiphit,goodhit,badhit,speed_powerup_surf,laser_powerup_surf,spaceship_surf,enginesound,debug_locationx,debug_locationy
 from Constants import *
 from graphicgroups import *
-from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaser,BigLaserWarning
+from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaser,BigLaserWarning,Enemies
 from spritesheet import PlayAnimation
 from debug import debug
 
@@ -311,6 +311,10 @@ class GameState:
         #endregion
         #endregion KANA
 
+        # ENEMIES
+        for enemy in enemies:
+            enemy.draw(screen)
+
         # PLAYER
         player.draw(screen)
 
@@ -429,7 +433,7 @@ class GameState:
                         PowerUp.spawn(speed_powerup_surf,"speed")
                     elif powerup_type == 1:
                         PowerUp.spawn(laser_powerup_surf,"laser")
-                if event.key == ord('e'): Planet.spawn()
+                if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('l'):
                     if player.lasersight == True:
@@ -449,6 +453,7 @@ class GameState:
                         Variables.debugwindow = True
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn()
+
             #endregion
             
 class GameOverState:

@@ -15,6 +15,8 @@ planets = []
 spacejunk = []
 warnings = []
 biglasers = []
+enemies = []
+enemyprojectiles = []
 
 #spritegroups
 explosion_group = pygame.sprite.Group()

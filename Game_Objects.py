@@ -427,3 +427,35 @@ class PowerUp:
                 player.speedboost = True
                 player.speedboostcounter = player.poweruptimelength
 
+class Enemies:
+    def __init__(self):
+        self.image = enemy_surf
+        self.x, self.y = WIDTH, random.randrange(0,HEIGHT/2)
+        self.velocity = 3
+
+    def update(self):
+        self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
+        self.x -= self.velocity
+        if self.x < -100:
+            enemies.pop(enemies.index(self))
+
+    def draw(self,screen):
+        self.update()
+        screen.blit(self.image, self.enemy_rect)
+
+        self.hitbox = self.enemy_rect
+        if Variables.hitboxshow:
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+    def spawn():
+        enemies.append(Enemies())
+
+class EnemyProjectiles:
+    def __init__(self):
+        pass
