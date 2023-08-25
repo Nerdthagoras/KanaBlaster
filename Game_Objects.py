@@ -115,6 +115,7 @@ class Pew:
     def __init__(self,x,y,image):
         self.x, self.y = x, y
         self.image = image
+        self.pew_rect = self.image.get_rect(center = (self.x, self.y))
         self.velocity = 60
 
     def update(self):
@@ -430,22 +431,31 @@ class PowerUp:
 class Enemies:
     def __init__(self):
         self.image = enemy_surf
-        self.x, self.y = WIDTH, random.randrange(0,HEIGHT/2)
-        self.velocity = 3
+        self.image = pygame.transform.scale(self.image,(64, 64))
+        self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
+        self.velocity = random.randint(1,4)
+        self.last_enemy_pew = 0
 
     def update(self):
         self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.x -= self.velocity
-        if self.x < -100:
+        self.y += self.velocity * math.sin(10*math.pi/180)
+        if self.x < -128:
             enemies.pop(enemies.index(self))
+    
+    def shoot(self,player):
+        if pygame.time.get_ticks() - self.last_enemy_pew >= random.randint(2000,10000):
+            enemyprojectiles.append(EnemyProjectiles(self.x, self.y,random.randint(45,135)*math.pi/180))
+            self.last_enemy_pew = pygame.time.get_ticks()
 
-    def draw(self,screen):
+    def draw(self,screen,player):
         self.update()
         screen.blit(self.image, self.enemy_rect)
 
         self.hitbox = self.enemy_rect
         if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+            pygame.draw.line(screen, (255,255,0), (self.x, self.y),(player.x,player.y))
 
     def collide(self,rect):
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
@@ -457,5 +467,37 @@ class Enemies:
         enemies.append(Enemies())
 
 class EnemyProjectiles:
-    def __init__(self):
-        pass
+    def __init__(self,x,y,direction):
+        self.x, self.y = x, y
+        self.direction = direction
+        self.image = enemy_pew_surf
+        self.image = pygame.transform.scale(self.image,(32, 32))
+        self.velocity = 8
+
+    def update(self):
+        sin_a = math.sin(self.direction)
+        cos_a = math.cos(self.direction)
+        speed_sin = self.velocity * sin_a
+        speed_cos = self.velocity * cos_a
+        self.x -= speed_sin
+        self.y -= speed_cos
+        self.enemy_pew_rect = self.image.get_rect(center = (self.x, self.y))
+        if self.x < 0 or self.y < 0 or self.y > HEIGHT:
+            enemyprojectiles.pop(enemyprojectiles.index(self))
+
+    def draw(self,screen):
+        self.update()
+        screen.blit(self.image, self.enemy_pew_rect)
+
+        self.hitbox = self.enemy_pew_rect
+        if Variables.hitboxshow:
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+    
+    def spawn():
+        enemyprojectiles.append(EnemyProjectiles())

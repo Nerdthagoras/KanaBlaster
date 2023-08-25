@@ -11,7 +11,7 @@ for i in range(len(levels)):
     gamekana.append(level)
 
 #changables
-level = 0
+level = 5
 gamemode = 0
 maxlives = 5
 lives = 5

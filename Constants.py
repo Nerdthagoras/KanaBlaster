@@ -37,6 +37,7 @@ min_kana_alpha = 200
 question_position = (100, 20)
 spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_alpha()
 enemy_surf = pygame.image.load(os.path.join('images', 'enemy.png')).convert_alpha()
+enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'laserpowerup.png')).convert_alpha()

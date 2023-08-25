@@ -6,6 +6,7 @@ from graphicgroups import *
 from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaser,BigLaserWarning,Enemies
 from spritesheet import PlayAnimation
 from debug import debug
+from Functions import reset_game
 
 import Variables
 import math
@@ -131,8 +132,7 @@ class MenuState:
 
                 #start
                 if self.start_button.collidepoint(event.pos):
-                    kanas.clear()
-                    correctkanas.clear()
+                    reset_game()
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
@@ -141,8 +141,7 @@ class MenuState:
             # Key Events
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    kanas.clear()
-                    correctkanas.clear()
+                    reset_game()
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
@@ -167,6 +166,8 @@ class GameState:
         self.done = False
         self.biglaser_timer = 0
         self.biglaser_randomness = 6000
+        self.enemy_timer = 0
+        self.enemy_randomness = 3000
 
     def update(self,screen):
         if Variables.lives <= 0:
@@ -223,18 +224,6 @@ class GameState:
         for warning in warnings:
             warning.draw(screen)
 
-        # BIG LASER
-        for biglaser in biglasers:
-            biglaser.draw(screen)
-
-            #if laser hits player
-            if biglaser.collide(player.spaceship_rect):
-                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
-                explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(shiphit)
-                Variables.lives -= 1
-                player.x, player.y = 0, HEIGHT-128
-
         # BULLETS
         for bullet in bullets:
             bullet.draw(screen)
@@ -243,6 +232,48 @@ class GameState:
         for cutoff in cuttoffline:
             cutoff.update(player)
             cutoff.draw(screen)
+
+        # ENEMIES
+        for enemy in enemies:
+            enemy.shoot(player)
+            enemy.draw(screen,player)
+
+            # if player hits Enemy
+            if enemy.collide(player.spaceship_rect):
+                enemies.pop(enemies.index(enemy))
+                explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
+                explosion_group.add(explosion)
+                explosion_group.add(ship_explosion)
+                pygame.mixer.Sound.play(shiphit)
+                Variables.lives -= 1
+                player.x, player.y = 0, HEIGHT-128
+
+            # if player's bullet hits Enemy
+            for bullet in bullets:
+                if enemy.collide(bullet.pew_rect):
+                    # Variables.RGB = [255,255,128] # FLASH
+                    pygame.mixer.Sound.play(goodhit)
+                    Variables.score += 1
+                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    bullets.pop(bullets.index(bullet))
+                    enemies.pop(enemies.index(enemy))
+
+        # ENEMY PEW
+        for epew in enemyprojectiles:
+            epew.draw(screen)
+
+            # if player hits Enemy pew
+            if epew.collide(player.spaceship_rect):
+                enemyprojectiles.pop(enemyprojectiles.index(epew))
+                explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
+                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
+                explosion_group.add(explosion)
+                explosion_group.add(ship_explosion)
+                pygame.mixer.Sound.play(shiphit)
+                Variables.lives -= 1
+                player.x, player.y = 0, HEIGHT-128
 
         #region KANA
         #region CORRECT KANA
@@ -311,10 +342,6 @@ class GameState:
         #endregion
         #endregion KANA
 
-        # ENEMIES
-        for enemy in enemies:
-            enemy.draw(screen)
-
         # PLAYER
         player.draw(screen)
 
@@ -323,6 +350,18 @@ class GameState:
             powerup.update(player)
             powerup.effect(powerup.pueffect,player)
             powerup.draw(screen)
+
+        # BIG LASER
+        for biglaser in biglasers:
+            biglaser.draw(screen)
+
+            #if laser hits player
+            if biglaser.collide(player.spaceship_rect):
+                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
+                explosion_group.add(ship_explosion)
+                pygame.mixer.Sound.play(shiphit)
+                Variables.lives -= 1
+                player.x, player.y = 0, HEIGHT-128
 
         # EXPLOSION
         explosion_group.draw(screen)
@@ -419,7 +458,13 @@ class GameState:
                     self.biglaser_timer = pygame.time.get_ticks()
                     self.biglaser_randomness = random.randint(2000,20000)
 
-
+            # Enemy Timer
+            if Variables.level >= 4:
+                if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
+                    Enemies.spawn()
+                    self.enemy_timer = pygame.time.get_ticks()
+                    self.enemy_randomness = random.randint(3000,10000)
+                    
             # Bridge Timer
             if event.type == USEREVENT+3: Bridge.spawn()
             
@@ -548,11 +593,19 @@ class GameOverState:
                     menu_state.done = False
                     game_state.done = False
                     self.done = True
+                if event.key == pygame.K_SPACE:
+                    player.movex, player.movey = 0,0
+                    player.pullback = 1.5
+                    Variables.lives = Variables.maxlives
+                    menu_state.done = False
+                    game_state.done = False
+                    self.done = True                    
 
 def displaydebug(x,y):
     debug('level ' + str(Variables.kananum+1) + '\\' + str(len(Variables.gamekana[Variables.level])),x,0+y)
     debug((player.x,player.y),x,20+y)
     debug('FPS: ' + str(round(clock.get_fps(),1)),x,40+y)
+    debug('Num of Bullets ' + str(len(enemyprojectiles)),x,60+y)
 
 # Instantiate Classes
 menu_state = MenuState()

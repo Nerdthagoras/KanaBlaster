@@ -6,7 +6,7 @@ import os
 
 # Initialize pygame
 pygame.init()
-pygame.mixer.music.set_volume(.4)
+pygame.mixer.music.set_volume(.1)
 music = pygame.mixer.music.load(os.path.join('sounds','GameIntro.wav'))
 pygame.mixer.music.play(-1)
 
@@ -17,7 +17,7 @@ while not current_state.done:
     current_state.update(screen)
     current_state.draw(screen)
     pygame.display.update()
-
+ 
     if current_state.done:
         if current_state == menu_state:
             current_state = game_state
