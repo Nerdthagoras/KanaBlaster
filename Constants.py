@@ -67,6 +67,7 @@ bridgewhoosh = pygame.mixer.Sound(os.path.join('sounds','bridgewhoosh.wav'))
 shiphit = pygame.mixer.Sound(os.path.join('sounds','ShipHit.wav'))
 biglaser_sound = pygame.mixer.Sound(os.path.join('sounds','biglaser.wav'))
 warning_sound = pygame.mixer.Sound(os.path.join('sounds','WarningBeep.wav'))
+enemypew_sound = pygame.mixer.Sound(os.path.join('sounds','enemypew.wav'))
 
 # Timings
 pygame.time.set_timer(USEREVENT+1, random.randrange(1000, 2000)) # Incorrect Kana

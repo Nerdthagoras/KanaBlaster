@@ -54,7 +54,7 @@ class MenuState:
 
         #region BRIDGE WIPE
         for bridge in bridges:
-            bridge.x -= bridge.velocity + 1 * (player.x/100)
+            bridge.x -= bridge.velocity + 1 * (player.spaceship_rect.center[0]/100)
             if bridge.x < -1000:
                 bridges.pop(bridges.index(bridge))
             bridge.draw(screen)
@@ -125,7 +125,7 @@ class MenuState:
 
                 # start level
                 if self.level_number.collidepoint(event.pos):
-                    if Variables.level >= 8:
+                    if Variables.level >= 9:
                         Variables.level = 0
                     else:
                         Variables.level += 1
@@ -133,29 +133,31 @@ class MenuState:
                 #start
                 if self.start_button.collidepoint(event.pos):
                     reset_game()
+                    game_state.enemy_wait_timer = 1000
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
-                    player.x,player.y = (0,HEIGHT-128)
+                    player.spaceship_rect.center[0],player.spaceship_rect.center[1] = (0,HEIGHT-128)
 
             # Key Events
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     reset_game()
+                    game_state.enemy_wait_timer = 1000
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
-                    player.x,player.y = (0,HEIGHT-128)
+                    # player.spaceship_rect.center[0],player.spaceship_rect.center[1] = 0,HEIGHT-128
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     exit()
                 if event.key == ord('f'):
                     pygame.display.toggle_fullscreen()
-
-            # Junk Timer
-            # if event.type == USEREVENT+5:
-            #     whichjunk = random.randint(0,len(spacejunkfiles)-1)
-            #     spacejunk.append(SpaceJunk(WIDTH,random.randrange(0,HEIGHT/2),whichjunk,random.randrange(-10,10),random.randrange(2,8)*0.1))
+                if event.key == ord('v'):
+                    if Variables.debugwindow:
+                        Variables.debugwindow = False
+                    else:
+                        Variables.debugwindow = True
 
             # Bridge Timer
             if event.type == USEREVENT+3:
@@ -164,6 +166,7 @@ class MenuState:
 class GameState:
     def __init__(self):
         self.done = False
+        self.enemy_wait_timer = 1000
         self.biglaser_timer = 0
         self.biglaser_randomness = 6000
         self.enemy_timer = 0
@@ -173,6 +176,8 @@ class GameState:
         if Variables.lives <= 0:
             pygame.mixer.Sound.stop(enginesound)
             self.done = True
+        if self.enemy_wait_timer >= 0:
+            self.enemy_wait_timer -= 1
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
@@ -239,15 +244,15 @@ class GameState:
             enemy.draw(screen,player)
 
             # if player hits Enemy
-            if enemy.collide(player.spaceship_rect):
-                enemies.pop(enemies.index(enemy))
-                explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
-                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
-                explosion_group.add(explosion)
-                explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(shiphit)
-                Variables.lives -= 1
-                player.x, player.y = 0, HEIGHT-128
+            if Variables.shipcollision == True:
+                if enemy.collide(player.spaceship_rect):
+                    enemies.pop(enemies.index(enemy))
+                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
 
             # if player's bullet hits Enemy
             for bullet in bullets:
@@ -265,15 +270,15 @@ class GameState:
             epew.draw(screen)
 
             # if player hits Enemy pew
-            if epew.collide(player.spaceship_rect):
-                enemyprojectiles.pop(enemyprojectiles.index(epew))
-                explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
-                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
-                explosion_group.add(explosion)
-                explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(shiphit)
-                Variables.lives -= 1
-                player.x, player.y = 0, HEIGHT-128
+            if Variables.shipcollision == True:
+                if epew.collide(player.spaceship_rect):
+                    enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
 
         #region KANA
         #region CORRECT KANA
@@ -286,15 +291,15 @@ class GameState:
             kana.draw(screen)
 
             # if player hits kana
-            if kana.collide(player.spaceship_rect):
-                correctkanas.pop(correctkanas.index(kana))
-                explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
-                explosion_group.add(explosion)
-                explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(shiphit)
-                Variables.lives -= 1
-                player.x, player.y = 0, HEIGHT-128
+            if Variables.shipcollision == True:
+                if kana.collide(player.spaceship_rect):
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
 
             # if player's bullet hits CORRECT kana
             for bullet in bullets:
@@ -310,7 +315,7 @@ class GameState:
 
         #region WRONG KANA
         for kana in kanas:
-            kana.x -= kana.xvelocity + 1 * (player.x/100)
+            kana.x -= kana.xvelocity + 1 * (player.spaceship_rect.center[0]/100)
             kana.y += kana.yvelocity * 2
 
             # remove kana if off screen
@@ -319,15 +324,15 @@ class GameState:
             kana.draw(screen)
 
             # if player hits kana
-            if kana.collide(player.spaceship_rect):
-                kanas.pop(kanas.index(kana))
-                explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
-                explosion_group.add(explosion)
-                explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(shiphit)
-                Variables.lives -= 1
-                player.x, player.y = 0, HEIGHT
+            if Variables.shipcollision == True:
+                if kana.collide(player.spaceship_rect):
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
 
             # if player's bullet hits WRONG kana
             for bullet in bullets:
@@ -356,12 +361,12 @@ class GameState:
             biglaser.draw(screen)
 
             #if laser hits player
-            if biglaser.collide(player.spaceship_rect):
-                ship_explosion = PlayAnimation(player.x, player.y,explosion_surfs.images,1,False)
-                explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(shiphit)
-                Variables.lives -= 1
-                player.x, player.y = 0, HEIGHT-128
+            if Variables.shipcollision == True:
+                if biglaser.collide(player.spaceship_rect):
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
 
         # EXPLOSION
         explosion_group.draw(screen)
@@ -426,14 +431,14 @@ class GameState:
 
             #region KANA
             #region Correct Kana Timer
-            Variables.correctkana_timer -= 1+(player.x)/100
+            Variables.correctkana_timer -= 1+(player.spaceship_rect.center[0])/100
             if Variables.correctkana_timer <= 0:
                 correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                 Variables.correctkana_timer = random.randint(150,300)
             #endregion
 
             # Incorrect Kana Timer
-            Variables.kana_timer -= 1+(player.x)/100
+            Variables.kana_timer -= 1+(player.spaceship_rect.center[0])/100
             if Variables.kana_timer <= 0:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
@@ -452,14 +457,14 @@ class GameState:
             #endregion
 
             # Big Laser Timer
-            if Variables.level >= 2:
+            if Variables.level >= 2 and self.enemy_wait_timer <= 0:
                 if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
-                    BigLaserWarning.spawn()
+                    BigLaserWarning.spawn(player)
                     self.biglaser_timer = pygame.time.get_ticks()
                     self.biglaser_randomness = random.randint(2000,20000)
 
             # Enemy Timer
-            if Variables.level >= 4:
+            if Variables.level >= 4 and self.enemy_wait_timer <= 0:
                 if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
                     Enemies.spawn()
                     self.enemy_timer = pygame.time.get_ticks()
@@ -497,7 +502,7 @@ class GameState:
                     else:
                         Variables.debugwindow = True
                 if event.key == ord('b'): Bridge.spawn()
-                if event.key == ord('r'): BigLaserWarning.spawn()
+                if event.key == ord('r'): BigLaserWarning.spawn(player)
 
             #endregion
             
@@ -513,7 +518,7 @@ class GameOverState:
 
         #region Planets
         for planet in planets:
-            planet.x -= planet.velocity * (player.x/100)
+            planet.x -= planet.velocity * (player.spaceship_rect.center[0]/100)
             if planet.x < -1000:
                 planets.pop(planets.index(planet))
             planet.draw(screen)
@@ -521,7 +526,7 @@ class GameOverState:
 
         #region Random Junk
         for junk in spacejunk:
-            junk.x -= junk.velocity * (player.x/100)
+            junk.x -= junk.velocity * (player.spaceship_rect.center[0]/100)
             if junk.x < -1000:
                 spacejunk.pop(spacejunk.index(junk))
             junk.draw(screen)
@@ -578,7 +583,7 @@ class GameOverState:
             if event.type == USEREVENT+2: Star.spawn()
 
             # Incorrect Kana Timer
-            Variables.kana_timer -= 1+(player.x)/100
+            Variables.kana_timer -= 1+(player.spaceship_rect.center[0])/100
             if Variables.kana_timer <= 0:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
@@ -603,9 +608,12 @@ class GameOverState:
 
 def displaydebug(x,y):
     debug('level ' + str(Variables.kananum+1) + '\\' + str(len(Variables.gamekana[Variables.level])),x,0+y)
-    debug((player.x,player.y),x,20+y)
+    debug(player.spaceship_rect.center,x,20+y)
     debug('FPS: ' + str(round(clock.get_fps(),1)),x,40+y)
     debug('Num of Bullets ' + str(len(enemyprojectiles)),x,60+y)
+    debug('Enemy Wait ' + str(game_state.enemy_wait_timer),x,80+y)
+    debug('Respawn ' + str(player.respawn_timer),x,100+y)
+    debug('XV: ' + str(round(player.Xvelocity,1)) + '  YV ' + str(round(player.Yvelocity,1)),x,120+y)
 
 # Instantiate Classes
 menu_state = MenuState()

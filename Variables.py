@@ -3,7 +3,7 @@ import random
 
 # Kanas CSV
 commasep = read_csv('data/kana.csv')
-levels = (5,10,15,20,25,30,38,43,46)
+levels = (5,10,15,20,25,30,35,38,43,46)
 gamekana = []
 for i in range(len(levels)):
     level = commasep[0:levels[i]]
@@ -11,7 +11,7 @@ for i in range(len(levels)):
     gamekana.append(level)
 
 #changables
-level = 5
+level = 0
 gamemode = 0
 maxlives = 5
 lives = 5
@@ -25,6 +25,7 @@ last_level = 0
 bridgewipecounter = 0
 debugwindow = False
 hitboxshow = False
+shipcollision = True
 
 RGB = [0,0,0]
 kana_timer = 100
