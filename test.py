@@ -15,13 +15,13 @@ class Player:
         self.direction = pygame.math.Vector2()
         self.Vvelocity = 0
         self.Xvelocity = 0
-        self.speedup = 0.2
-        self.slowdown = 0.3
+        self.speedup = 0.8
+        self.slowdown = 0.2
         self.speed = 8
 
     def movement(self):
         keys = pygame.key.get_pressed()
-
+        #region Vecors
         # Vertical
         if keys[pygame.K_w]: 
             if self.Vvelocity >= -self.speed:
@@ -55,8 +55,8 @@ class Player:
                 self.Xvelocity -= self.slowdown
                 if self.Xvelocity < self.slowdown:
                     self.Xvelocity = 0
-
-        # print(self.Vvelocity)
+        #endregion
+    
     def move(self):
         self.direction[1] = self.Vvelocity
         self.direction[0] = self.Xvelocity
@@ -67,7 +67,11 @@ class Player:
         self.move()
 
     def draw(self,screen):
+        self.hitbox = self.spaceship_rect
+        print(self.spaceship_rect.center)
         screen.blit(self.image, self.spaceship_rect)
+        pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+        pygame.draw.circle(screen,(0,0,255),(self.spaceship_rect.center), 4)
 
 class LoadSpritesheet():
     def __init__(self, image, spritesize,scale):
@@ -135,6 +139,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                exit()
 
     screen.fill((0,0,0))
     player.update()

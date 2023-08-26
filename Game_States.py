@@ -52,13 +52,13 @@ class MenuState:
             screen.blit(kanalistthing,(25+(27*f),HEIGHT-30))
         #endregion
 
-        #region BRIDGE WIPE
-        for bridge in bridges:
-            bridge.x -= bridge.velocity + 1 * (player.spaceship_rect.center[0]/100)
-            if bridge.x < -1000:
-                bridges.pop(bridges.index(bridge))
-            bridge.draw(screen)
-        #endregion 
+        # #region BRIDGE WIPE
+        # for bridge in bridges:
+        #     bridge.x -= bridge.velocity + 1 * (player.spaceship_rect.center[0]/100)
+        #     if bridge.x < -1000:
+        #         bridges.pop(bridges.index(bridge))
+        #     bridge.draw(screen)
+        # #endregion 
 
         #region BUTTONS
         # Game Mode Button
@@ -414,20 +414,28 @@ class GameState:
         #endregion
 
     def handle_events(self, events):
+
+        #region Big Laser Timer
+        if Variables.level >= 3 and self.enemy_wait_timer <= 0:
+            if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
+                BigLaserWarning.spawn(player)
+                self.biglaser_timer = pygame.time.get_ticks()
+                self.biglaser_randomness = random.randint(2000,20000)
+        #endregion
+
+        #region Enemy Timer
+        if Variables.level >= 1 and self.enemy_wait_timer <= 0:
+            if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
+                Enemies.spawn()
+                self.enemy_timer = pygame.time.get_ticks()
+                self.enemy_randomness = random.randint(3000,10000)
+        #endregion
+
         for event in events:
             #Click the X to close window
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-
-            # PLANET
-            if event.type == USEREVENT+7: Planet.spawn()
-
-            # JUNK
-            if event.type == USEREVENT+8: SpaceJunk.spawn()
-
-            # Stars Timer
-            if event.type == USEREVENT+2: Star.spawn()
 
             #region KANA
             #region Correct Kana Timer
@@ -444,8 +452,19 @@ class GameState:
                 if selection != Variables.kananum:
                     kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                     Variables.kana_timer = random.randint(50,100)
-                
-            #endregion KANA
+            
+        #endregion KANA
+
+            # I'm not loving this USEREVENT timing for spawing objects, I need to change 
+            # this on the basis of distance rather than time
+            # PLANET
+            if event.type == USEREVENT+7: Planet.spawn()
+
+            # JUNK
+            if event.type == USEREVENT+8: SpaceJunk.spawn()
+
+            # Stars Timer
+            if event.type == USEREVENT+2: Star.spawn()
 
             #region POWERUP
             if event.type == USEREVENT+5:
@@ -455,20 +474,6 @@ class GameState:
                 elif powerup_type == 1:
                     PowerUp.spawn(laser_powerup_surf,"laser")
             #endregion
-
-            # Big Laser Timer
-            if Variables.level >= 2 and self.enemy_wait_timer <= 0:
-                if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
-                    BigLaserWarning.spawn(player)
-                    self.biglaser_timer = pygame.time.get_ticks()
-                    self.biglaser_randomness = random.randint(2000,20000)
-
-            # Enemy Timer
-            if Variables.level >= 4 and self.enemy_wait_timer <= 0:
-                if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
-                    Enemies.spawn()
-                    self.enemy_timer = pygame.time.get_ticks()
-                    self.enemy_randomness = random.randint(3000,10000)
                     
             # Bridge Timer
             if event.type == USEREVENT+3: Bridge.spawn()

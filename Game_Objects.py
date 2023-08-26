@@ -18,7 +18,7 @@ class Ship:
         self.Yvelocity = 0
         self.Xvelocity = 0
         self.speedup = 0.5
-        self.slowdown = 0.3
+        self.slowdown = 0.25
         self.speed = 6
         self.last_pewtimer = 0
         self.maxnumpew = 2
@@ -90,10 +90,10 @@ class Ship:
                     if self.Xvelocity <= self.slowdown:
                         self.Xvelocity = 0
 
-
         # Pew
         if keys[pygame.K_SPACE]:
-            Pew.spawn(self)
+            if Variables.shipcollision == True:
+                Pew.spawn(self)
 
     def move(self):
         self.direction[1] = self.Yvelocity
@@ -105,9 +105,13 @@ class Ship:
         self.move()
 
         # RESPAWN
-        if self.respawn_timer > 0:
+        if self.respawn_timer == 200:
             Variables.shipcollision = False
-            self.spaceship_rect.center = (100, HEIGHT-128)
+            self.lasersight = False
+            self.speedboost = False
+            self.spaceship_rect.center = (100, HEIGHT // 2)
+            self.respawn_timer -= 1
+        elif self.respawn_timer > 0:
             self.respawn_timer -= 1
         elif self.respawn_timer == 0:
             Variables.shipcollision = True
@@ -122,7 +126,7 @@ class Ship:
         else:
             self.speed = 6
             self.speedup = 0.5
-            self.slowdown = 0.3          
+            self.slowdown = 0.25
             self.speedboost = False
 
         # LASER PowerUp
@@ -338,6 +342,7 @@ class BigLaser:
         self.x, self.y = x, y
         self.image = biglaser_surf
         self.velocity = 120
+        self.hitboxYshrink = 50
     
     def update(self):
         self.x -= self.velocity
@@ -352,6 +357,8 @@ class BigLaser:
         screen.blit(self.image, self.biglaser_rect)
 
         self.hitbox = self.biglaser_rect
+        self.hitbox[1] += self.hitboxYshrink
+        self.hitbox[3] -= (self.hitboxYshrink*2)
         if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
             print(self.biglaser_rect)
@@ -372,7 +379,7 @@ class BigLaserWarning:
         self.opacity = True
         self.y = y
         self.image_flash_delay = 100
-        self.warning_length = 15
+        self.warning_length = 10
         self.image = biglaser_warning_surf
 
     def update(self):

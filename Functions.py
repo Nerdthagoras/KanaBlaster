@@ -1,5 +1,6 @@
 import csv
 from graphicgroups import *
+import Variables
 
 def read_csv(file_name):
     with open(file_name, newline='', encoding='utf-8') as file:
@@ -24,3 +25,4 @@ def reset_game():
     biglasers.clear()
     enemies.clear()
     enemyprojectiles.clear()
+    Variables.kananum = 0
