@@ -619,7 +619,7 @@ def displaydebug(x,y):
 menu_state = MenuState()
 game_state = GameState()
 gameover_state = GameOverState()
-player = Ship(-100,HEIGHT//2,spaceship_surf)
+player = Ship(0,HEIGHT//2,spaceship_surf)
 
 # Set current state
 current_state = menu_state

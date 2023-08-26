@@ -55,29 +55,41 @@ class Ship:
                     self.Yvelocity = 0
 
         # Horizontal
-        if keys[pygame.K_a] and self.spaceship_rect.midleft[0] > 15: 
+        if keys[pygame.K_a] and self.spaceship_rect.midleft[0] > 20: 
             if self.Xvelocity >= -self.speed:
                 self.Xvelocity -= self.speedup
         elif keys[pygame.K_d] and self.spaceship_rect.midleft[0] < WIDTH - 500:
             if self.Xvelocity <= self.speed:
                 self.Xvelocity +=self.speedup
         else: 
-            if self.spaceship_rect.midleft[0] > 15:
+            if self.spaceship_rect.midleft[0] > 110:
                 if self.Xvelocity < -3:
                     self.Xvelocity += self.slowdown
-                    if self.Xvelocity > self.slowdown:
+                    if self.Xvelocity >= self.slowdown:
                         self.Xvelocity = -3
                 elif self.Xvelocity > -3:
                     self.Xvelocity -= self.slowdown
-                    if self.Xvelocity < self.slowdown:
+                    if self.Xvelocity <= self.slowdown:
                         self.Xvelocity = -3
-            else: 
-                self.Xvelocity = 0
+            elif self.spaceship_rect.midleft[0] < 90: 
+                if self.Xvelocity < 3:
+                    self.Xvelocity += self.slowdown
+                    if self.Xvelocity >= self.slowdown:
+                        self.Xvelocity = 3
+                elif self.Xvelocity > 3:
+                    self.Xvelocity -= self.slowdown
+                    if self.Xvelocity <= self.slowdown:
+                        self.Xvelocity = 3
+            else:
+                if self.Xvelocity < 0:
+                    self.Xvelocity += self.slowdown
+                    if self.Xvelocity >= self.slowdown:
+                        self.Xvelocity = 0
+                elif self.Xvelocity > 0:
+                    self.Xvelocity -= self.slowdown
+                    if self.Xvelocity <= self.slowdown:
+                        self.Xvelocity = 0
 
-        # if self.spaceship_rect.center[0] > 0:
-        #     self.Xvelocity -= self.spaceship_rect.center[0]/700
-        # elif self.spaceship_rect.center[0] < 0:
-        #     self.Xvelocity -= self.spaceship_rect.center[0]/300
 
         # Pew
         if keys[pygame.K_SPACE]:
@@ -103,10 +115,14 @@ class Ship:
 
         # SPEED BOOST PowerUp
         if self.speedboost and self.speedboostcounter > 0:
-            self.speed = 9
+            self.speed = 10
+            self.speedup = 2
+            self.slowdown = 2
             self.speedboostcounter -= 1
         else:
             self.speed = 6
+            self.speedup = 0.5
+            self.slowdown = 0.3          
             self.speedboost = False
 
         # LASER PowerUp
@@ -123,7 +139,7 @@ class Ship:
                 laser.set_alpha(96)
             else:
                 laser.set_alpha(16)
-            screen.blit(laser,(self.x,self.y))
+            screen.blit(laser,self.spaceship_rect.midright)
             self.lasersightcounter -= 1
         elif self.lasersight and self.lasersightcounter <= 0:
             self.lasersight = False
