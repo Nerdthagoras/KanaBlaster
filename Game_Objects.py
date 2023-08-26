@@ -149,9 +149,9 @@ class Ship:
         self.update()
 
         if Variables.shipcollision == False:
-            if self.respawn_timer % 3 == 0: self.image.set_alpha(128)
-            elif self.respawn_timer % 3 == 1: self.image.set_alpha(64)
-            elif self.respawn_timer % 3 == 2: self.image.set_alpha(32)
+            if self.respawn_timer % 3 == 0: self.image.set_alpha(200)
+            elif self.respawn_timer % 3 == 1: self.image.set_alpha(128)
+            elif self.respawn_timer % 3 == 2: self.image.set_alpha(16)
         else:
             self.image.set_alpha(255)
         screen.blit(self.image, self.spaceship_rect)
@@ -201,7 +201,7 @@ class Planet:
         self.scale = random.randint(5,15)/10
         self.planet_surf = pygame.transform.scale(self.planet_surf,(self.planet_surf.get_width()*self.scale,self.planet_surf.get_height()*self.scale))
         self.x = WIDTH+500
-        self.y = random.randrange(0,HEIGHT/2)
+        self.y = random.randrange(0,HEIGHT)
         self.velocity = 0.5
     
     def update(self,player):
@@ -354,6 +354,7 @@ class BigLaser:
         self.hitbox = self.biglaser_rect
         if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+            print(self.biglaser_rect)
 
     def collide(self,rect):
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
@@ -371,7 +372,7 @@ class BigLaserWarning:
         self.opacity = True
         self.y = y
         self.image_flash_delay = 100
-        self.warning_length = 10
+        self.warning_length = 15
         self.image = biglaser_warning_surf
 
     def update(self):
@@ -499,7 +500,7 @@ class Enemies:
     def shoot(self,player):
         if pygame.time.get_ticks() - self.last_enemy_pew >= random.randint(2000,10000):
             pygame.mixer.Sound.play(enemypew_sound)
-            enemyprojectiles.append(EnemyProjectiles(self.x, self.y,random.randint(45,135)*math.pi/180))
+            enemyprojectiles.append(EnemyProjectiles(self.x, self.y,random.randint(60,120)*math.pi/180))
             self.last_enemy_pew = pygame.time.get_ticks()
 
     def draw(self,screen,player):
