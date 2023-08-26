@@ -453,7 +453,7 @@ class GameState:
                     kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                     Variables.kana_timer = random.randint(50,100)
             
-        #endregion KANA
+            #endregion KANA
 
             # I'm not loving this USEREVENT timing for spawing objects, I need to change 
             # this on the basis of distance rather than time

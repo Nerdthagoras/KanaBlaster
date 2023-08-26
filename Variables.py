@@ -26,7 +26,7 @@ bridgewipecounter = 0
 debugwindow = False
 hitboxshow = False
 shipcollision = True
-shipdistance = 0
+shipdistance = 1
 
 RGB = [0,0,0]
 kana_timer = 100

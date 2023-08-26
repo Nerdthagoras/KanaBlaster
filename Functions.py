@@ -26,3 +26,4 @@ def reset_game():
     enemies.clear()
     enemyprojectiles.clear()
     Variables.kananum = 0
+    Variables.shipdistance = 1
