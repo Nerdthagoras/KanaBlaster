@@ -490,24 +490,53 @@ class PowerUp:
                 player.speedboostcounter = player.poweruptimelength
 
 class Enemies:
-    def __init__(self):
-        self.image = enemy_surf
+    def __init__(self,typeof):
+        self.type = typeof
+        self.image = enemy_surfs[self.type]
         self.image = pygame.transform.scale(self.image,(64, 64))
         self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
         self.velocity = random.randint(1,4)
         self.last_enemy_pew = 0
 
+    def calculate_angles(self,number_of_angles):
+        if number_of_angles < 1:
+            return []
+        
+        angle_step = 360 / number_of_angles
+        angles = [i * angle_step for i in range(number_of_angles)]
+        return angles
+
     def update(self):
-        self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
+        if self.type == 0 or self.type == 1:
+            self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
+        elif self.type == 2:
+            self.enemy_rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity
         self.y += self.velocity * math.sin(10*math.pi/180)
         if self.x < -128:
             enemies.pop(enemies.index(self))
     
+    def findobjectangle(self,player):
+            # Find angle of player
+            dx = self.x - player.spaceship_rect.center[0]
+            dy = self.y - player.spaceship_rect.center[1]
+            self.theta = math.atan2(-dy,dx)
+            return self.theta
+
     def shoot(self,player):
+        angle = self.findobjectangle(player)
         if pygame.time.get_ticks() - self.last_enemy_pew >= random.randint(2000,10000):
-            pygame.mixer.Sound.play(enemypew_sound)
-            enemyprojectiles.append(EnemyProjectiles(self.x, self.y,random.randint(60,120)*math.pi/180))
+            if self.type == 0:
+                if angle < math.pi/3 and angle > -math.pi/3:
+                    pygame.mixer.Sound.play(enemypew_sound)
+                    enemyprojectiles.append(EnemyProjectiles(self.x, self.y,angle))
+            elif self.type == 1:
+                pygame.mixer.Sound.play(enemypew_sound)
+                enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(random.randint(60,120))))
+            elif self.type == 2:
+                pygame.mixer.Sound.play(enemypew_sound)
+                for angle in self.calculate_angles(8):
+                    enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(angle)))
             self.last_enemy_pew = pygame.time.get_ticks()
 
     def draw(self,screen,player):
@@ -526,23 +555,29 @@ class Enemies:
         return False
 
     def spawn():
-        enemies.append(Enemies())
+        # enemies.append(Enemies(random.randint(0,2)))
+        enemies.append(Enemies(random.randint(0,2)))
 
 class EnemyProjectiles:
     def __init__(self,x,y,direction):
         self.x, self.y = x, y
         self.direction = direction
+        self.skewoffset = 20
+        self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
         self.image = enemy_pew_surf
         self.image = pygame.transform.scale(self.image,(32, 32))
         self.velocity = 8
 
+    def objectdirection(self,direction):
+        pewdir = direction - math.pi/2 + self.directionskew
+        sin_a = math.sin(pewdir)
+        cos_a = math.cos(pewdir)
+        self.x += self.velocity * sin_a
+        self.y += self.velocity * cos_a
+        return self.x, self.y
+
     def update(self):
-        sin_a = math.sin(self.direction)
-        cos_a = math.cos(self.direction)
-        speed_sin = self.velocity * sin_a
-        speed_cos = self.velocity * cos_a
-        self.x -= speed_sin
-        self.y -= speed_cos
+        self.x, self.y = self.objectdirection(self.direction)
         self.enemy_pew_rect = self.image.get_rect(center = (self.x, self.y))
         if self.x < 0 or self.y < 0 or self.y > HEIGHT:
             enemyprojectiles.pop(enemyprojectiles.index(self))

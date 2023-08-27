@@ -238,6 +238,21 @@ class GameState:
             cutoff.update(player)
             cutoff.draw(screen)
 
+        # ENEMY PEW
+        for epew in enemyprojectiles:
+            epew.draw(screen)
+
+            # if player hits Enemy pew
+            if Variables.shipcollision == True:
+                if epew.collide(player.spaceship_rect):
+                    enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
         # ENEMIES
         for enemy in enemies:
             enemy.shoot(player)
@@ -264,21 +279,6 @@ class GameState:
                     explosion_group.add(explosion)
                     bullets.pop(bullets.index(bullet))
                     enemies.pop(enemies.index(enemy))
-
-        # ENEMY PEW
-        for epew in enemyprojectiles:
-            epew.draw(screen)
-
-            # if player hits Enemy pew
-            if Variables.shipcollision == True:
-                if epew.collide(player.spaceship_rect):
-                    enemyprojectiles.pop(enemyprojectiles.index(epew))
-                    explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(explosion)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
-                    player.respawn()
 
         #region KANA
         #region CORRECT KANA

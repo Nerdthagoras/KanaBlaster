@@ -36,7 +36,6 @@ off_screen_offset = 64
 min_kana_alpha = 200
 question_position = (100, 20)
 spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_alpha()
-enemy_surf = pygame.image.load(os.path.join('images', 'enemy.png')).convert_alpha()
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
@@ -50,6 +49,11 @@ ship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.p
 planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
 planet_surfs = []
 for plfile in planetfiles: planet_surfs.append(pygame.image.load(os.path.join('images','Planets',plfile)).convert_alpha())
+
+enemyfiles = [f for f in os.listdir(os.getcwd() + '/images/Enemies')]
+enemy_surfs = []
+for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
+# enemy_surf = pygame.image.load(os.path.join('images', 'enemy.png')).convert_alpha()
 
 # Space Junk
 spacejunkfiles = [

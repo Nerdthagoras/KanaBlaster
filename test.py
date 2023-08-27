@@ -3,6 +3,8 @@ import os
 pygame.init()
 WIDTH, HEIGHT = 1440,900
 clock = pygame.time.Clock()
+dt = 0
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 running = True
@@ -17,7 +19,7 @@ class Player:
         self.Xvelocity = 0
         self.speedup = 0.8
         self.slowdown = 0.2
-        self.speed = 8
+        self.speed = 20
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -58,8 +60,8 @@ class Player:
         #endregion
     
     def move(self):
-        self.direction[1] = self.Vvelocity
-        self.direction[0] = self.Xvelocity
+        self.direction[1] = self.Vvelocity * dt
+        self.direction[0] = self.Xvelocity * dt
         self.spaceship_rect.center += self.direction
 
     def update(self):
@@ -134,7 +136,7 @@ spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_a
 player = Player(WIDTH//2,HEIGHT//2,spaceship_surf)
 
 while running:
-    clock.tick(60)
+    dt = clock.tick(60)/100
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
