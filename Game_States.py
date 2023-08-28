@@ -137,7 +137,7 @@ class MenuState:
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
-                    player.spaceship_rect.center[0],player.spaceship_rect.center[1] = (0,HEIGHT-128)
+                    # player.spaceship_rect.center[0],player.spaceship_rect.center[1] = (0,HEIGHT-128)
 
             # Key Events
             if event.type == pygame.KEYDOWN:

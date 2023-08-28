@@ -448,6 +448,7 @@ class PowerUp:
     def __init__(self,x,y,xvelocity,yvelocity,image,pueffect):
         self.pueffect = pueffect
         self.img = image
+        self.img = pygame.transform.scale(self.img,(64,64))
         self.x, self.y = x, y
         self.xvelocity, self.yvelocity = xvelocity, yvelocity
         self.hitbox = self.img_rect = self.img.get_rect(center = (self.x, self.y))
@@ -483,11 +484,14 @@ class PowerUp:
                 powerups.pop(powerups.index(self))
                 player.lasersight = True
                 player.lasersightcounter = player.poweruptimelength
+                pygame.mixer.Sound.play(powerup_sound)
         if pueffect == "speed":
             if self.collide(player.spaceship_rect):
                 powerups.pop(powerups.index(self))
                 player.speedboost = True
                 player.speedboostcounter = player.poweruptimelength
+                pygame.mixer.Sound.play(powerup_sound)
+        
 
 class Enemies:
     def __init__(self,typeof):

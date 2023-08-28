@@ -39,8 +39,8 @@ spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_a
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
-laser_powerup_surf = pygame.image.load(os.path.join('images', 'laserpowerup.png')).convert_alpha()
-speed_powerup_surf = pygame.image.load(os.path.join('images', 'speedpowerup.png')).convert_alpha()
+laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
+speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
 biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
 explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
@@ -72,6 +72,7 @@ shiphit = pygame.mixer.Sound(os.path.join('sounds','ShipHit.wav'))
 biglaser_sound = pygame.mixer.Sound(os.path.join('sounds','biglaser.wav'))
 warning_sound = pygame.mixer.Sound(os.path.join('sounds','WarningBeep.wav'))
 enemypew_sound = pygame.mixer.Sound(os.path.join('sounds','enemypew.wav'))
+powerup_sound = pygame.mixer.Sound(os.path.join('sounds','powerup.wav'))
 
 # Timings
 pygame.time.set_timer(USEREVENT+1, random.randrange(1000, 2000)) # Incorrect Kana
