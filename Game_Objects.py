@@ -17,7 +17,7 @@ class Ship:
         self.Yvelocity = 0
         self.Xvelocity = 0
         self.speed = 1000
-        self.acceleration = self.speed*2
+        self.acceleration = self.speed*3
         self.shiprest = 100
         self.speedup = 2
         self.slowdown = 1
@@ -92,17 +92,18 @@ class Ship:
         self.move()
 
         # RESPAWN
-        if self.respawn_timer == 200:
+        if self.respawn_timer == 5:
             Variables.shipcollision = False
             self.lasersight = False
             self.speedboost = False
-            self.spaceship_rect.center = (100, HEIGHT // 2)
-            self.respawn_timer -= 1
+            self.direction = pygame.math.Vector2(100, HEIGHT // 2)
+            self.respawn_timer -= 1 * Variables.dt
         elif self.respawn_timer > 0:
-            self.respawn_timer -= 1
-        elif self.respawn_timer == 0:
+            self.respawn_timer -= 1 * Variables.dt
+        elif self.respawn_timer < 0 and self.respawn_timer > -1:
             Variables.shipcollision = True
-            self.respawn_timer -= 1
+            self.respawn_timer -= 1 * Variables.dt
+        elif self.respawn_timer <= -1: self.respawn_timer = -1
 
         # # SPEED BOOST PowerUp
         # if self.speedboost and self.speedboostcounter > 0:
@@ -140,9 +141,9 @@ class Ship:
         self.update()
 
         if Variables.shipcollision == False:
-            if self.respawn_timer % 3 == 0: self.image.set_alpha(200)
-            elif self.respawn_timer % 3 == 1: self.image.set_alpha(128)
-            elif self.respawn_timer % 3 == 2: self.image.set_alpha(16)
+            if int(self.respawn_timer*100) % 3 == 0: self.image.set_alpha(200)
+            elif int(self.respawn_timer*100) % 3 == 1: self.image.set_alpha(128)
+            elif int(self.respawn_timer*100) % 3 == 2: self.image.set_alpha(16)
         else:
             self.image.set_alpha(255)
         screen.blit(self.image, self.spaceship_rect)
@@ -153,14 +154,14 @@ class Ship:
 
     def respawn(self):
         Variables.lives -= 1
-        self.respawn_timer = 200
+        self.respawn_timer = 5
 
 class Pew:
     def __init__(self,x,y,image):
         self.x, self.y = x, y
         self.image = image
         self.pew_rect = self.image.get_rect(center = (self.x, self.y))
-        self.velocity = 6000
+        self.velocity = 3000
 
     def update(self):
         self.x += self.velocity * Variables.dt
@@ -193,7 +194,7 @@ class Planet:
         self.planet_surf = pygame.transform.scale(self.planet_surf,(self.planet_surf.get_width()*self.scale,self.planet_surf.get_height()*self.scale))
         self.x = WIDTH+500
         self.y = random.randrange(0,HEIGHT)
-        self.velocity = 0.5
+        self.velocity = 50
     
     def update(self,player):
         self.x -= self.velocity * Variables.dt
@@ -213,7 +214,7 @@ class SpaceJunk:
         self.img = pygame.image.load(os.getcwd() + spacejunkfiles[num][0]).convert_alpha()
         self.img = pygame.transform.scale(self.img,(self.img.get_width()*scale,self.img.get_height()*scale))
         self.x, self.y = WIDTH+50, random.randrange(0,HEIGHT/2)
-        self.velocity = 8
+        self.velocity = 600
         self.rotate = 0
         self.rotate_rate = rotate / 10
 
@@ -260,7 +261,7 @@ class Star:
         if self.x < -100: starfield.pop(starfield.index(self))
 
     def draw(self,screen):
-        self.startext.set_alpha(self.depth/9*255)
+        self.startext.set_alpha(self.depth/900*255)
         screen.blit(self.startext, (self.x,self.y))
 
     def spawn():
@@ -270,7 +271,7 @@ class Bridge:
     def __init__(self,x,y,image):
         self.img = image
         self.x, self.y = x, y
-        self.velocity = 30
+        self.velocity = 3000
         self.drawn = False
         self.sound = True
 
@@ -304,7 +305,7 @@ class CutOffLine:
         self.y = y
         self.lastkana = lastkana
         self.kanatohit = kanatohit
-        self.velocity = 2
+        self.velocity = 200
 
     def update(self,player):
         self.x -= self.velocity * Variables.dt
@@ -442,7 +443,7 @@ class PowerUp:
 
     def update(self,player):
         self.x -= self.xvelocity * Variables.dt
-        self.y += self.yvelocity * math.sin(self.x/100)
+        self.y += self.yvelocity * Variables.dt * math.sin(self.x/100)
         if self.x < -64:
             powerups.pop(powerups.index(self))
 
@@ -457,7 +458,7 @@ class PowerUp:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
 
     def spawn(graphic,effect):
-        powerups.append(PowerUp(WIDTH+64, random.randrange(128,HEIGHT-128,),1,random.randrange(100,200)/100,graphic,effect))
+        powerups.append(PowerUp(WIDTH+64, random.randrange(128,HEIGHT-128,),100,random.randrange(100,200),graphic,effect))
 
     def collide(self,rect):
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:

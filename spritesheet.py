@@ -38,7 +38,7 @@ class PlayAnimation(pygame.sprite.Sprite):
         self.scale = scale
 
     def update(self):
-        explosion_speed = 1
+        explosion_speed = 10
         self.counter += 1
 
         if self.counter >= explosion_speed and self.index < len(self.spritearray) - 1:

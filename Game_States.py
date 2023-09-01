@@ -481,7 +481,8 @@ class GameState:
             # KEYDOWN
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE: Variables.lives = 0
-                if event.key == ord('p'):
+                if event.key == ord('p'): Planet.spawn()
+                if event.key == ord('o'):
                     powerup_type = random.randint(0,1)
                     if powerup_type == 0:
                         PowerUp.spawn(speed_powerup_surf,"speed")
@@ -589,7 +590,7 @@ class GameOverState:
             if Variables.kana_timer <= 0:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
-                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-128,),selection,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                     Variables.kana_timer = random.randint(50,100)
 
             if event.type == pygame.KEYDOWN:
