@@ -16,7 +16,7 @@ class Ship:
         self.deadzone = 20
         self.Yvelocity = 0
         self.Xvelocity = 0
-        self.speed = 1000
+        self.speed = 800
         self.acceleration = self.speed*3
         self.deceleration = self.speed*4
         self.shiprest = 100
@@ -24,7 +24,7 @@ class Ship:
         self.slowdown = 1
         self.last_pewtimer = 0
         self.maxnumpew = 2
-        self.can_play = True
+        # self.can_play = True
         self.shiprestpoint = 100
         self.shipborder = 128
         self.respawn_timer = -1
@@ -64,7 +64,7 @@ class Ship:
         if keys[pygame.K_a]: 
             if self.Xvelocity <= self.speed:
                 self.Xvelocity += self.temp_acc
-        elif keys[pygame.K_d]:
+        elif keys[pygame.K_d] and self.direction[0] < WIDTH-500:
             if self.Xvelocity >= -self.speed:
                 self.Xvelocity -= self.temp_acc
         else:
@@ -87,6 +87,16 @@ class Ship:
     def move(self):
         self.direction[0] -= self.Xvelocity * Variables.dt
         self.direction[1] -= self.Yvelocity * Variables.dt
+        if self.direction[1] < self.shipborder:
+            self.direction[1] = self.shipborder
+            self.Yvelocity = 0
+        elif self.direction[1] > HEIGHT-self.shipborder:
+            self.direction[1] = HEIGHT-self.shipborder
+            self.Yvelocity = 0
+        elif self.direction[0] < 48:
+            self.direction[0] = 48
+            self.Xvelocity = 0
+        # elif self.direction[0] > WIDTH-500: self.direction[0] = WIDTH-500
         self.spaceship_rect.center = self.direction
 
     def update(self):
@@ -94,7 +104,7 @@ class Ship:
         self.move()
 
         # RESPAWN
-        if self.respawn_timer == 5:
+        if self.respawn_timer == 3:
             Variables.shipcollision = False
             self.lasersight = False
             self.speedboost = False
@@ -108,16 +118,16 @@ class Ship:
         elif self.respawn_timer <= -1: self.respawn_timer = -1
 
         # # SPEED BOOST PowerUp
-        # if self.speedboost and self.speedboostcounter > 0:
-        #     self.speed = 10
-        #     self.speedup = 2
-        #     self.slowdown = 2
-        #     self.speedboostcounter -= 1
-        # else:
-        #     self.speed = 6
-        #     self.speedup = 0.5
-        #     self.slowdown = 0.25
-        #     self.speedboost = False
+        if self.speedboost and self.speedboostcounter > 0:
+            self.speed = 1000
+            self.acceleration = self.speed*6
+            self.deceleration = self.speed*7
+            self.speedboostcounter -= 1
+        else:
+            self.speed = 800
+            self.acceleration = self.speed*3
+            self.deceleration = self.speed*4
+            self.speedboost = False
 
         # LASER PowerUp
         if self.lasersight and self.lasersightcounter > 200:
@@ -156,7 +166,7 @@ class Ship:
 
     def respawn(self):
         Variables.lives -= 1
-        self.respawn_timer = 5
+        self.respawn_timer = 3
 
 class Pew:
     def __init__(self,x,y,image):

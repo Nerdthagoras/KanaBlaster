@@ -438,14 +438,14 @@ class GameState:
 
             #region KANA
             #region Correct Kana Timer
-            Variables.correctkana_timer -= 1+(player.spaceship_rect.center[0])/100
+            Variables.correctkana_timer -= 1000 * Variables.dt
             if Variables.correctkana_timer <= 0:
                 correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                 Variables.correctkana_timer = random.randint(150,300)
             #endregion
 
             # Incorrect Kana Timer
-            Variables.kana_timer -= 1+(player.spaceship_rect.center[0])/100
+            Variables.kana_timer -= 1000 * Variables.dt
             if Variables.kana_timer <= 0:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
@@ -619,6 +619,8 @@ def displaydebug(x,y):
     debug('XV: ' + str(round(player.Xvelocity,1)) + '  YV ' + str(round(player.Yvelocity,1)),x,120+y)
     debug('Laser CD:' + str(player.lasersightcounter),x,140+y)
     debug('Speed CD:' + str(player.speedboostcounter),x,160+y)
+    debug('CKT:' + str(Variables.correctkana_timer),x,180+y)
+    debug('IKT:' + str(Variables.kana_timer),x,200+y)
 
 # Instantiate Classes
 menu_state = MenuState()
