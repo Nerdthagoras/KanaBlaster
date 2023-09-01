@@ -1,6 +1,5 @@
 from Functions import read_csv
 import time
-from Constants import clock
 import random
 
 lt = time.time()

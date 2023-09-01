@@ -18,6 +18,7 @@ class Ship:
         self.Xvelocity = 0
         self.speed = 1000
         self.acceleration = self.speed*3
+        self.deceleration = self.speed*4
         self.shiprest = 100
         self.speedup = 2
         self.slowdown = 1
@@ -38,6 +39,7 @@ class Ship:
     def movement(self):
         keys = pygame.key.get_pressed()
         self.temp_acc = self.acceleration * Variables.dt
+        self.temp_dec = self.deceleration * Variables.dt
         #region Vecors
         # Vertical
         if keys[pygame.K_w]:
@@ -51,12 +53,12 @@ class Ship:
                 if self.Yvelocity >= -self.deadzone:
                     self.Yvelocity = 0
                 else:
-                    self.Yvelocity += self.temp_acc
+                    self.Yvelocity += self.temp_dec
             elif self.Yvelocity > 0:
                 if self.Yvelocity <= self.deadzone:
                     self.Yvelocity = 0
                 else:
-                    self.Yvelocity -= self.temp_acc
+                    self.Yvelocity -= self.temp_dec
 
         # Horizontal
         if keys[pygame.K_a]: 
@@ -70,12 +72,12 @@ class Ship:
                 if self.Xvelocity >= -self.deadzone:
                     self.Xvelocity = 0
                 else:
-                    self.Xvelocity += self.temp_acc
+                    self.Xvelocity += self.temp_dec
             elif self.Xvelocity > 0:
                 if self.Xvelocity <= self.deadzone:
                     self.Xvelocity = 0
                 else:
-                    self.Xvelocity -= self.temp_acc
+                    self.Xvelocity -= self.temp_dec
         #endregion
         # Pew
         if keys[pygame.K_SPACE]:
@@ -329,7 +331,7 @@ class BigLaser:
     def __init__(self,x,y):
         self.x, self.y = x, y
         self.image = biglaser_surf
-        self.velocity = 120
+        self.velocity = 8000
         self.hitboxYshrink = 50
     
     def update(self):
@@ -480,14 +482,13 @@ class PowerUp:
                 player.speedboostcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(powerup_sound)
         
-
 class Enemies:
     def __init__(self,typeof):
         self.type = typeof
         self.image = enemy_surfs[self.type]
         self.image = pygame.transform.scale(self.image,(64, 64))
         self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
-        self.velocity = random.randint(1,4)
+        self.velocity = random.randint(100,400)
         self.last_enemy_pew = 0
 
     def calculate_angles(self,number_of_angles):
@@ -518,14 +519,14 @@ class Enemies:
     def shoot(self,player):
         angle = self.findobjectangle(player)
         if pygame.time.get_ticks() - self.last_enemy_pew >= random.randint(2000,10000):
-            if self.type == 0:
+            if self.type == 0: # AIMED SHOT
                 if angle < math.pi/3 and angle > -math.pi/3:
                     pygame.mixer.Sound.play(enemypew_sound)
                     enemyprojectiles.append(EnemyProjectiles(self.x, self.y,angle))
-            elif self.type == 1:
+            elif self.type == 1: # FORWARD SHOT
                 pygame.mixer.Sound.play(enemypew_sound)
-                enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(random.randint(60,120))))
-            elif self.type == 2:
+                enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(random.randint(-10,10))))
+            elif self.type == 2: #AoE SHOT
                 pygame.mixer.Sound.play(enemypew_sound)
                 for angle in self.calculate_angles(8):
                     enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(angle)))
@@ -558,7 +559,7 @@ class EnemyProjectiles:
         self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
         self.image = enemy_pew_surf
         self.image = pygame.transform.scale(self.image,(32, 32))
-        self.velocity = 8
+        self.velocity = 500
 
     def objectdirection(self,direction):
         pewdir = direction - math.pi/2 + self.directionskew

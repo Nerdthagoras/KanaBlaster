@@ -7,7 +7,7 @@ import random
 
 # Initialize Pygame
 pygame.init()
-fps = 0
+fps = 60
 clock = pygame.time.Clock()
 
 # Screen Size

@@ -617,6 +617,8 @@ def displaydebug(x,y):
     debug('Enemy Wait ' + str(game_state.enemy_wait_timer),x,80+y)
     debug('Respawn ' + str(player.respawn_timer),x,100+y)
     debug('XV: ' + str(round(player.Xvelocity,1)) + '  YV ' + str(round(player.Yvelocity,1)),x,120+y)
+    debug('Laser CD:' + str(player.lasersightcounter),x,140+y)
+    debug('Speed CD:' + str(player.speedboostcounter),x,160+y)
 
 # Instantiate Classes
 menu_state = MenuState()
