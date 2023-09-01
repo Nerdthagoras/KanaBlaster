@@ -112,7 +112,7 @@ class MenuState:
             if event.type == USEREVENT+1:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
-                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(300,HEIGHT-128,),selection,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(300,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
 
             # Mouse Events
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -315,8 +315,7 @@ class GameState:
 
         #region WRONG KANA
         for kana in kanas:
-            kana.x -= kana.xvelocity + 1 * (player.spaceship_rect.center[0]/100)
-            kana.y += kana.yvelocity * 2
+            kana.update(player)
 
             # remove kana if off screen
             if kana.x < -64:
@@ -441,7 +440,7 @@ class GameState:
             #region Correct Kana Timer
             Variables.correctkana_timer -= 1+(player.spaceship_rect.center[0])/100
             if Variables.correctkana_timer <= 0:
-                correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+                correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                 Variables.correctkana_timer = random.randint(150,300)
             #endregion
 
@@ -450,7 +449,7 @@ class GameState:
             if Variables.kana_timer <= 0:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
-                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,2,random.randint(-10,10)/100,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                     Variables.kana_timer = random.randint(50,100)
             
             #endregion KANA
@@ -539,9 +538,7 @@ class GameOverState:
 
         #region STARS
         for star in starfield:
-            star.x -= star.velocity / 2
-            if star.x < 0:
-                starfield.pop(starfield.index(star))
+            star.update(player)
             star.draw(screen)
         #endregion
 

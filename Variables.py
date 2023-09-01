@@ -1,5 +1,10 @@
 from Functions import read_csv
+import time
+from Constants import clock
 import random
+
+lt = time.time()
+dt = 0
 
 # Kanas CSV
 commasep = read_csv('data/kana.csv')

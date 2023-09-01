@@ -1,18 +1,22 @@
 from Constants import clock,fps,screen
 from Game_States import current_state,menu_state,game_state,gameover_state
+import time
 
 import pygame
 import os
 
 # Initialize pygame
 pygame.init()
-pygame.mixer.music.set_volume(.5)
+pygame.mixer.music.set_volume(0)
 music = pygame.mixer.music.load(os.path.join('sounds','GameIntro.wav'))
 pygame.mixer.music.play(-1)
 
 # Game loop
 while not current_state.done:
     clock.tick(fps)
+    import Variables
+    Variables.dt = time.time() - Variables.lt
+    Variables.lt = time.time()
     current_state.handle_events(pygame.event.get())
     current_state.update(screen)
     current_state.draw(screen)

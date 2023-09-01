@@ -10,16 +10,17 @@ import os
 # PLAYER
 class Ship:
     def __init__(self,x,y,image):
-        self.x, self.y = x, y
         self.image = image
-        self.spaceship_rect = self.image.get_rect(center = (self.x, self.y))
-        self.shiprest = 100
-        self.direction = pygame.math.Vector2()
+        self.direction = pygame.math.Vector2(x,y)
+        self.spaceship_rect = self.image.get_rect(center = self.direction)
+        self.deadzone = 20
         self.Yvelocity = 0
         self.Xvelocity = 0
-        self.speedup = 0.5
-        self.slowdown = 0.25
-        self.speed = 6
+        self.speed = 1000
+        self.acceleration = self.speed*2
+        self.shiprest = 100
+        self.speedup = 2
+        self.slowdown = 1
         self.last_pewtimer = 0
         self.maxnumpew = 2
         self.can_play = True
@@ -36,69 +37,55 @@ class Ship:
 
     def movement(self):
         keys = pygame.key.get_pressed()
-
+        self.temp_acc = self.acceleration * Variables.dt
+        #region Vecors
         # Vertical
-        if keys[pygame.K_w] and self.spaceship_rect.center[1] > 128:
-            if self.Yvelocity >= -self.speed:
-                self.Yvelocity -= self.speedup
-        elif keys[pygame.K_s] and self.spaceship_rect.center[1] < HEIGHT - 128:
+        if keys[pygame.K_w]:
             if self.Yvelocity <= self.speed:
-                self.Yvelocity += self.speedup
-        else: 
+                self.Yvelocity += self.temp_acc
+        elif keys[pygame.K_s]:
+            if self.Yvelocity >= -self.speed:
+                self.Yvelocity -= self.temp_acc
+        else:
             if self.Yvelocity < 0:
-                self.Yvelocity += self.slowdown
-                if self.Yvelocity > self.slowdown:
+                if self.Yvelocity >= -self.deadzone:
                     self.Yvelocity = 0
+                else:
+                    self.Yvelocity += self.temp_acc
             elif self.Yvelocity > 0:
-                self.Yvelocity -= self.slowdown
-                if self.Yvelocity < self.slowdown:
+                if self.Yvelocity <= self.deadzone:
                     self.Yvelocity = 0
+                else:
+                    self.Yvelocity -= self.temp_acc
 
         # Horizontal
-        if keys[pygame.K_a] and self.spaceship_rect.midleft[0] > 20: 
-            if self.Xvelocity >= -self.speed:
-                self.Xvelocity -= self.speedup
-        elif keys[pygame.K_d] and self.spaceship_rect.midleft[0] < WIDTH - 500:
+        if keys[pygame.K_a]: 
             if self.Xvelocity <= self.speed:
-                self.Xvelocity +=self.speedup
-        else: 
-            if self.spaceship_rect.midleft[0] > 110:
-                if self.Xvelocity < -3:
-                    self.Xvelocity += self.slowdown
-                    if self.Xvelocity >= self.slowdown:
-                        self.Xvelocity = -3
-                elif self.Xvelocity > -3:
-                    self.Xvelocity -= self.slowdown
-                    if self.Xvelocity <= self.slowdown:
-                        self.Xvelocity = -3
-            elif self.spaceship_rect.midleft[0] < 90: 
-                if self.Xvelocity < 3:
-                    self.Xvelocity += self.slowdown
-                    if self.Xvelocity >= self.slowdown:
-                        self.Xvelocity = 3
-                elif self.Xvelocity > 3:
-                    self.Xvelocity -= self.slowdown
-                    if self.Xvelocity <= self.slowdown:
-                        self.Xvelocity = 3
-            else:
-                if self.Xvelocity < 0:
-                    self.Xvelocity += self.slowdown
-                    if self.Xvelocity >= self.slowdown:
-                        self.Xvelocity = 0
-                elif self.Xvelocity > 0:
-                    self.Xvelocity -= self.slowdown
-                    if self.Xvelocity <= self.slowdown:
-                        self.Xvelocity = 0
-
+                self.Xvelocity += self.temp_acc
+        elif keys[pygame.K_d]:
+            if self.Xvelocity >= -self.speed:
+                self.Xvelocity -= self.temp_acc
+        else:
+            if self.Xvelocity < 0:
+                if self.Xvelocity >= -self.deadzone:
+                    self.Xvelocity = 0
+                else:
+                    self.Xvelocity += self.temp_acc
+            elif self.Xvelocity > 0:
+                if self.Xvelocity <= self.deadzone:
+                    self.Xvelocity = 0
+                else:
+                    self.Xvelocity -= self.temp_acc
+        #endregion
         # Pew
         if keys[pygame.K_SPACE]:
             if Variables.shipcollision == True:
                 Pew.spawn(self)
 
     def move(self):
-        self.direction[1] = self.Yvelocity
-        self.direction[0] = self.Xvelocity
-        self.spaceship_rect.center += self.direction
+        self.direction[0] -= self.Xvelocity * Variables.dt
+        self.direction[1] -= self.Yvelocity * Variables.dt
+        self.spaceship_rect.center = self.direction
 
     def update(self):
         self.movement()
@@ -117,17 +104,17 @@ class Ship:
             Variables.shipcollision = True
             self.respawn_timer -= 1
 
-        # SPEED BOOST PowerUp
-        if self.speedboost and self.speedboostcounter > 0:
-            self.speed = 10
-            self.speedup = 2
-            self.slowdown = 2
-            self.speedboostcounter -= 1
-        else:
-            self.speed = 6
-            self.speedup = 0.5
-            self.slowdown = 0.25
-            self.speedboost = False
+        # # SPEED BOOST PowerUp
+        # if self.speedboost and self.speedboostcounter > 0:
+        #     self.speed = 10
+        #     self.speedup = 2
+        #     self.slowdown = 2
+        #     self.speedboostcounter -= 1
+        # else:
+        #     self.speed = 6
+        #     self.speedup = 0.5
+        #     self.slowdown = 0.25
+        #     self.speedboost = False
 
         # LASER PowerUp
         if self.lasersight and self.lasersightcounter > 200:
@@ -173,10 +160,10 @@ class Pew:
         self.x, self.y = x, y
         self.image = image
         self.pew_rect = self.image.get_rect(center = (self.x, self.y))
-        self.velocity = 60
+        self.velocity = 6000
 
     def update(self):
-        self.x += self.velocity
+        self.x += self.velocity * Variables.dt
         if self.x > WIDTH+200:
             bullets.pop(bullets.index(self))
 
@@ -209,7 +196,7 @@ class Planet:
         self.velocity = 0.5
     
     def update(self,player):
-        self.x -= self.velocity + 0.2 * (player.spaceship_rect.center[0]/100)
+        self.x -= self.velocity * Variables.dt
         if self.x < -1000:
             planets.pop(planets.index(self))
 
@@ -231,7 +218,7 @@ class SpaceJunk:
         self.rotate_rate = rotate / 10
 
     def update(self,player):
-        self.x -= self.velocity + 0.2 * (player.spaceship_rect.center[0]/100)
+        self.x -= self.velocity * Variables.dt
         if self.x < -1000:
             spacejunk.pop(spacejunk.index(self))
 
@@ -255,7 +242,7 @@ class SpaceJunk:
 
 class Star:
     def __init__(self):
-        self.depth = random.randrange(1,10)
+        self.depth = random.randrange(100,1000)
         self.x, self.y = WIDTH, random.randrange(50,HEIGHT-50)
         self.gamemode = Variables.gamemode
         self.kana = random.randint(0,45)
@@ -269,7 +256,7 @@ class Star:
         # self.startext = pygame.transform.scale(self.startext,(self.startext.get_width()*scale,self.startext.get_height()*scale))
 
     def update(self,player):
-        self.x -= self.velocity + 1 * (player.spaceship_rect.center[0]/100)
+        self.x -= self.velocity * Variables.dt
         if self.x < -100: starfield.pop(starfield.index(self))
 
     def draw(self,screen):
@@ -288,7 +275,7 @@ class Bridge:
         self.sound = True
 
     def update(self,player):
-        self.x -= self.velocity + 1 * (player.spaceship_rect.center[0]/100)
+        self.x -= self.velocity * Variables.dt
         if self.x < -1000:
             bridges.pop(bridges.index(self))
             self.drawn = False
@@ -320,7 +307,7 @@ class CutOffLine:
         self.velocity = 2
 
     def update(self,player):
-        self.x -= self.velocity + 1 * (player.spaceship_rect.center[0]/100)
+        self.x -= self.velocity * Variables.dt
         if self.x < -200: cuttoffline.pop(cuttoffline.index(self))
 
     def draw(self,screen):
@@ -345,7 +332,7 @@ class BigLaser:
         self.hitboxYshrink = 50
     
     def update(self):
-        self.x -= self.velocity
+        self.x -= self.velocity * Variables.dt
         if self.x < -512:
             biglasers.pop(biglasers.index(self))
             self.laserdelay = 100
@@ -408,19 +395,19 @@ class BigLaserWarning:
 
 # INTERACTABLES
 class Kana:
-    def __init__(self,x,y,kana,xvelocity,yvelocity,fade,rotate):
+    def __init__(self,x,y,kana,fade,rotate):
         self.x, self.y = x, y
-        self.xvelocity, self.yvelocity = xvelocity, yvelocity
+        self.xvelocity, self.yvelocity = 200, random.randint(-10,10)
         self.shrink = 5
         self.kana = kana
         self.fade = fade
         self.rotate = 0
-        self.rotate_rate = rotate * 0.02
+        self.rotate_rate = rotate * 0.002
         self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, WHITE)
 
     def update(self,player):
-        self.x -= self.xvelocity + 1 * (player.spaceship_rect.center[0]/100)
-        self.y += self.yvelocity
+        self.x -= self.xvelocity * Variables.dt
+        self.y += self.yvelocity * Variables.dt
 
     def draw(self,screen):
         orig_rect = self.kanatext.get_rect()
@@ -454,7 +441,7 @@ class PowerUp:
         self.hitbox = self.img_rect = self.img.get_rect(center = (self.x, self.y))
 
     def update(self,player):
-        self.x -= self.xvelocity + 1 * (player.spaceship_rect.center[0]/100)
+        self.x -= self.xvelocity * Variables.dt
         self.y += self.yvelocity * math.sin(self.x/100)
         if self.x < -64:
             powerups.pop(powerups.index(self))
@@ -515,8 +502,8 @@ class Enemies:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         elif self.type == 2:
             self.enemy_rect = self.image.get_rect(center = (self.x, self.y))
-        self.x -= self.velocity
-        self.y += self.velocity * math.sin(10*math.pi/180)
+        self.x -= self.velocity * Variables.dt
+        self.y += self.velocity * Variables.dt * math.sin(10*math.pi/180)
         if self.x < -128:
             enemies.pop(enemies.index(self))
     
@@ -576,8 +563,8 @@ class EnemyProjectiles:
         pewdir = direction - math.pi/2 + self.directionskew
         sin_a = math.sin(pewdir)
         cos_a = math.cos(pewdir)
-        self.x += self.velocity * sin_a
-        self.y += self.velocity * cos_a
+        self.x += self.velocity * sin_a * Variables.dt
+        self.y += self.velocity * cos_a * Variables.dt
         return self.x, self.y
 
     def update(self):
