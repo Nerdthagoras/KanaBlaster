@@ -21,11 +21,6 @@ while not current_state.done:
     current_state.update(screen)
     current_state.draw(screen)
     pygame.display.update()
- 
-    # for event in pygame.event.get():
-    #     if event.type == pygame.KEYDOWN:
-    #             if event.key == ord('='): fps += 5
-    #             if event.key == ord('-'): fps -= 5
 
     if current_state.done:
         if current_state == menu_state:

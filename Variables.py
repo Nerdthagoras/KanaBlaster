@@ -27,12 +27,10 @@ last_question_num = 0
 last_kananum = 0
 last_level = 0
 bridgewipecounter = 0
-debugwindow = False
-hitboxshow = False
+debugwindow = True
+hitboxshow = True
 shipcollision = True
 shipdistance = 1
 
 RGB = [0,0,0]
-kana_timer = 100
-correctkana_timer = 75
 theta = 0

@@ -361,7 +361,6 @@ class BigLaser:
         self.hitbox[3] -= (self.hitboxYshrink*2)
         if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
-            print(self.biglaser_rect)
 
     def collide(self,rect):
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
@@ -428,12 +427,12 @@ class Kana:
         rot_rect = orig_rect.copy()
         rot_rect.center = rotated_image.get_rect().center
         rotated_image = rotated_image.subsurface(rot_rect).copy()
-        centered_image = rotated_image.get_rect(center = (self.x,self.y))
-        screen.blit(rotated_image, centered_image)
+        self.centered_image = rotated_image.get_rect(center = (self.x,self.y))
+        screen.blit(rotated_image, self.centered_image)
         self.rotate += self.rotate_rate
 
         # Draw hitbox
-        self.hitbox = centered_image
+        self.hitbox = self.centered_image
         if Variables.hitboxshow:
             pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)

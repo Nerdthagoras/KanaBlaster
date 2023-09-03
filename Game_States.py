@@ -3,7 +3,7 @@ from pygame.locals import USEREVENT
 # from Constants import BLACK,WHITE,GAME_OVER_font,ui_font,question_font,question_position,WIDTH,HEIGHT,clock,off_screen_offset,min_kana_alpha,spacejunkfiles,explosion_surfs,shiphit,goodhit,badhit,speed_powerup_surf,laser_powerup_surf,spaceship_surf,enginesound,debug_locationx,debug_locationy
 from Constants import *
 from graphicgroups import *
-from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaser,BigLaserWarning,Enemies
+from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaserWarning,Enemies
 from spritesheet import PlayAnimation
 from debug import debug
 from Functions import reset_game
@@ -343,6 +343,10 @@ class GameState:
                     Variables.score -= 2
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
+            # Stop Kana's from intersecting
+            for ckana in correctkanas:
+                if kana.collide(ckana.centered_image):
+                    kanas.pop(kanas.index(kana))
         #endregion
         #endregion KANA
 
@@ -438,15 +442,13 @@ class GameState:
 
             #region KANA
             #region Correct Kana Timer
-            Variables.correctkana_timer -= 1000 * Variables.dt
-            if Variables.correctkana_timer <= 0:
+            if event.type == USEREVENT+4:
                 correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                 Variables.correctkana_timer = random.randint(150,300)
             #endregion
 
             # Incorrect Kana Timer
-            Variables.kana_timer -= 1000 * Variables.dt
-            if Variables.kana_timer <= 0:
+            if event.type == USEREVENT+1:
                 selection = random.randint(0,Variables.levels[Variables.level]-1)
                 if selection != Variables.kananum:
                     kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
@@ -454,8 +456,6 @@ class GameState:
             
             #endregion KANA
 
-            # I'm not loving this USEREVENT timing for spawing objects, I need to change 
-            # this on the basis of distance rather than time
             # PLANET
             if event.type == USEREVENT+7: Planet.spawn()
 
@@ -619,8 +619,6 @@ def displaydebug(x,y):
     debug('XV: ' + str(round(player.Xvelocity,1)) + '  YV ' + str(round(player.Yvelocity,1)),x,120+y)
     debug('Laser CD:' + str(player.lasersightcounter),x,140+y)
     debug('Speed CD:' + str(player.speedboostcounter),x,160+y)
-    debug('CKT:' + str(Variables.correctkana_timer),x,180+y)
-    debug('IKT:' + str(Variables.kana_timer),x,200+y)
 
 # Instantiate Classes
 menu_state = MenuState()
