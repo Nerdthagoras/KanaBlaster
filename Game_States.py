@@ -19,9 +19,9 @@ class MenuState:
         self.kana_thresh = 1
         self.enemy_wait_timer = 0
         self.biglaser_timer = 0
-        self.biglaser_randomness = 6000
-        self.enemy_timer = 0
-        self.enemy_randomness = 3000
+        self.biglaser_randomness = 5
+        self.enemy_timer = time.time()
+        self.enemy_randomness = 5
 
     def update(self,screen):
         pygame.mouse.set_visible(True)
@@ -40,17 +40,17 @@ class MenuState:
 
         #Big Laser Timer
         if Variables.level >= 3 and self.enemy_wait_timer <= 0:
-            if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
+            if time.time() - self.biglaser_timer >= self.biglaser_randomness:
                 BigLaserWarning.spawn(player)
-                self.biglaser_timer = pygame.time.get_ticks()
-                self.biglaser_randomness = random.randint(2000,20000)
+                self.biglaser_timer = time.time()
+                self.biglaser_randomness = random.randint(5,30)
 
         # Enemy Timer
         if Variables.level >= 1 and self.enemy_wait_timer <= 0:
-            if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
+            if time.time() - self.enemy_timer >= self.enemy_randomness:
                 Enemies.spawn()
-                self.enemy_timer = pygame.time.get_ticks()
-                self.enemy_randomness = random.randint(3000,10000)
+                self.enemy_timer = time.time()
+                self.enemy_randomness = random.randint(5,30)
 
     def draw(self,screen):
         screen.fill(('black'))
@@ -166,7 +166,7 @@ class MenuState:
                 #start
                 if self.start_button.collidepoint(event.pos):
                     reset_game()
-                    game_state.enemy_wait_timer = 1000
+                    game_state.enemy_wait_timer = 10
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
@@ -176,7 +176,8 @@ class MenuState:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     reset_game()
-                    game_state.enemy_wait_timer = 1000
+                    pygame.mixer.Sound.stop(enginesound)
+                    game_state.enemy_wait_timer = 10
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
@@ -197,6 +198,7 @@ class MenuState:
 class GameState:
     def __init__(self):
         self.done = False
+        self.enemy_wait_timer = 10
         self.star_timer = time.time()
         self.incorrectkana_timer = time.time()
         self.incorrectkana_thresh = 1
@@ -210,18 +212,17 @@ class GameState:
         self.powerup_thresh = 40
         self.bridge_timer = time.time()
         self.bridge_thresh = 30
-        self.enemy_wait_timer = 1000
-        self.biglaser_timer = 20
-        self.biglaser_randomness = 6000
+        self.biglaser_timer = time.time()
+        self.biglaser_randomness = 60
         self.enemy_timer = time.time()
-        self.enemy_randomness = 3000
+        self.enemy_randomness = 0
 
     def update(self,screen):
         if Variables.lives <= 0:
             pygame.mixer.Sound.stop(enginesound)
             self.done = True
         if self.enemy_wait_timer >= 0:
-            self.enemy_wait_timer -= 1
+            self.enemy_wait_timer -= 1 * Variables.dt
 
         # Stars Timer
         if time.time() - self.star_timer >= 0.05:
@@ -237,7 +238,7 @@ class GameState:
                 else:
                     kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                 self.incorrectkana_timer = time.time()
-                self.incorrectkana_thresh = random.randint(10,20)/10
+                self.incorrectkana_thresh = random.randint(5,10)/10
 
         # Correct Kana Timer
         if time.time() - self.correctkana_timer >= self.correctkana_thresh:
@@ -257,10 +258,10 @@ class GameState:
 
         # Enemy Timer
         if Variables.level >= 1 and self.enemy_wait_timer <= 0:
-            if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
+            if time.time() - self.enemy_timer >= self.enemy_randomness:
                 Enemies.spawn()
-                self.enemy_timer = pygame.time.get_ticks()
-                self.enemy_randomness = random.randint(3000,10000)
+                self.enemy_timer = time.time()
+                self.enemy_randomness = random.randint(5,30)
 
         # PLANET
         if time.time() - self.planet_timer >= self.planet_thresh:
@@ -570,8 +571,11 @@ class GameState:
                 if event.key == ord('l'):
                     if player.lasersight == True:
                         player.lasersight = False
+                        pygame.mixer.Sound.stop(shiplaser_sound)
+                        player.laserlength = 0
                     else:
                         player.lasersight = True
+                        pygame.mixer.Sound.play(shiplaser_sound)
                         player.lasersightcounter = player.poweruptimelength
                 if event.key == ord('h'):
                     if Variables.hitboxshow == True:
@@ -755,8 +759,8 @@ def displaydebug(x,y):
         ["XVel",round(player.Xvelocity,2),'white'],
         ["YVel",round(player.Yvelocity,2),'white'],
         ['Laser Counter',player.lasersightcounter,'red'],
-        ['Wrong Kana Timer',round(game_state.incorrectkana_thresh - (time.time() - game_state.incorrectkana_timer),1),'red'],
-        ['Right Kana Timer',round(game_state.correctkana_thresh - (time.time() - game_state.correctkana_timer),1),'green'],
+        ["Enemy Wait Timer",game_state.enemy_wait_timer,'white'],
+        ['Enemy Timer',round(game_state.enemy_randomness - (time.time() - game_state.enemy_timer),1),'green'],
         ['Big Laser Timer',round(game_state.biglaser_randomness - (time.time() - game_state.biglaser_timer),1),'blue']
     ]
     currentline = y

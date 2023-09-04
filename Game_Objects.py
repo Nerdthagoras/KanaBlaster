@@ -34,6 +34,7 @@ class Ship:
 
         self.lasersight = False
         self.lasersightcounter = self.poweruptimelength
+        self.laserlength = 0
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -104,6 +105,7 @@ class Ship:
 
         # RESPAWN
         if self.respawn_timer == 3:
+            pygame.mixer.Sound.stop(shiplaser_sound)
             Variables.shipcollision = False
             self.lasersight = False
             self.speedboost = False
@@ -121,7 +123,7 @@ class Ship:
             self.speed = 1000
             self.acceleration = self.speed*6
             self.deceleration = self.speed*7
-            self.speedboostcounter -= 1
+            self.speedboostcounter -= 100 * Variables.dt
         else:
             self.speed = 800
             self.acceleration = self.speed*3
@@ -130,11 +132,12 @@ class Ship:
 
         # LASER PowerUp
         if self.lasersight and self.lasersightcounter > 256:
-            laser = pygame.Surface((WIDTH,2))
+            laser = pygame.Surface((self.laserlength,2))
             laser.set_alpha(128)
             laser.fill((255,0,0))
             screen.blit(laser,self.spaceship_rect.midright)
             self.lasersightcounter -= 100 * Variables.dt
+            self.laserlength += 3000 * Variables.dt
         elif self.lasersight and self.lasersightcounter <= 256 and self.lasersightcounter > 0:
             laser = pygame.Surface((WIDTH,2))
             laser.fill((self.lasersightcounter/2,0,0))
@@ -142,6 +145,7 @@ class Ship:
             self.lasersightcounter -= 100 * Variables.dt
         elif self.lasersight and self.lasersightcounter <= 0:
             self.lasersight = False
+            self.laserlength = 0
 
     def draw(self,screen):
         from Variables import hitboxshow
@@ -400,6 +404,9 @@ class BigLaserWarning:
     def spawn(player):
         warnings.append(BigLaserWarning(random.randint(player.spaceship_rect.center[1]-64,player.spaceship_rect.center[1]+64)))
 
+class WallOfDeath:
+    pass
+
 # INTERACTABLES
 class Kana:
     def __init__(self,x,y,kana,fade,rotate,color='white'):
@@ -410,7 +417,7 @@ class Kana:
         self.kana = kana
         self.fade = fade
         self.rotate = 0
-        self.rotate_rate = rotate * 0.002
+        self.rotate_rate = rotate * 2
         self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
 
     def update(self,player):
@@ -425,7 +432,7 @@ class Kana:
         rotated_image = rotated_image.subsurface(rot_rect).copy()
         self.centered_image = rotated_image.get_rect(center = (self.x,self.y))
         screen.blit(rotated_image, self.centered_image)
-        self.rotate += self.rotate_rate
+        self.rotate += self.rotate_rate * Variables.dt
 
         # Draw hitbox
         self.hitbox = self.centered_image
@@ -480,6 +487,7 @@ class PowerUp:
                 player.lasersight = True
                 player.lasersightcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(powerup_sound)
+                pygame.mixer.Sound.play(shiplaser_sound)
         if pueffect == "speed":
             if self.collide(player.spaceship_rect):
                 powerups.pop(powerups.index(self))

@@ -7,7 +7,7 @@ import random
 
 # Initialize Pygame
 pygame.init()
-fps = 60
+fps = 0
 clock = pygame.time.Clock()
 
 # Screen Size
@@ -69,6 +69,7 @@ biglaser_sound = pygame.mixer.Sound(os.path.join('sounds','biglaser.wav'))
 warning_sound = pygame.mixer.Sound(os.path.join('sounds','WarningBeep.wav'))
 enemypew_sound = pygame.mixer.Sound(os.path.join('sounds','enemypew.wav'))
 powerup_sound = pygame.mixer.Sound(os.path.join('sounds','powerup.wav'))
+shiplaser_sound = pygame.mixer.Sound(os.path.join('sounds','shiplaser.wav'))
 
 # Timings
 pygame.time.set_timer(USEREVENT+1, 997) # Incorrect Kana
