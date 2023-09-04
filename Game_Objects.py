@@ -1,4 +1,4 @@
-# from Constants import enginesound,WIDTH,HEIGHT,screen,pew_surf,pewsound,planet_surfs,spacejunkfiles,small_font,WHITE,bridgewhoosh,question_position,bridge_surf,question_font,off_screen_offset,large_font
+# from Constants import enginesound,WIDTH,HEIGHT,screen,pew_surf,pewsound,planet_surfs,spacejunkfiles,small_font,'white',bridgewhoosh,question_position,bridge_surf,question_font,off_screen_offset,large_font
 from Constants import *
 from graphicgroups import *
 import Variables
@@ -24,8 +24,7 @@ class Ship:
         self.slowdown = 1
         self.last_pewtimer = 0
         self.maxnumpew = 2
-        # self.can_play = True
-        self.shiprestpoint = 100
+        # self.shiprestpoint = 100
         self.shipborder = 128
         self.respawn_timer = -1
 
@@ -130,21 +129,17 @@ class Ship:
             self.speedboost = False
 
         # LASER PowerUp
-        if self.lasersight and self.lasersightcounter > 200:
+        if self.lasersight and self.lasersightcounter > 256:
             laser = pygame.Surface((WIDTH,2))
             laser.set_alpha(128)
             laser.fill((255,0,0))
             screen.blit(laser,self.spaceship_rect.midright)
-            self.lasersightcounter -= 1
-        elif self.lasersight and self.lasersightcounter <= 200 and self.lasersightcounter > 0:
+            self.lasersightcounter -= 100 * Variables.dt
+        elif self.lasersight and self.lasersightcounter <= 256 and self.lasersightcounter > 0:
             laser = pygame.Surface((WIDTH,2))
-            laser.fill((255,0,0))
-            if self.lasersightcounter/2 % 2 == 0:
-                laser.set_alpha(96)
-            else:
-                laser.set_alpha(16)
+            laser.fill((self.lasersightcounter/2,0,0))
             screen.blit(laser,self.spaceship_rect.midright)
-            self.lasersightcounter -= 1
+            self.lasersightcounter -= 100 * Variables.dt
         elif self.lasersight and self.lasersightcounter <= 0:
             self.lasersight = False
 
@@ -193,7 +188,7 @@ class Pew:
     def spawn(player):
         if len(bullets) < player.maxnumpew:
             if pygame.time.get_ticks() - player.last_pewtimer >= 200:
-                bullets.append(Pew(player.spaceship_rect.center[0],player.spaceship_rect.midright[1],pew_surf))
+                bullets.append(Pew(player.spaceship_rect.midright[0],player.spaceship_rect.midright[1],pew_surf))
                 pygame.mixer.Sound.play(pewsound)
                 player.last_pewtimer = pygame.time.get_ticks()
 
@@ -225,15 +220,14 @@ class SpaceJunk:
     def __init__(self,num,rotate,scale):
         self.img = pygame.image.load(os.getcwd() + spacejunkfiles[num][0]).convert_alpha()
         self.img = pygame.transform.scale(self.img,(self.img.get_width()*scale,self.img.get_height()*scale))
-        self.x, self.y = WIDTH+50, random.randrange(0,HEIGHT/2)
+        self.x, self.y = WIDTH+50, random.randrange(128,HEIGHT-128)
         self.velocity = 600
         self.rotate = 0
         self.rotate_rate = rotate / 10
 
     def update(self,player):
         self.x -= self.velocity * Variables.dt
-        if self.x < -1000:
-            spacejunk.pop(spacejunk.index(self))
+        if self.x < -100: spacejunk.pop(spacejunk.index(self))
 
     def draw(self,screen):
         self.img.set_alpha(255)
@@ -242,7 +236,8 @@ class SpaceJunk:
         rot_rect = orig_rect.copy()
         rot_rect.center = rotated_image.get_rect().center
         rotated_image = rotated_image.subsurface(rot_rect).copy()
-        screen.blit(rotated_image, (self.x,self.y))
+        self.centered_image = rotated_image.get_rect(center = (self.x,self.y))
+        screen.blit(rotated_image, self.centered_image)
         self.rotate += self.rotate_rate
 
     def spawn():
@@ -262,8 +257,8 @@ class Star:
         self.velocity = float(self.depth)
         fontsize = 15
         star_font = pygame.font.SysFont(font_name, fontsize)
-        self.startext = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], False, WHITE)
-        if Variables.lives <= 0: self.startext = star_font.render('GAME OVER', True, WHITE)
+        self.startext = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], False, 'white')
+        if Variables.lives <= 0: self.startext = star_font.render('GAME OVER', True, 'white')
 
         # scale = (self.depth*2)/fontsize
         # self.startext = pygame.transform.scale(self.startext,(self.startext.get_width()*scale,self.startext.get_height()*scale))
@@ -327,8 +322,8 @@ class CutOffLine:
         self.box = pygame.Rect(self.x,0,2,HEIGHT)
         kanaoffset = 40
         pygame.draw.rect(screen, (128,0,0), self.box, 2)
-        last_kana_text = question_font.render(self.lastkana, True, WHITE)
-        next_kana_text = question_font.render(self.kanatohit, True, WHITE)
+        last_kana_text = question_font.render(self.lastkana, True, 'white')
+        next_kana_text = question_font.render(self.kanatohit, True, 'white')
         lkt_rect = last_kana_text.get_rect()
         nkt_rect = next_kana_text.get_rect()
         screen.blit(last_kana_text, (self.x-kanaoffset-(lkt_rect.centerx), HEIGHT-64))
@@ -407,15 +402,16 @@ class BigLaserWarning:
 
 # INTERACTABLES
 class Kana:
-    def __init__(self,x,y,kana,fade,rotate):
+    def __init__(self,x,y,kana,fade,rotate,color='white'):
         self.x, self.y = x, y
-        self.xvelocity, self.yvelocity = 200, random.randint(-10,10)
+        self.color = color
+        self.xvelocity, self.yvelocity = 200, random.randint(-20,20)
         self.shrink = 5
         self.kana = kana
         self.fade = fade
         self.rotate = 0
         self.rotate_rate = rotate * 0.002
-        self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, WHITE)
+        self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
 
     def update(self,player):
         self.x -= self.xvelocity * Variables.dt
@@ -498,6 +494,7 @@ class Enemies:
         self.image = pygame.transform.scale(self.image,(64, 64))
         self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
         self.velocity = random.randint(100,400)
+        self.Yvelocity = random.randint(-50,50)
         self.last_enemy_pew = 0
 
     def calculate_angles(self,number_of_angles):
@@ -514,7 +511,7 @@ class Enemies:
         elif self.type == 2:
             self.enemy_rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.dt
-        self.y += self.velocity * Variables.dt * math.sin(10*math.pi/180)
+        self.y += self.Yvelocity * Variables.dt
         if self.x < -128:
             enemies.pop(enemies.index(self))
     

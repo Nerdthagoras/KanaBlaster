@@ -13,8 +13,8 @@ pygame.mixer.music.play(-1)
 
 # Game loop
 while not current_state.done:
-    clock.tick(fps)
     import Variables
+    clock.tick(fps)
     Variables.dt = time.time() - Variables.lt
     Variables.lt = time.time()
     current_state.handle_events(pygame.event.get())
@@ -35,6 +35,6 @@ while not current_state.done:
             current_state = menu_state
             music = pygame.mixer.music.load(os.path.join('sounds','GameIntro.wav'))
             pygame.mixer.music.play(-1)
-
+    
 # Quit
 pygame.quit()

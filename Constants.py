@@ -7,18 +7,14 @@ import random
 
 # Initialize Pygame
 pygame.init()
-fps = 0
+fps = 60
 clock = pygame.time.Clock()
 
 # Screen Size
 WIDTH, HEIGHT = 1440,900
 
 # Debug Location
-debug_locationx,debug_locationy = WIDTH-200,100
-
-# Define some colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+debug_locationx,debug_locationy = WIDTH-300,100
 
 # Define some font sizes
 font_name = "MSGothic"

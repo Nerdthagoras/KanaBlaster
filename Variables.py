@@ -28,7 +28,7 @@ last_kananum = 0
 last_level = 0
 bridgewipecounter = 0
 debugwindow = True
-hitboxshow = True
+hitboxshow = False
 shipcollision = True
 shipdistance = 1
 

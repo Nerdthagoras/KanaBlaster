@@ -1,9 +1,7 @@
 from pygame.locals import USEREVENT
-
-# from Constants import BLACK,WHITE,GAME_OVER_font,ui_font,question_font,question_position,WIDTH,HEIGHT,clock,off_screen_offset,min_kana_alpha,spacejunkfiles,explosion_surfs,shiphit,goodhit,badhit,speed_powerup_surf,laser_powerup_surf,spaceship_surf,enginesound,debug_locationx,debug_locationy
 from Constants import *
 from graphicgroups import *
-from Game_Objects import Ship,Planet,SpaceJunk,Star,Bridge,Kana,PowerUp,BigLaserWarning,Enemies
+from Game_Objects import *
 from spritesheet import PlayAnimation
 from debug import debug
 from Functions import reset_game
@@ -11,16 +9,51 @@ from Functions import reset_game
 import Variables
 import math
 import random
+import time
 
 class MenuState:
     def __init__(self):
         self.done = False
+        self.star_timer = 0
+        self.kana_timer = 0
+        self.kana_thresh = 1
+        self.enemy_wait_timer = 0
+        self.biglaser_timer = 0
+        self.biglaser_randomness = 6000
+        self.enemy_timer = 0
+        self.enemy_randomness = 3000
 
     def update(self,screen):
         pygame.mouse.set_visible(True)
 
+        # Stars Timer
+        if time.time() - self.star_timer >= 0.05:
+            Star.spawn()
+            self.star_timer = time.time()
+
+        # All Kana Timer
+        if time.time() - self.kana_timer >= self.kana_thresh:
+            selection = random.randint(0,Variables.levels[Variables.level]-1)
+            kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(300,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+            self.kana_timer = time.time()
+            self.kana_thresh = random.randint(10,20)/10
+
+        #Big Laser Timer
+        if Variables.level >= 3 and self.enemy_wait_timer <= 0:
+            if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
+                BigLaserWarning.spawn(player)
+                self.biglaser_timer = pygame.time.get_ticks()
+                self.biglaser_randomness = random.randint(2000,20000)
+
+        # Enemy Timer
+        if Variables.level >= 1 and self.enemy_wait_timer <= 0:
+            if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
+                Enemies.spawn()
+                self.enemy_timer = pygame.time.get_ticks()
+                self.enemy_randomness = random.randint(3000,10000)
+
     def draw(self,screen):
-        screen.fill((BLACK))
+        screen.fill(('black'))
 
         #region RANDOM JUNK
         for junk in spacejunk:
@@ -48,48 +81,57 @@ class MenuState:
         kanalist.clear()
         for f in range(int(Variables.levels[Variables.level])): kanalist.append(Variables.commasep[f])
         for f in range(int(Variables.levels[Variables.level])):
-            kanalistthing = ui_font.render(kanalist[f][Variables.gamemode], True, WHITE)
+            kanalistthing = ui_font.render(kanalist[f][Variables.gamemode], True, 'white')
             screen.blit(kanalistthing,(25+(27*f),HEIGHT-30))
         #endregion
 
-        # #region BRIDGE WIPE
-        # for bridge in bridges:
-        #     bridge.x -= bridge.velocity + 1 * (player.spaceship_rect.center[0]/100)
-        #     if bridge.x < -1000:
-        #         bridges.pop(bridges.index(bridge))
-        #     bridge.draw(screen)
-        # #endregion 
+        # ENEMY PEW
+        for epew in enemyprojectiles:
+            epew.draw(screen)
+
+        # ENEMIES
+        for enemy in enemies:
+            enemy.shoot(player)
+            enemy.draw(screen,player)
+
+        # WARNING for BIG LASER
+        for warning in warnings:
+            warning.draw(screen)
+
+        # BIG LASER
+        for biglaser in biglasers:
+            biglaser.draw(screen)
 
         #region BUTTONS
         # Game Mode Button
         self.game_mode_location = (10, 50, 200, 40)
         self.game_mode = pygame.Rect(self.game_mode_location)
-        pygame.draw.rect(screen, WHITE, self.game_mode, 2)
+        pygame.draw.rect(screen, 'white', self.game_mode, 2)
         if Variables.gamemode == 0:
-            sound_state = ui_font.render('Hiragana', True, WHITE)
+            sound_state = ui_font.render('Hiragana', True, 'white')
             screen.blit(sound_state, (75, 60))
         else:
-            sound_state = ui_font.render('Katakana', True, WHITE)
+            sound_state = ui_font.render('Katakana', True, 'white')
             screen.blit(sound_state, (75, 60))
 
         # Start Level
         self.level_number_location = (10, 10, 200, 40)
         self.level_number = pygame.Rect(self.level_number_location)
-        level_text = ui_font.render('Level: ', True, WHITE)
-        pygame.draw.rect(screen, WHITE, self.level_number, 2)
+        level_text = ui_font.render('Level: ', True, 'white')
+        pygame.draw.rect(screen, 'white', self.level_number, 2)
         screen.blit(level_text, (self.level_number_location[0]+10,self.level_number_location[1]+10))
-        num_text = ui_font.render(str(Variables.level), True, WHITE)
+        num_text = ui_font.render(str(Variables.level), True, 'white')
         screen.blit(num_text,(120, 20))            
 
         # Start Button
         self.start_button_location = (WIDTH // 2-75, HEIGHT //2-80, 150, 70)
         self.start_button = pygame.Rect(self.start_button_location)
-        self.start_text = question_font.render('START', True, WHITE)
-        pygame.draw.rect(screen, WHITE, self.start_button, 2)
+        self.start_text = question_font.render('START', True, 'white')
+        pygame.draw.rect(screen, 'white', self.start_button, 2)
         screen.blit(self.start_text, (self.start_button_location[0]+10, self.start_button_location[1]+10))                      
 
         # Game Title
-        TITLE_text = GAME_OVER_font.render('KANA BLASTER', True, WHITE)
+        TITLE_text = GAME_OVER_font.render('KANA BLASTER', True, 'white')
         screen.blit(TITLE_text, (10, HEIGHT/8))
         #endregion
 
@@ -104,15 +146,6 @@ class MenuState:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-
-            # Stars Timer
-            if event.type == USEREVENT+2: Star.spawn()
-
-            # Incorrect Kana Timer
-            if event.type == USEREVENT+1:
-                selection = random.randint(0,Variables.levels[Variables.level]-1)
-                if selection != Variables.kananum:
-                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(300,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
 
             # Mouse Events
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -158,18 +191,29 @@ class MenuState:
                         Variables.debugwindow = False
                     else:
                         Variables.debugwindow = True
-
-            # Bridge Timer
-            if event.type == USEREVENT+3:
-                Bridge.spawn()
+                if event.key == ord('e'): Enemies.spawn()
+                if event.key == ord('r'): BigLaserWarning.spawn(player)
 
 class GameState:
     def __init__(self):
         self.done = False
+        self.star_timer = time.time()
+        self.incorrectkana_timer = time.time()
+        self.incorrectkana_thresh = 1
+        self.correctkana_timer = time.time()
+        self.correctkana_thresh = 4
+        self.junk_timer = time.time()
+        self.junk_thresh = 60
+        self.planet_timer = time.time()
+        self.planet_thresh = 60
+        self.powerup_timer = time.time()
+        self.powerup_thresh = 40
+        self.bridge_timer = time.time()
+        self.bridge_thresh = 30
         self.enemy_wait_timer = 1000
-        self.biglaser_timer = 0
+        self.biglaser_timer = 20
         self.biglaser_randomness = 6000
-        self.enemy_timer = 0
+        self.enemy_timer = time.time()
         self.enemy_randomness = 3000
 
     def update(self,screen):
@@ -178,6 +222,73 @@ class GameState:
             self.done = True
         if self.enemy_wait_timer >= 0:
             self.enemy_wait_timer -= 1
+
+        # Stars Timer
+        if time.time() - self.star_timer >= 0.05:
+            Star.spawn()
+            self.star_timer = time.time()
+
+        # Incorrect Kana Timer
+        if time.time() - self.incorrectkana_timer >= self.incorrectkana_thresh:
+            selection = random.randint(0,Variables.levels[Variables.level]-1)
+            if selection != Variables.kananum:
+                if Variables.debugwindow:
+                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10),'red'))
+                else:
+                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+                self.incorrectkana_timer = time.time()
+                self.incorrectkana_thresh = random.randint(10,20)/10
+
+        # Correct Kana Timer
+        if time.time() - self.correctkana_timer >= self.correctkana_thresh:
+            if Variables.debugwindow:
+                correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10),'green'))
+            else:
+                correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10)))
+            self.correctkana_timer = time.time()
+            self.correctkana_thresh = random.randint(40,60)/10
+
+        # Big Laser Timer
+        if Variables.level >= 3 and self.enemy_wait_timer <= 0:
+            if time.time() - self.biglaser_timer >= self.biglaser_randomness:
+                BigLaserWarning.spawn(player)
+                self.biglaser_timer = time.time()
+                self.biglaser_randomness = random.randint(5,30)
+
+        # Enemy Timer
+        if Variables.level >= 1 and self.enemy_wait_timer <= 0:
+            if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
+                Enemies.spawn()
+                self.enemy_timer = pygame.time.get_ticks()
+                self.enemy_randomness = random.randint(3000,10000)
+
+        # PLANET
+        if time.time() - self.planet_timer >= self.planet_thresh:
+            Planet.spawn()
+            self.planet_timer = time.time()
+            self.planet_thresh = random.randint(60,90)
+
+        # JUNK
+        if time.time() - self.junk_timer >= self.junk_thresh:
+            SpaceJunk.spawn()
+            self.junk_timer = time.time()
+            self.junk_thresh = random.randint(60,90)
+
+        # POWERUP
+        if time.time() - self.powerup_timer >= self.powerup_thresh:
+            powerup_type = random.randint(0,1)
+            if powerup_type == 0:
+                PowerUp.spawn(speed_powerup_surf,"speed")
+            elif powerup_type == 1:
+                PowerUp.spawn(laser_powerup_surf,"laser")
+            self.powerup_timer = time.time()
+            self.powerup_thresh = random.randint(30,40)
+                
+        # Bridge Timer
+        if time.time() - self.bridge_timer >= self.bridge_thresh:
+            Bridge.spawn()
+            self.bridge_timer = time.time()
+            self.bridge_thresh = random.randint(60,70)
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
@@ -311,6 +422,15 @@ class GameState:
                     explosion_group.add(explosion)
                     bullets.pop(bullets.index(bullet))
                     correctkanas.pop(correctkanas.index(kana))
+
+            # Kana hit by junk
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
         #endregion 
 
         #region WRONG KANA
@@ -343,10 +463,23 @@ class GameState:
                     Variables.score -= 2
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
+
             # Stop Kana's from intersecting
             for ckana in correctkanas:
                 if kana.collide(ckana.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
                     kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # Kana hit by junk
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
         #endregion
         #endregion KANA
 
@@ -384,8 +517,8 @@ class GameState:
             scaled_rect = scaled_surface.get_rect(center=original_rect.center)
             return scaled_surface, scaled_rect
         
-        shoot_text = ui_font.render('Shoot', True, WHITE)
-        romajitext = question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, WHITE)
+        shoot_text = ui_font.render('Shoot', True, 'white')
+        romajitext = question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
         Variables.theta +=0.05
         theta_scale = math.sin(Variables.theta)
         romaji_scaled, romaji_rect = scale_surface_from_center(romajitext, 1.5 + (theta_scale*.5))
@@ -396,13 +529,13 @@ class GameState:
 
         #region UI TEXT
         if Variables.score <=0: Variables.score = 0
-        scoretext = ui_font.render("Score: " + str(Variables.score), True, WHITE)
+        scoretext = ui_font.render("Score: " + str(Variables.score), True, 'white')
         screen.blit(scoretext, (WIDTH-200, 10))
 
-        livestext = ui_font.render("Lives: " + str(Variables.lives), True, WHITE)
+        livestext = ui_font.render("Lives: " + str(Variables.lives), True, 'white')
         screen.blit(livestext, (WIDTH-400, 10))
 
-        leveltext = ui_font.render("Level: " + str(Variables.level), True, WHITE)
+        leveltext = ui_font.render("Level: " + str(Variables.level), True, 'white')
         screen.blit(leveltext, (WIDTH-600, 10))
         #endregion
 
@@ -417,67 +550,12 @@ class GameState:
         #endregion
 
     def handle_events(self, events):
-
-        #region Big Laser Timer
-        if Variables.level >= 3 and self.enemy_wait_timer <= 0:
-            if pygame.time.get_ticks() - self.biglaser_timer >= self.biglaser_randomness:
-                BigLaserWarning.spawn(player)
-                self.biglaser_timer = pygame.time.get_ticks()
-                self.biglaser_randomness = random.randint(2000,20000)
-        #endregion
-
-        #region Enemy Timer
-        if Variables.level >= 1 and self.enemy_wait_timer <= 0:
-            if pygame.time.get_ticks() - self.enemy_timer >= self.enemy_randomness:
-                Enemies.spawn()
-                self.enemy_timer = pygame.time.get_ticks()
-                self.enemy_randomness = random.randint(3000,10000)
-        #endregion
-
         for event in events:
-            #Click the X to close window
+            # Click the X to close window
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
-            #region KANA
-            #region Correct Kana Timer
-            if event.type == USEREVENT+4:
-                correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10)))
-                Variables.correctkana_timer = random.randint(150,300)
-            #endregion
-
-            # Incorrect Kana Timer
-            if event.type == USEREVENT+1:
-                selection = random.randint(0,Variables.levels[Variables.level]-1)
-                if selection != Variables.kananum:
-                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
-                    Variables.kana_timer = random.randint(50,100)
-            
-            #endregion KANA
-
-            # PLANET
-            if event.type == USEREVENT+7: Planet.spawn()
-
-            # JUNK
-            if event.type == USEREVENT+8: SpaceJunk.spawn()
-
-            # Stars Timer
-            if event.type == USEREVENT+2: Star.spawn()
-
-            #region POWERUP
-            if event.type == USEREVENT+5:
-                powerup_type = random.randint(0,1)
-                if powerup_type == 0:
-                    PowerUp.spawn(speed_powerup_surf,"speed")
-                elif powerup_type == 1:
-                    PowerUp.spawn(laser_powerup_surf,"laser")
-            #endregion
-                    
-            # Bridge Timer
-            if event.type == USEREVENT+3: Bridge.spawn()
-            
-            #region CONTROLS
             # KEYDOWN
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE: Variables.lives = 0
@@ -488,7 +566,6 @@ class GameState:
                         PowerUp.spawn(speed_powerup_surf,"speed")
                     elif powerup_type == 1:
                         PowerUp.spawn(laser_powerup_surf,"laser")
-                if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('l'):
                     if player.lasersight == True:
@@ -507,35 +584,30 @@ class GameState:
                     else:
                         Variables.debugwindow = True
                 if event.key == ord('b'): Bridge.spawn()
+                if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn(player)
 
-            #endregion
-            
 class GameOverState:
     def __init__(self):
         self.done = False
+        self.star_timer = 0
+        self.kana_timer = 0
 
     def update(self,screen):
         pass
 
     def draw(self,screen):
-        screen.fill((BLACK))
+        screen.fill(('black'))
 
-        #region Planets
+        # PLANETS
         for planet in planets:
-            planet.x -= planet.velocity * (player.spaceship_rect.center[0]/100)
-            if planet.x < -1000:
-                planets.pop(planets.index(planet))
+            planet.update(player)
             planet.draw(screen)
-        #endregion
 
-        #region Random Junk
+        # RANDOM JUNK
         for junk in spacejunk:
-            junk.x -= junk.velocity * (player.spaceship_rect.center[0]/100)
-            if junk.x < -1000:
-                spacejunk.pop(spacejunk.index(junk))
+            junk.update(player)
             junk.draw(screen)
-        #endregion 
 
         #region STARS
         for star in starfield:
@@ -543,6 +615,7 @@ class GameOverState:
             star.draw(screen)
         #endregion
 
+        #region KANA
         #region CORRECT KANA
         for kana in correctkanas:
             kana.update(player)
@@ -551,28 +624,100 @@ class GameOverState:
             if kana.x < -64:
                 correctkanas.pop(correctkanas.index(kana))
             kana.draw(screen)
-        #endregion
+
+            # if player hits kana
+            if Variables.shipcollision == True:
+                if kana.collide(player.spaceship_rect):
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
+            # if player's bullet hits CORRECT kana
+            for bullet in bullets:
+                if kana.collide(bullet.pew_rect):
+                    # Variables.RGB = [255,255,128] # FLASH
+                    pygame.mixer.Sound.play(goodhit)
+                    Variables.score += 1
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    bullets.pop(bullets.index(bullet))
+                    correctkanas.pop(correctkanas.index(kana))
+
+            # Kana hit by junk
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+        #endregion 
 
         #region WRONG KANA
         for kana in kanas:
             kana.update(player)
-            
+
             # remove kana if off screen
             if kana.x < -64:
                 kanas.pop(kanas.index(kana))
             kana.draw(screen)
-        #endregion        
+
+            # if player hits kana
+            if Variables.shipcollision == True:
+                if kana.collide(player.spaceship_rect):
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
+            # if player's bullet hits WRONG kana
+            for bullet in bullets:
+                if kana.collide(bullet.pew_rect):
+                    Variables.RGB[0] = 128
+                    kanas.pop(kanas.index(kana))
+                    bullets.pop(bullets.index(bullet))
+                    pygame.mixer.Sound.play(badhit)
+                    Variables.score -= 2
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # Stop Kana's from intersecting
+            for ckana in correctkanas:
+                if kana.collide(ckana.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # Kana hit by junk
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+        #endregion
+        #endregion KANA
+     
         
         # EXPLOSION
         explosion_group.draw(screen)
         explosion_group.update()
 
         # Game Over 
-        GAME_OVER_text = GAME_OVER_font.render('GAME OVER', True, WHITE)
+        GAME_OVER_text = GAME_OVER_font.render('GAME OVER', True, 'white')
         screen.blit(GAME_OVER_text, (10, HEIGHT/2))
 
         # Score
-        Score_text = question_font.render('Score: ' + str(Variables.score), True, WHITE)
+        Score_text = question_font.render('Score: ' + str(Variables.score), True, 'white')
         screen.blit(Score_text, (400, HEIGHT/8))
 
     def handle_events(self, events):
@@ -584,14 +729,6 @@ class GameOverState:
 
             # Stars Timer
             if event.type == USEREVENT+2: Star.spawn()
-
-            # Incorrect Kana Timer
-            Variables.kana_timer -= 1+(player.spaceship_rect.center[0])/100
-            if Variables.kana_timer <= 0:
-                selection = random.randint(0,Variables.levels[Variables.level]-1)
-                if selection != Variables.kananum:
-                    kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
-                    Variables.kana_timer = random.randint(50,100)
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -610,15 +747,22 @@ class GameOverState:
                     self.done = True                    
 
 def displaydebug(x,y):
-    debug('level ' + str(Variables.kananum+1) + '\\' + str(len(Variables.gamekana[Variables.level])),x,0+y)
-    debug(player.spaceship_rect.center,x,20+y)
-    debug('FPS: ' + str(round(clock.get_fps(),1)),x,40+y)
-    debug('Num of Bullets ' + str(len(enemyprojectiles)),x,60+y)
-    debug('Enemy Wait ' + str(game_state.enemy_wait_timer),x,80+y)
-    debug('Respawn ' + str(player.respawn_timer),x,100+y)
-    debug('XV: ' + str(round(player.Xvelocity,1)) + '  YV ' + str(round(player.Yvelocity,1)),x,120+y)
-    debug('Laser CD:' + str(player.lasersightcounter),x,140+y)
-    debug('Speed CD:' + str(player.speedboostcounter),x,160+y)
+    debugitems = [
+        ["FPS",round(clock.get_fps(),1),'white'],
+        ['Level',Variables.kananum,'white'],
+        ["Player Pos",player.spaceship_rect.center,'white'],
+        ['Respawn',round(player.respawn_timer,1),'white'],
+        ["XVel",round(player.Xvelocity,2),'white'],
+        ["YVel",round(player.Yvelocity,2),'white'],
+        ['Laser Counter',player.lasersightcounter,'red'],
+        ['Wrong Kana Timer',round(game_state.incorrectkana_thresh - (time.time() - game_state.incorrectkana_timer),1),'red'],
+        ['Right Kana Timer',round(game_state.correctkana_thresh - (time.time() - game_state.correctkana_timer),1),'green'],
+        ['Big Laser Timer',round(game_state.biglaser_randomness - (time.time() - game_state.biglaser_timer),1),'blue']
+    ]
+    currentline = y
+    for item in debugitems:
+        debug(item[0],item[1],x,currentline,item[2])
+        currentline += 20
 
 # Instantiate Classes
 menu_state = MenuState()
