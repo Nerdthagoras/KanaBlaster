@@ -5,6 +5,7 @@ from Game_Objects import *
 from spritesheet import PlayAnimation
 from debug import debug
 from Functions import reset_game
+from Settings import *
 
 import Variables
 import math
@@ -36,7 +37,7 @@ class MenuState:
             selection = random.randint(0,Variables.levels[Variables.level]-1)
             kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(300,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
             self.kana_timer = time.time()
-            self.kana_thresh = random.randint(10,20)/10
+            self.kana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
 
         #Big Laser Timer
         if Variables.level >= 3 and self.enemy_wait_timer <= 0:
@@ -157,11 +158,17 @@ class MenuState:
                         Variables.gamemode = 0
 
                 # start level
-                if self.level_number.collidepoint(event.pos):
+                if self.level_number.collidepoint(event.pos) and event.button == 1 or self.level_number.collidepoint(event.pos) and event.button == 4:
                     if Variables.level >= 9:
                         Variables.level = 0
                     else:
                         Variables.level += 1
+                elif self.level_number.collidepoint(event.pos) and event.button == 3 or self.level_number.collidepoint(event.pos) and event.button == 5:
+                    if Variables.level <= 0:
+                        Variables.level = 9
+                    else:
+                        Variables.level -= 1
+                elif self.level_number.collidepoint(event.pos) and event.button == 2: Variables.level = 0
 
                 #start
                 if self.start_button.collidepoint(event.pos):
@@ -198,6 +205,7 @@ class MenuState:
 class GameState:
     def __init__(self):
         self.done = False
+        self.bgfade_timer = time.time()
         self.enemy_wait_timer = 10
         self.star_timer = time.time()
         self.incorrectkana_timer = time.time()
@@ -238,7 +246,7 @@ class GameState:
                 else:
                     kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-10,10)))
                 self.incorrectkana_timer = time.time()
-                self.incorrectkana_thresh = random.randint(5,10)/10
+                self.incorrectkana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
 
         # Correct Kana Timer
         if time.time() - self.correctkana_timer >= self.correctkana_thresh:
@@ -247,7 +255,7 @@ class GameState:
             else:
                 correctkanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),Variables.kananum,random.randint(min_kana_alpha,256),random.randint(-10,10)))
             self.correctkana_timer = time.time()
-            self.correctkana_thresh = random.randint(40,60)/10
+            self.correctkana_thresh = random.randint(minimum_correct_kana_frequency,maximum_correct_kana_frequency)/10
 
         # Big Laser Timer
         if Variables.level >= 3 and self.enemy_wait_timer <= 0:
@@ -289,25 +297,26 @@ class GameState:
         if time.time() - self.bridge_timer >= self.bridge_thresh:
             Bridge.spawn()
             self.bridge_timer = time.time()
-            self.bridge_thresh = random.randint(60,70)
+            self.bridge_thresh = random.randint(minimum_bridge_frequency,maximum_bridge_frequency)
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
 
         # region SCREEN
-        color_fade_speed = 40
-        if Variables.RGB[0] > color_fade_speed:
-            Variables.RGB[0] -= color_fade_speed
-        else:
-            Variables.RGB[0] = 0
-        if Variables.RGB[1] > color_fade_speed:
-            Variables.RGB[1] -= color_fade_speed
-        else:
-            Variables.RGB[1] = 0
-        if Variables.RGB[2] > color_fade_speed:
-            Variables.RGB[2] -= color_fade_speed
-        else:
-            Variables.RGB[2] = 0
+        if time.time() - self.bgfade_timer >= 0.001:
+            if Variables.RGB[0] > 10:
+                Variables.RGB[0] -= 500 * Variables.dt
+            else:
+                Variables.RGB[0] = 0
+            if Variables.RGB[1] > 10:
+                Variables.RGB[1] -= 500 * Variables.dt
+            else:
+                Variables.RGB[1] = 0
+            if Variables.RGB[2] > 10:
+                Variables.RGB[2] -= 500 * Variables.dt
+            else:
+                Variables.RGB[2] = 0
+            self.bgfade_timer = time.time()
         screen.fill((Variables.RGB[0],Variables.RGB[1],Variables.RGB[2]))
         #endregion
 
@@ -436,11 +445,10 @@ class GameState:
 
         #region WRONG KANA
         for kana in kanas:
-            kana.update(player)
-
             # remove kana if off screen
             if kana.x < -64:
                 kanas.pop(kanas.index(kana))
+            kana.update(player)
             kana.draw(screen)
 
             # if player hits kana
@@ -520,7 +528,7 @@ class GameState:
         
         shoot_text = ui_font.render('Shoot', True, 'white')
         romajitext = question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
-        Variables.theta +=0.05
+        Variables.theta += 5 * Variables.dt
         theta_scale = math.sin(Variables.theta)
         romaji_scaled, romaji_rect = scale_surface_from_center(romajitext, 1.5 + (theta_scale*.5))
 
@@ -562,11 +570,13 @@ class GameState:
                 if event.key == pygame.K_ESCAPE: Variables.lives = 0
                 if event.key == ord('p'): Planet.spawn()
                 if event.key == ord('o'):
-                    powerup_type = random.randint(0,1)
+                    powerup_type = random.randint(0,2)
                     if powerup_type == 0:
                         PowerUp.spawn(speed_powerup_surf,"speed")
                     elif powerup_type == 1:
                         PowerUp.spawn(laser_powerup_surf,"laser")
+                    elif powerup_type == 2:
+                        PowerUp.spawn(kanaswitch_powerup_surf,"switch")
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('l'):
                     if player.lasersight == True:
@@ -590,6 +600,11 @@ class GameState:
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn(player)
+                if event.key == ord('k'):
+                    if Variables.gamemode == 0:
+                        Variables.gamemode = 1
+                    else:
+                        Variables.gamemode = 0
 
 class GameOverState:
     def __init__(self):
@@ -761,7 +776,9 @@ def displaydebug(x,y):
         ['Laser Counter',player.lasersightcounter,'red'],
         ["Enemy Wait Timer",game_state.enemy_wait_timer,'white'],
         ['Enemy Timer',round(game_state.enemy_randomness - (time.time() - game_state.enemy_timer),1),'green'],
-        ['Big Laser Timer',round(game_state.biglaser_randomness - (time.time() - game_state.biglaser_timer),1),'blue']
+        ['Big Laser Timer',round(game_state.biglaser_randomness - (time.time() - game_state.biglaser_timer),1),'blue'],
+        ['Kana Switch Timer',round(player.kanaswitchcounter,1),'blue'],
+        ['Bridge Timer',round(game_state.bridge_thresh - (time.time() - game_state.bridge_timer),1),'white']
     ]
     currentline = y
     for item in debugitems:

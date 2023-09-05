@@ -1,6 +1,7 @@
 # from Constants import enginesound,WIDTH,HEIGHT,screen,pew_surf,pewsound,planet_surfs,spacejunkfiles,small_font,'white',bridgewhoosh,question_position,bridge_surf,question_font,off_screen_offset,large_font
 from Constants import *
 from graphicgroups import *
+from Settings import *
 import Variables
 
 import math
@@ -16,7 +17,7 @@ class Ship:
         self.deadzone = 20
         self.Yvelocity = 0
         self.Xvelocity = 0
-        self.speed = 800
+        self.speed = ship_normal_top_speed
         self.acceleration = self.speed*3
         self.deceleration = self.speed*4
         self.shiprest = 100
@@ -35,6 +36,9 @@ class Ship:
         self.lasersight = False
         self.lasersightcounter = self.poweruptimelength
         self.laserlength = 0
+
+        self.kanaswitch = False
+        self.kanaswitchcounter = self.poweruptimelength
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -113,21 +117,21 @@ class Ship:
             self.respawn_timer -= 1 * Variables.dt
         elif self.respawn_timer > 0:
             self.respawn_timer -= 1 * Variables.dt
-        elif self.respawn_timer < 0 and self.respawn_timer > -1:
+        elif self.respawn_timer < 0 and self.respawn_timer >= -1:
             Variables.shipcollision = True
             self.respawn_timer -= 1 * Variables.dt
-        elif self.respawn_timer <= -1: self.respawn_timer = -1
+        elif self.respawn_timer < -1: self.respawn_timer = -1
 
         # # SPEED BOOST PowerUp
         if self.speedboost and self.speedboostcounter > 0:
-            self.speed = 1000
-            self.acceleration = self.speed*6
-            self.deceleration = self.speed*7
+            self.speed = ship_boosted_top_speed
+            self.acceleration = self.speed*ship_boosted_acceleration
+            self.deceleration = self.speed*ship_boosted_deceleration
             self.speedboostcounter -= 100 * Variables.dt
         else:
-            self.speed = 800
-            self.acceleration = self.speed*3
-            self.deceleration = self.speed*4
+            self.speed = ship_normal_top_speed
+            self.acceleration = self.speed*ship_normal_acceleration
+            self.deceleration = self.speed*ship_normal_deceleration
             self.speedboost = False
 
         # LASER PowerUp
@@ -146,6 +150,24 @@ class Ship:
         elif self.lasersight and self.lasersightcounter <= 0:
             self.lasersight = False
             self.laserlength = 0
+
+        # KANASWITCH PowerUp
+        if self.kanaswitch and self.kanaswitchcounter == 1000:
+            Variables.RGB = [255,255,255]
+            self.kanaswitchcounter -= 100 * Variables.dt
+            if Variables.gamemode == 0:
+                Variables.gamemode = 1
+            else:
+                Variables.gamemode = 0
+        elif self.kanaswitch and self.kanaswitchcounter >= 0:
+            self.kanaswitchcounter -= 100 * Variables.dt
+        elif self.kanaswitch and self.kanaswitchcounter <= 0:
+            if Variables.gamemode == 0:
+                Variables.gamemode = 1
+            else:
+                Variables.gamemode = 0
+            self.kanaswitch = False
+            Variables.RGB = [255,255,255]
 
     def draw(self,screen):
         from Variables import hitboxshow
@@ -171,8 +193,8 @@ class Pew:
     def __init__(self,x,y,image):
         self.x, self.y = x, y
         self.image = image
-        self.pew_rect = self.image.get_rect(center = (self.x, self.y))
-        self.velocity = 3000
+        self.pew_rect = self.image.get_rect(midleft = (self.x, self.y))
+        self.velocity = ship_bullet_speed
 
     def update(self):
         self.x += self.velocity * Variables.dt
@@ -181,8 +203,8 @@ class Pew:
 
     def draw(self,screen):
         self.update()
-        self.image = pygame.transform.scale(self.image,(128,16))
-        self.pew_rect = self.image.get_rect(center = (self.x, self.y))
+        self.image = pygame.transform.scale(self.image,(256,16))
+        self.pew_rect = self.image.get_rect(midleft = (self.x, self.y))
         screen.blit(self.image, self.pew_rect)
 
         # Draw hitbox
@@ -192,7 +214,7 @@ class Pew:
     def spawn(player):
         if len(bullets) < player.maxnumpew:
             if pygame.time.get_ticks() - player.last_pewtimer >= 200:
-                bullets.append(Pew(player.spaceship_rect.midright[0],player.spaceship_rect.midright[1],pew_surf))
+                bullets.append(Pew(player.spaceship_rect.center[0],player.spaceship_rect.center[1],pew_surf))
                 pygame.mixer.Sound.play(pewsound)
                 player.last_pewtimer = pygame.time.get_ticks()
 
@@ -332,6 +354,8 @@ class CutOffLine:
         nkt_rect = next_kana_text.get_rect()
         screen.blit(last_kana_text, (self.x-kanaoffset-(lkt_rect.centerx), HEIGHT-64))
         screen.blit(next_kana_text, (self.x+kanaoffset-(nkt_rect.centerx), HEIGHT-64))
+        screen.blit(last_kana_text, (self.x-kanaoffset-(lkt_rect.centerx), 64))
+        screen.blit(next_kana_text, (self.x+kanaoffset-(nkt_rect.centerx), 64))
 
     def spawn():
         cuttoffline.append(CutOffLine(WIDTH+off_screen_offset,0,Variables.gamekana[Variables.level][Variables.kananum][2],Variables.gamekana[Variables.last_level][Variables.last_kananum][2]))
@@ -421,6 +445,7 @@ class Kana:
         self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
 
     def update(self,player):
+        self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
         self.x -= self.xvelocity * Variables.dt
         self.y += self.yvelocity * Variables.dt
 
@@ -494,7 +519,13 @@ class PowerUp:
                 player.speedboost = True
                 player.speedboostcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(powerup_sound)
-        
+        if pueffect == "switch":
+            if self.collide(player.spaceship_rect):
+                powerups.pop(powerups.index(self))
+                player.kanaswitch = True
+                player.kanaswitchcounter = player.poweruptimelength
+                pygame.mixer.Sound.play(powerup_sound)
+
 class Enemies:
     def __init__(self,typeof):
         self.type = typeof

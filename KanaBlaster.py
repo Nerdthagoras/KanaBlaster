@@ -37,4 +37,4 @@ while not current_state.done:
             pygame.mixer.music.play(-1)
     
 # Quit
-pygame.quit()
+pygame.quit() 

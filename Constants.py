@@ -7,7 +7,7 @@ import random
 
 # Initialize Pygame
 pygame.init()
-fps = 0
+fps = 60
 clock = pygame.time.Clock()
 
 # Screen Size
@@ -35,21 +35,25 @@ spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_a
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
-laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
-speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
 biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
 explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 ship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 
+#PowerUp Files
+laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
+speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
+kanaswitch_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', '1up.png')).convert_alpha()
+
+#Planet Files
 planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
 planet_surfs = []
 for plfile in planetfiles: planet_surfs.append(pygame.image.load(os.path.join('images','Planets',plfile)).convert_alpha())
 
+#Enemy Files
 enemyfiles = [f for f in os.listdir(os.getcwd() + '/images/Enemies')]
 enemy_surfs = []
 for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
-# enemy_surf = pygame.image.load(os.path.join('images', 'enemy.png')).convert_alpha()
 
 # Space Junk
 spacejunkfiles = [
