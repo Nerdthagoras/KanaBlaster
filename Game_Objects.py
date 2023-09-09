@@ -26,7 +26,7 @@ class Ship:
         self.last_pewtimer = 0
         self.maxnumpew = 2
         # self.shiprestpoint = 100
-        self.shipborder = 128
+        self.shipborder = ship_screen_boundary
         self.respawn_timer = -1
 
         self.poweruptimelength = 1000
@@ -85,11 +85,11 @@ class Ship:
         #endregion
         # Pew
         if keys[pygame.K_SPACE]:
-            if Variables.shipcollision == True:
+            # if Variables.shipcollision == True:
                 Pew.spawn(self)
 
     def move(self):
-        self.direction[0] -= self.Xvelocity * Variables.dt
+        self.direction[0] -= (self.Xvelocity + 2*kanax_velocity/3) * Variables.dt
         self.direction[1] -= self.Yvelocity * Variables.dt
         if self.direction[1] < self.shipborder:
             self.direction[1] = self.shipborder
@@ -97,9 +97,9 @@ class Ship:
         elif self.direction[1] > HEIGHT-self.shipborder:
             self.direction[1] = HEIGHT-self.shipborder
             self.Yvelocity = 0
-        elif self.direction[0] < 48:
+        elif self.direction[0] <= 48:
             self.direction[0] = 48
-            self.Xvelocity = 0
+            # self.Xvelocity = 0
         # elif self.direction[0] > WIDTH-500: self.direction[0] = WIDTH-500
         self.spaceship_rect.center = self.direction
 
@@ -117,7 +117,7 @@ class Ship:
             self.respawn_timer -= 1 * Variables.dt
         elif self.respawn_timer > 0:
             self.respawn_timer -= 1 * Variables.dt
-        elif self.respawn_timer < 0 and self.respawn_timer >= -1:
+        elif self.respawn_timer <= 0 and self.respawn_timer > -1:
             Variables.shipcollision = True
             self.respawn_timer -= 1 * Variables.dt
         elif self.respawn_timer < -1: self.respawn_timer = -1
@@ -338,7 +338,7 @@ class CutOffLine:
         self.y = y
         self.lastkana = lastkana
         self.kanatohit = kanatohit
-        self.velocity = 200
+        self.velocity = kanax_velocity
 
     def update(self,player):
         self.x -= self.velocity * Variables.dt
@@ -428,36 +428,55 @@ class BigLaserWarning:
     def spawn(player):
         warnings.append(BigLaserWarning(random.randint(player.spaceship_rect.center[1]-64,player.spaceship_rect.center[1]+64)))
 
-class WallOfDeath:
-    pass
-
 # INTERACTABLES
 class Kana:
-    def __init__(self,x,y,kana,fade,rotate,color='white'):
+    def __init__(self,x,y,kana,fade,rotate,color='white',new=False):
         self.x, self.y = x, y
+        self.kanakill = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])*(255/num_to_shoot_new_kana)
+        self.new = new
         self.color = color
-        self.xvelocity, self.yvelocity = 200, random.randint(-20,20)
+        self.xvelocity, self.yvelocity = kanax_velocity, random.randint(-kanay_velocity,kanay_velocity)
         self.shrink = 5
         self.kana = kana
         self.fade = fade
         self.rotate = 0
-        self.rotate_rate = rotate * 2
+        self.rotate_rate = (rotate * Variables.level) / 2
         self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
+        self.kanascale = 1
 
     def update(self,player):
-        self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
         self.x -= self.xvelocity * Variables.dt
-        self.y += self.yvelocity * Variables.dt
+        if self.y > ship_screen_boundary and self.y < HEIGHT - ship_screen_boundary:
+            self.y += self.yvelocity * Variables.dt
 
     def draw(self,screen):
-        orig_rect = self.kanatext.get_rect()
+        # self.kanatext = pygame.transform.scale(self.kanatext,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
+        self.orig_rect = self.kanatext.get_rect()
         rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
-        rot_rect = orig_rect.copy()
+        rot_rect = self.orig_rect.copy()
         rot_rect.center = rotated_image.get_rect().center
         rotated_image = rotated_image.subsurface(rot_rect).copy()
-        self.centered_image = rotated_image.get_rect(center = (self.x,self.y))
-        screen.blit(rotated_image, self.centered_image)
+        scale_image = pygame.transform.scale(rotated_image,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
+        self.centered_image = scale_image.get_rect(center = (self.x,self.y))
+        screen.blit(scale_image, self.centered_image)
         self.rotate += self.rotate_rate * Variables.dt
+
+        # Highlight new
+        if self.new:
+            # pygame.draw.circle(screen,(0,0,255),self.centered_image.topright, 4)
+            top_right_of_kana = (self.centered_image.topright[0],self.centered_image.topright[1])
+            alpha = 255 - self.kanakill
+            if alpha <= 0: alpha = 0
+
+            shoot_here_surf = pygame.Surface((100,100),pygame.SRCALPHA)
+            shoot_here_pos = shoot_here_surf.get_rect(bottomleft = (top_right_of_kana))
+            # pygame.draw.circle(screen,'blue',top_right_of_kana,3)
+            pygame.draw.line(shoot_here_surf,(255,0,0),(0,100),(25,50),3)
+            shoot_text = ui_font.render('Shoot',True,(255,0,0))
+            shoot_here_surf.set_alpha(alpha)
+            shoot_here_surf.blit(shoot_text,(20,0))
+
+            screen.blit(shoot_here_surf, shoot_here_pos)
 
         # Draw hitbox
         self.hitbox = self.centered_image

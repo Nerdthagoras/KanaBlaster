@@ -13,6 +13,7 @@ pygame.mixer.music.play(-1)
 
 # Game loop
 while not current_state.done:
+    # pygame.display.set_caption(str(clock.get_fps()))
     import Variables
     clock.tick(fps)
     Variables.dt = time.time() - Variables.lt
