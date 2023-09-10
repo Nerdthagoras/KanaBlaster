@@ -25,9 +25,25 @@ ship_boosted_deceleration = 7
 ship_screen_boundary = 32
 
 ship_bullet_speed = 3000
+
+ship_extra_life_increment = 100
+#endregion
+
+#region Stars
+star_frequency = 0.05
 #endregion
 
 #region Bridge frequency in seconds
 minimum_bridge_frequency = 30
 maximum_bridge_frequency = 35
+#endregion
+
+#region Enemy Ships
+enemy_start_level = 1
+minimum_enemy_frequency = 5
+maximum_enemy_frequency = 10
+#endregion
+
+#region Big Laser
+biglaser_start_level = 3
 #endregion

@@ -1,12 +1,16 @@
 from Functions import read_csv
 import time
 import random
+import os
 
 lt = time.time()
 dt = 0
 
 # Kanas CSV
-commasep = read_csv('data/kana.csv')
+if os.path.isfile('data/userkana.csv'):
+    commasep = read_csv('data/userkana.csv')
+else:
+    commasep = read_csv('data/kana.csv')
 levels = (5,10,15,20,25,30,35,38,43,46)
 gamekana = []
 for i in range(len(levels)):

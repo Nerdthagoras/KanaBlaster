@@ -171,7 +171,6 @@ class Ship:
 
     def draw(self,screen):
         from Variables import hitboxshow
-        self.update()
 
         if Variables.shipcollision == False:
             if int(self.respawn_timer*100) % 3 == 0: self.image.set_alpha(200)
@@ -202,7 +201,6 @@ class Pew:
             bullets.pop(bullets.index(self))
 
     def draw(self,screen):
-        self.update()
         self.image = pygame.transform.scale(self.image,(256,16))
         self.pew_rect = self.image.get_rect(midleft = (self.x, self.y))
         screen.blit(self.image, self.pew_rect)
@@ -250,6 +248,8 @@ class SpaceJunk:
         self.velocity = 600
         self.rotate = 0
         self.rotate_rate = rotate / 10
+        self.rotated_image = pygame.transform.rotate(self.img,self.rotate)
+        self.centered_image = self.rotated_image.get_rect(center = (self.x,self.y))
 
     def update(self,player):
         self.x -= self.velocity * Variables.dt
@@ -258,12 +258,12 @@ class SpaceJunk:
     def draw(self,screen):
         self.img.set_alpha(255)
         orig_rect = self.img.get_rect()
-        rotated_image = pygame.transform.rotate(self.img,self.rotate)
+        self.rotated_image = pygame.transform.rotate(self.img,self.rotate)
         rot_rect = orig_rect.copy()
-        rot_rect.center = rotated_image.get_rect().center
-        rotated_image = rotated_image.subsurface(rot_rect).copy()
-        self.centered_image = rotated_image.get_rect(center = (self.x,self.y))
-        screen.blit(rotated_image, self.centered_image)
+        rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(rot_rect).copy()
+        self.centered_image = self.rotated_image.get_rect(center = (self.x,self.y))
+        screen.blit(self.rotated_image, self.centered_image)
         self.rotate += self.rotate_rate
 
     def spawn():
@@ -374,7 +374,6 @@ class BigLaser:
             self.laserdelay = 100
 
     def draw(self,screen):
-        self.update()
         self.image = pygame.transform.scale(self.image,(2048,256))
         self.biglaser_rect = self.image.get_rect(center = (self.x, self.y))
         screen.blit(self.image, self.biglaser_rect)
@@ -420,13 +419,37 @@ class BigLaserWarning:
             warnings.pop(warnings.index(self))
 
     def draw(self,screen):
-        self.update()
         if self.opacity == True:
             self.warning_rect = self.image.get_rect(midright = (WIDTH, self.y))
             screen.blit(self.image, self.warning_rect)
 
     def spawn(player):
         warnings.append(BigLaserWarning(random.randint(player.spaceship_rect.center[1]-64,player.spaceship_rect.center[1]+64)))
+
+class CenterWarning:
+    def __init__(self,message,surface,scale):
+        self.pos = (WIDTH // 2, HEIGHT // 2)
+        self.alpha = 255
+        self.message = message
+        self.surf = surface
+        self.scale = scale
+
+    def update(self):
+        self.alpha -= 100 * Variables.dt
+        if self.alpha <= 0: centerwarning.pop(centerwarning.index(self))
+
+    def draw(self):
+        warning_text = WARNING_font.render(self.message, True, 'white')
+        warning_text.set_alpha(self.alpha)
+        self.surf_scaled = pygame.transform.scale(self.surf,(self.surf.get_rect().width*self.scale,self.surf.get_rect().height*self.scale))
+        self.surf_scaled.set_alpha(self.alpha)
+        centered_warning = warning_text.get_rect(center = self.pos)
+        centered_image = self.surf_scaled.get_rect(center = self.pos)
+        screen.blit(self.surf_scaled,centered_image)
+        screen.blit(warning_text, centered_warning)
+
+    def spawn(message,surface,scale=1):
+        centerwarning.append(CenterWarning(message,surface,scale))
 
 # INTERACTABLES
 class Kana:
@@ -443,6 +466,14 @@ class Kana:
         self.rotate_rate = (rotate * Variables.level) / 2
         self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
         self.kanascale = 1
+        self.orig_rect = self.kanatext.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
+        self.rot_rect = self.orig_rect.copy()
+        self.rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
+        self.scale_image = pygame.transform.scale(self.rotated_image,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
+        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
+        self.hitbox = [0,0,0,0]
 
     def update(self,player):
         self.x -= self.xvelocity * Variables.dt
@@ -452,13 +483,13 @@ class Kana:
     def draw(self,screen):
         # self.kanatext = pygame.transform.scale(self.kanatext,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
         self.orig_rect = self.kanatext.get_rect()
-        rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
-        rot_rect = self.orig_rect.copy()
-        rot_rect.center = rotated_image.get_rect().center
-        rotated_image = rotated_image.subsurface(rot_rect).copy()
-        scale_image = pygame.transform.scale(rotated_image,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
-        self.centered_image = scale_image.get_rect(center = (self.x,self.y))
-        screen.blit(scale_image, self.centered_image)
+        self.rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
+        self.rot_rect = self.orig_rect.copy()
+        self.rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
+        self.scale_image = pygame.transform.scale(self.rotated_image,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
+        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
+        screen.blit(self.scale_image, self.centered_image)
         self.rotate += self.rotate_rate * Variables.dt
 
         # Highlight new
@@ -547,10 +578,11 @@ class PowerUp:
 
 class Enemies:
     def __init__(self,typeof):
+        self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
         self.type = typeof
         self.image = enemy_surfs[self.type]
         self.image = pygame.transform.scale(self.image,(64, 64))
-        self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
+        self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = random.randint(100,400)
         self.Yvelocity = random.randint(-50,50)
         self.last_enemy_pew = 0
@@ -597,7 +629,6 @@ class Enemies:
             self.last_enemy_pew = pygame.time.get_ticks()
 
     def draw(self,screen,player):
-        self.update()
         screen.blit(self.image, self.enemy_rect)
 
         self.hitbox = self.enemy_rect
@@ -623,7 +654,9 @@ class EnemyProjectiles:
         self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
         self.image = enemy_pew_surf
         self.image = pygame.transform.scale(self.image,(32, 32))
+        self.enemy_pew_rect = self.image.get_rect(center = (self.x, self.y))
         self.velocity = 500
+        self.hitbox = [0,0,0,0]
 
     def objectdirection(self,direction):
         pewdir = direction - math.pi/2 + self.directionskew
@@ -640,7 +673,7 @@ class EnemyProjectiles:
             enemyprojectiles.pop(enemyprojectiles.index(self))
 
     def draw(self,screen):
-        self.update()
+        # self.update()
         screen.blit(self.image, self.enemy_pew_rect)
 
         self.hitbox = self.enemy_pew_rect

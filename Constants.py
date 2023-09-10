@@ -22,6 +22,7 @@ kana_font = pygame.font.SysFont(font_name, 60)
 question_font = pygame.font.SysFont(font_name, 50)
 ui_font = pygame.font.SysFont(font_name, 30)
 GAME_OVER_font = pygame.font.SysFont(font_name, 200)
+WARNING_font = pygame.font.SysFont(font_name, 100)
 
 # Create the window and define screen dimensions
 screen = pygame.display.set_mode((WIDTH, HEIGHT))

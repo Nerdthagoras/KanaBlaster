@@ -17,6 +17,7 @@ warnings = []
 biglasers = []
 enemies = []
 enemyprojectiles = []
+centerwarning = []
 
 #spritegroups
 explosion_group = pygame.sprite.Group()
