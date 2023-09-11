@@ -1,16 +1,20 @@
 from Constants import clock,fps,screen
-from Game_States import current_state,menu_state,game_state,gameover_state
+from Game_States import intro_state,current_state,menu_state,game_state,gameover_state
 import time
 import Variables
 import pygame
 import os
 
+allstates = [
+    [intro_state,menu_state,'GameIntro'],
+    [menu_state,game_state,'TimeDilation'],
+    [game_state,gameover_state,'ColinTheme'],
+    [gameover_state,menu_state,'GameIntro'],
+]
 
 # Initialize pygame
 pygame.init()
 pygame.mixer.music.set_volume(.3)
-music = pygame.mixer.music.load(os.path.join('sounds','GameIntro.wav'))
-pygame.mixer.music.play(-1)
 
 # Game loop
 while not current_state.done:
@@ -26,18 +30,13 @@ while not current_state.done:
 
     # Handle state changes when state is done
     if current_state.done:
-        if current_state == menu_state:
-            current_state = game_state
-            music = pygame.mixer.music.load(os.path.join('sounds','TimeDilation.wav'))
-            pygame.mixer.music.play(-1)
-        elif current_state == game_state:
-            current_state = gameover_state
-            music = pygame.mixer.music.load(os.path.join('sounds','ColinTheme.wav'))
-            pygame.mixer.music.play(-1)
-        elif current_state == gameover_state:
-            current_state = menu_state
-            music = pygame.mixer.music.load(os.path.join('sounds','GameIntro.wav'))
-            pygame.mixer.music.play(-1)
+        for state in allstates:
+            if current_state == state[0]:
+                current_state = state[1]
+                if len(state) == 3:
+                    music = pygame.mixer.music.load(os.path.join('music',str(state[2]) + '.wav'))
+                    pygame.mixer.music.play(-1)
+                break
     
 # Quit
 pygame.quit() 

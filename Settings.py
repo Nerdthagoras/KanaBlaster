@@ -47,3 +47,6 @@ maximum_enemy_frequency = 10
 #region Big Laser
 biglaser_start_level = 3
 #endregion
+
+#region Junk
+#endregion

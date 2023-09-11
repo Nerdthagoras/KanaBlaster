@@ -44,7 +44,7 @@ ship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.p
 #PowerUp Files
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
 speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
-kanaswitch_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', '1up.png')).convert_alpha()
+oneup_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', '1up.png')).convert_alpha()
 
 #Planet Files
 planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]

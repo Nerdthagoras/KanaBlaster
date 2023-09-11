@@ -247,7 +247,7 @@ class SpaceJunk:
         self.x, self.y = WIDTH+50, random.randrange(128,HEIGHT-128)
         self.velocity = 600
         self.rotate = 0
-        self.rotate_rate = rotate / 10
+        self.rotate_rate = rotate / 100
         self.rotated_image = pygame.transform.rotate(self.img,self.rotate)
         self.centered_image = self.rotated_image.get_rect(center = (self.x,self.y))
 
@@ -269,7 +269,7 @@ class SpaceJunk:
     def spawn():
         whichjunk = random.randint(0,len(spacejunkfiles)-1)
         junksize = random.randrange(2,10)
-        spacejunk.append(SpaceJunk(whichjunk,random.randrange(-10,10),junksize*0.1))
+        spacejunk.append(SpaceJunk(whichjunk,random.randrange(-100,100),junksize*0.1))
         junkobject = pygame.mixer.Sound(os.getcwd() + spacejunkfiles[whichjunk][1])
         junkobject.set_volume(junksize*0.1)
         pygame.mixer.Sound.play(junkobject)
@@ -464,6 +464,7 @@ class Kana:
         self.fade = fade
         self.rotate = 0
         self.rotate_rate = (rotate * Variables.level) / 2
+        self.kanasound = Variables.gamekana[Variables.level][self.kana][2]
         self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
         self.kanascale = 1
         self.orig_rect = self.kanatext.get_rect()
@@ -575,7 +576,12 @@ class PowerUp:
                 player.kanaswitch = True
                 player.kanaswitchcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(powerup_sound)
-
+        if pueffect == "1up":
+            if self.collide(player.spaceship_rect):
+                powerups.pop(powerups.index(self))
+                Variables.lives += 1
+                pygame.mixer.Sound.play(powerup_sound)
+                
 class Enemies:
     def __init__(self,typeof):
         self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)

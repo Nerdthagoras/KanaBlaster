@@ -12,6 +12,25 @@ import math
 import random
 import time
 
+class IntroState:
+    def __init__(self):
+        self.done = False
+        self.timer = 0
+        self.lt = time.time()
+
+    def manifest(self):
+        pass
+
+    def update(self,screen):
+        if time.time() - self.lt >= 5:
+            self.done = True
+
+    def draw(self,screen):
+        pass
+
+    def handle_events(self, events):
+        pass
+
 class MenuState:
     def __init__(self):
         self.done = False
@@ -75,7 +94,7 @@ class MenuState:
             enemy.update()
             enemy.shoot(player)
 
-        # enemy Pew
+        # Enemy Projectiles
         for epew in enemyprojectiles: epew.update()
 
     def draw(self,screen):
@@ -85,7 +104,7 @@ class MenuState:
         for star in starfield: star.draw(screen)
         for kana in kanas: kana.draw(screen)
 
-        #KANA LIST
+        # Bottom KANA LIST
         kanalist.clear()
         for kana in range(int(Variables.levels[Variables.level])): kanalist.append(Variables.commasep[kana])
         for kana in range(int(Variables.levels[Variables.level])):
@@ -173,7 +192,6 @@ class MenuState:
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
-                    # player.spaceship_rect.center[0],player.spaceship_rect.center[1] = (0,HEIGHT-128)
 
             # Key Events
             if event.type == pygame.KEYDOWN:
@@ -184,6 +202,7 @@ class MenuState:
                     reset_game()
                     pygame.mixer.Sound.stop(enginesound)
                     game_state.enemy_wait_timer = 10
+                    game_state.bridge_thresh = random.randint(minimum_bridge_frequency,maximum_bridge_frequency)
                     gameover_state.done = False
                     game_state.done = False
                     self.done = True
@@ -301,7 +320,8 @@ class GameState:
     def update(self,screen):
         # Extra Life
         if Variables.score >= self.extralife:
-            Variables.lives += 1
+            # Variables.lives += 1
+            PowerUp.spawn(oneup_powerup_surf,"1up")
             self.extralife += ship_extra_life_increment
 
         # Warning Messages
@@ -382,7 +402,7 @@ class GameState:
             for bullet in bullets:
                 if kana.collide(bullet.pew_rect):
                     pygame.mixer.Sound.play(goodhit)
-                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
+                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
                     if kana.x >= 2*WIDTH // 3:
                         Variables.score += 3
@@ -398,6 +418,17 @@ class GameState:
                     kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
                     if kanaint <= num_to_shoot_new_kana: kanaint += 1
                     Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3] = kanaint
+
+            # if enemy's bullet hits WRONG kana
+            for epew in enemyprojectiles:
+                if kana.collide(epew.hitbox):
+                    # Variables.RGB[0] = 128
+                    correctkanas.pop(correctkanas.index(kana))
+                    # enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    # kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
+                    # pygame.mixer.Sound.play(kana_sound)
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
 
             # Kana hit by junk
             for junk in spacejunk:
@@ -432,7 +463,7 @@ class GameState:
                     Variables.RGB[0] = 128
                     kanas.pop(kanas.index(kana))
                     bullets.pop(bullets.index(bullet))
-                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
+                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
                     if kana.x >= 2*WIDTH // 3:
                         Variables.score -= 3
@@ -440,6 +471,17 @@ class GameState:
                         Variables.score -= 2
                     else:
                         Variables.score -= 1
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # if enemy's bullet hits WRONG kana
+            for epew in enemyprojectiles:
+                if kana.collide(epew.hitbox):
+                    # Variables.RGB[0] = 128
+                    kanas.pop(kanas.index(kana))
+                    # enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    # kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
+                    # pygame.mixer.Sound.play(kana_sound)
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
@@ -658,7 +700,7 @@ class GameState:
                     elif powerup_type == 1:
                         PowerUp.spawn(laser_powerup_surf,"laser")
                     elif powerup_type == 2:
-                        PowerUp.spawn(kanaswitch_powerup_surf,"switch")
+                        PowerUp.spawn(oneup_powerup_surf,"1up")
                 if event.key == ord('l'):
                     if player.lasersight == True:
                         player.lasersight = False
@@ -830,11 +872,12 @@ def displaydebug(x,y):
 
 #region INSTANCING
 # Instantiate Classes
+intro_state = IntroState()
 menu_state = MenuState()
 game_state = GameState()
 gameover_state = GameOverState()
 player = Ship(0,HEIGHT//2,spaceship_surf)
 
 # Set current state
-current_state = menu_state
+current_state = intro_state
 #endregion
