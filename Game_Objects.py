@@ -1,4 +1,3 @@
-# from Constants import enginesound,WIDTH,HEIGHT,screen,pew_surf,pewsound,planet_surfs,spacejunkfiles,small_font,'white',bridgewhoosh,question_position,bridge_surf,question_font,off_screen_offset,large_font
 from Constants import *
 from graphicgroups import *
 from Settings import *
@@ -194,8 +193,10 @@ class Pew:
         self.image = image
         self.pew_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = ship_bullet_speed
+        self.hitbox = [0,0,0,0]
 
     def update(self):
+        self.hitbox = self.pew_rect
         self.x += self.velocity * Variables.dt
         if self.x > WIDTH+200:
             bullets.pop(bullets.index(self))
@@ -207,7 +208,7 @@ class Pew:
 
         # Draw hitbox
         if Variables.hitboxshow:
-            pygame.draw.rect(screen, (0,255,0),self.pew_rect, 2)
+            pygame.draw.rect(screen, (0,255,0),self.hitbox, 2)
     
     def spawn(player):
         if len(bullets) < player.maxnumpew:
@@ -215,6 +216,12 @@ class Pew:
                 bullets.append(Pew(player.spaceship_rect.center[0],player.spaceship_rect.center[1],pew_surf))
                 pygame.mixer.Sound.play(pewsound)
                 player.last_pewtimer = pygame.time.get_ticks()
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
 
 # ENVIRONMENT
 class Planet:
@@ -342,7 +349,7 @@ class CutOffLine:
 
     def update(self,player):
         self.x -= self.velocity * Variables.dt
-        if self.x < -200: cuttoffline.pop(cuttoffline.index(self))
+        if self.x < -50: cuttoffline.pop(cuttoffline.index(self))
 
     def draw(self,screen):
         self.box = pygame.Rect(self.x,0,2,HEIGHT)
@@ -581,7 +588,7 @@ class PowerUp:
                 powerups.pop(powerups.index(self))
                 Variables.lives += 1
                 pygame.mixer.Sound.play(powerup_sound)
-                
+
 class Enemies:
     def __init__(self,typeof):
         self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)

@@ -22,10 +22,13 @@ class IntroState:
         pass
 
     def update(self,screen):
-        if time.time() - self.lt >= 5:
+        if time.time() - self.lt >= 1:
             self.done = True
 
     def draw(self,screen):
+        pass
+
+    def collision(self):
         pass
 
     def handle_events(self, events):
@@ -156,6 +159,9 @@ class MenuState:
             displaydebug(debug_locationx,debug_locationy)
         #endregion
 
+    def collision(self):
+        pass
+
     def handle_events(self, events):
         for event in events:
             #Click the X to close window
@@ -251,7 +257,7 @@ class GameState:
 
     def manifest(self):
         # Stars Timer
-        if time.time() - self.star_timer >= 0.05 and not self.paused:
+        if time.time() - self.star_timer >= 0.05:
             Star.spawn()
             self.star_timer = time.time()
 
@@ -385,138 +391,17 @@ class GameState:
                     Variables.score -= 10
                     self.correct_kana_lost_sound_play = False
 
-            # if player hits kana
-            if Variables.shipcollision == True:
-                if kana.collide(player.spaceship_rect):
-                    correctkanas.pop(correctkanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(explosion)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
-                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
-                    pygame.mixer.Sound.play(kana_sound)
-                    player.respawn()
-
-            # if player's bullet hits CORRECT kana
-            for bullet in bullets:
-                if kana.collide(bullet.pew_rect):
-                    pygame.mixer.Sound.play(goodhit)
-                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
-                    pygame.mixer.Sound.play(kana_sound)
-                    if kana.x >= 2*WIDTH // 3:
-                        Variables.score += 3
-                    elif kana.x > WIDTH // 3 and kana.x < 2*WIDTH // 3:
-                        Variables.score += 2
-                    else:
-                        Variables.score += 1
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-                    bullets.pop(bullets.index(bullet))
-                    correctkanas.pop(correctkanas.index(kana))
-
-                    kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
-                    if kanaint <= num_to_shoot_new_kana: kanaint += 1
-                    Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3] = kanaint
-
-            # if enemy's bullet hits WRONG kana
-            for epew in enemyprojectiles:
-                if kana.collide(epew.hitbox):
-                    # Variables.RGB[0] = 128
-                    correctkanas.pop(correctkanas.index(kana))
-                    # enemyprojectiles.pop(enemyprojectiles.index(epew))
-                    # kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
-                    # pygame.mixer.Sound.play(kana_sound)
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
-            # Kana hit by junk
-            for junk in spacejunk:
-                if kana.collide(junk.centered_image):
-                    pygame.mixer.Sound.play(goodhit)
-                    correctkanas.pop(correctkanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
         # Incorrect kanas
         for kana in kanas:
             kana.update(player)
             # remove kana if off screen
             if kana.x < -64: kanas.pop(kanas.index(kana))
 
-            # if player hits kana
-            if Variables.shipcollision == True:
-                if kana.collide(player.spaceship_rect):
-                    kanas.pop(kanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(explosion)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
-                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
-                    pygame.mixer.Sound.play(kana_sound)
-                    player.respawn()
-
-            # if player's bullet hits WRONG kana
-            for bullet in bullets:
-                if kana.collide(bullet.pew_rect):
-                    Variables.RGB[0] = 128
-                    kanas.pop(kanas.index(kana))
-                    bullets.pop(bullets.index(bullet))
-                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
-                    pygame.mixer.Sound.play(kana_sound)
-                    if kana.x >= 2*WIDTH // 3:
-                        Variables.score -= 3
-                    elif kana.x > WIDTH // 3 and kana.x < 2*WIDTH // 3:
-                        Variables.score -= 2
-                    else:
-                        Variables.score -= 1
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
-            # if enemy's bullet hits WRONG kana
-            for epew in enemyprojectiles:
-                if kana.collide(epew.hitbox):
-                    # Variables.RGB[0] = 128
-                    kanas.pop(kanas.index(kana))
-                    # enemyprojectiles.pop(enemyprojectiles.index(epew))
-                    # kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
-                    # pygame.mixer.Sound.play(kana_sound)
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
-            # Stop Kana's from intersecting
-            for ckana in correctkanas:
-                if kana.collide(ckana.centered_image):
-                    pygame.mixer.Sound.play(goodhit)
-                    kanas.pop(kanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
-            # Kana hit by junk
-            for junk in spacejunk:
-                if kana.collide(junk.centered_image):
-                    pygame.mixer.Sound.play(goodhit)
-                    kanas.pop(kanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
         # Big Laser Warning
         for warning in warnings: warning.update()
 
         # Enemy Projectiles
-        for epew in enemyprojectiles:
-            epew.update()
-            # if player hits Enemy pew
-            if Variables.shipcollision == True:
-                if epew.collide(player.spaceship_rect):
-                    enemyprojectiles.pop(enemyprojectiles.index(epew))
-                    explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(explosion)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
-                    player.respawn()
+        for epew in enemyprojectiles: epew.update()
 
         # ENEMIES
         for enemy in enemies:
@@ -578,36 +463,11 @@ class GameState:
             enemy.shoot(player)
             enemy.draw(screen,player)
 
-            # if player hits Enemy
-            if Variables.shipcollision == True:
-                if enemy.collide(player.spaceship_rect):
-                    enemies.pop(enemies.index(enemy))
-                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(explosion)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
-                    player.respawn()
-
-            # if player's bullet hits Enemy
-            for bullet in bullets:
-                if enemy.collide(bullet.pew_rect):
-                    pygame.mixer.Sound.play(goodhit)
-                    Variables.score += 1
-                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-                    bullets.pop(bullets.index(bullet))
-                    enemies.pop(enemies.index(enemy))
-
-        #region KANA
-        #region CORRECT KANA
+        #CORRECT KANA
         for kana in correctkanas: kana.draw(screen)
-        #endregion 
 
-        #region WRONG KANA
+        #WRONG KANA
         for kana in kanas: kana.draw(screen)
-        #endregion
-        #endregion KANA
 
         # PLAYER
         player.update()
@@ -620,16 +480,7 @@ class GameState:
             powerup.draw(screen)
 
         # BIG LASER
-        for biglaser in biglasers:
-            biglaser.draw(screen)
-
-            #if laser hits player
-            if Variables.shipcollision == True:
-                if biglaser.collide(player.spaceship_rect):
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
-                    player.respawn()
+        for biglaser in biglasers: biglaser.draw(screen)
 
         # EXPLOSION
         explosion_group.draw(screen)
@@ -678,6 +529,223 @@ class GameState:
         if Variables.debugwindow: displaydebug(debug_locationx,debug_locationy)
         #endregion
 
+    def collision(self):
+        # If it is a projectile, then it will hit something, 
+        # if it is not a projectile then the ship is considered the projectile
+        # Space Junk will be treated like a projectile because it persists after collision
+
+        #region Player Projectiles
+        for bullet in bullets:
+
+            #correct Kana
+            for ckana in correctkanas:    
+                if ckana.collide(bullet.pew_rect):
+                    pygame.mixer.Sound.play(goodhit)
+                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
+                    pygame.mixer.Sound.play(kana_sound)
+                    if ckana.x >= 2*WIDTH // 3:
+                        Variables.score += 3
+                    elif ckana.x > WIDTH // 3 and ckana.x < 2*WIDTH // 3:
+                        Variables.score += 2
+                    else:
+                        Variables.score += 1
+                    explosion = PlayAnimation(ckana.x, ckana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    bullets.pop(bullets.index(bullet))
+                    correctkanas.pop(correctkanas.index(ckana))
+                    kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
+                    if kanaint <= num_to_shoot_new_kana: kanaint += 1
+                    Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3] = kanaint
+
+            # if player's bullet hits WRONG kana
+            for kana in kanas:
+                if kana.collide(bullet.pew_rect):
+                    Variables.RGB[0] = 128
+                    kanas.pop(kanas.index(kana))
+                    bullets.pop(bullets.index(bullet))
+                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
+                    pygame.mixer.Sound.play(kana_sound)
+                    if kana.x >= 2*WIDTH // 3:
+                        Variables.score -= 3
+                    elif kana.x > WIDTH // 3 and kana.x < 2*WIDTH // 3:
+                        Variables.score -= 2
+                    else:
+                        Variables.score -= 1
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # if player's bullet hits Enemy
+            for enemy in enemies:
+                if enemy.collide(bullet.pew_rect):
+                    pygame.mixer.Sound.play(goodhit)
+                    Variables.score += 1
+                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    bullets.pop(bullets.index(bullet))
+                    enemies.pop(enemies.index(enemy))
+
+            # if player's bullet hits powerup
+            for powerup in powerups:
+                if powerup.collide(bullet.pew_rect):
+                    pygame.mixer.Sound.play(badhit)
+                    explosion = PlayAnimation(powerup.x, powerup.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    bullets.pop(bullets.index(bullet))
+                    powerups.pop(powerups.index(powerup))
+
+        #endregion
+        
+        #region Enemy Projectiles
+        for epew in enemyprojectiles:
+            # if hit Player
+            if Variables.shipcollision == True:
+                if epew.collide(player.spaceship_rect):
+                    enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    explosion = PlayAnimation(epew.x, epew.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
+            # if WRONG kana
+            for kana in kanas:
+                if kana.collide(epew.hitbox):
+                    kanas.pop(kanas.index(kana))
+                    enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # if CORRECT kana
+            for kana in correctkanas:
+                if kana.collide(epew.hitbox):
+                    correctkanas.pop(correctkanas.index(kana))
+                    enemyprojectiles.pop(enemyprojectiles.index(epew))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+        #endregion
+
+        #region BIG LASER
+        # if BIG LASER hits player
+        for biglaser in biglasers:
+            if Variables.shipcollision == True:
+                if biglaser.collide(player.spaceship_rect):
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
+            # correctKana hit by BIG LASER
+            for kana in correctkanas:
+                if kana.collide(biglaser.hitbox):
+                    pygame.mixer.Sound.play(goodhit)
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # Wrong Kana hit by BIG LASER
+            for kana in kanas:
+                if kana.collide(biglaser.hitbox):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # if enemy hit by BIG LASER
+            for enemy in enemies:
+                if enemy.collide(biglaser.hitbox):
+                    pygame.mixer.Sound.play(goodhit)
+                    Variables.score += 1
+                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    enemies.pop(enemies.index(enemy))
+
+            # if powerup hit by BIG LASER
+            for powerup in powerups:
+                if powerup.collide(biglaser.hitbox):
+                    pygame.mixer.Sound.play(badhit)
+                    explosion = PlayAnimation(powerup.x, powerup.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+                    powerups.pop(powerups.index(powerup))
+
+        #endregion
+
+        #region Space Junk
+        # correctKana hit by junk
+        for kana in correctkanas:
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+        # Wrong Kana hit by junk
+        for kana in kanas:
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+        #endregion
+
+        #region Ship
+        # if player's ship hits correct kana
+        for kana in correctkanas:
+            if Variables.shipcollision == True:
+                if kana.collide(player.spaceship_rect):
+                    correctkanas.pop(correctkanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
+                    pygame.mixer.Sound.play(kana_sound)
+                    player.respawn()
+
+            # if player hits kana
+        
+        # if player's ship hits wrong kana
+        for kana in kanas:
+            if Variables.shipcollision == True:
+                if kana.collide(player.spaceship_rect):
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
+                    pygame.mixer.Sound.play(kana_sound)
+                    player.respawn()
+
+        # if player hits Enemy
+        for enemy in enemies:
+            if Variables.shipcollision == True:
+                if enemy.collide(player.spaceship_rect):
+                    enemies.pop(enemies.index(enemy))
+                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
+        #endregion
+    
+        #region Kana on Kana
+        for kana in kanas:
+            for ckana in correctkanas:
+                if kana.collide(ckana.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+        #endregion
+
     def handle_events(self, events):
         for event in events:
             # Click the X to close window
@@ -721,10 +789,11 @@ class GameState:
                     else:
                         Variables.debugwindow = True
                 if event.key == ord('k'):
-                    if Variables.gamemode == 0:
-                        Variables.gamemode = 1
-                    else:
-                        Variables.gamemode = 0
+                    selection = random.randint(0,Variables.levels[Variables.level]-1)
+                    if selection != Variables.kananum:
+                        kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-kana_rotate_rate,kana_rotate_rate)))
+                        self.incorrectkana_timer = time.time()
+                        self.incorrectkana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('n'): CenterWarning.spawn('Big Laser Active',biglaser_surf,0.5)
@@ -753,13 +822,13 @@ class GameOverState:
 
         #CORRECT KANA
         for kana in correctkanas:
-            # Kana hit by junk
-            for junk in spacejunk:
-                if kana.collide(junk.centered_image):
-                    pygame.mixer.Sound.play(goodhit)
-                    kanas.pop(kanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
+            # # Kana hit by junk
+            # for junk in spacejunk:
+            #     if kana.collide(junk.centered_image):
+            #         pygame.mixer.Sound.play(goodhit)
+            #         kanas.pop(kanas.index(kana))
+            #         explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+            #         explosion_group.add(explosion)
             kana.update(player)
 
         # WRONG KANA
@@ -818,6 +887,17 @@ class GameOverState:
         if Variables.debugwindow: displaydebug(debug_locationx,debug_locationy)
         #endregion
 
+    def collision(self):
+        #CORRECT KANA
+        for kana in correctkanas:
+            # Kana hit by junk
+            for junk in spacejunk:
+                if kana.collide(junk.centered_image):
+                    pygame.mixer.Sound.play(goodhit)
+                    kanas.pop(kanas.index(kana))
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
     def handle_events(self, events):
         for event in events:
             #Click the X to close window
@@ -845,12 +925,12 @@ class GameOverState:
                     self.done = True                    
 
 #region DEBUG
-
 def displaydebug(x,y):
     debugitems = [
         ["NEL",game_state.extralife],
         ['NumCK',len(correctkanas)],
         ['NumIK',len(kanas)],
+        ['COT',len(cuttoffline)],
         # ['Sub Level',Variables.kananum],
         # ["Player Pos",player.spaceship_rect.center],
         # ['Respawn',round(player.respawn_timer,1)],
@@ -861,7 +941,7 @@ def displaydebug(x,y):
         # ['Enemy Timer',round(game_state.enemy_randomness - (time.time() - game_state.enemy_timer),1)],
         # ['Big Laser Timer',round(game_state.biglaser_randomness - (time.time() - game_state.biglaser_timer),1)],
         # ['Kana Switch Timer',round(player.kanaswitchcounter,1)],
-        ['Bridge Timer',round(game_state.bridge_thresh - (time.time() - game_state.bridge_timer),1)]
+        # ['Bridge Timer',round(game_state.bridge_thresh - (time.time() - game_state.bridge_timer),1)],
     ]
     currentline = y
     for item in debugitems:

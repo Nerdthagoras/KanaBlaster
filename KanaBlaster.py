@@ -26,6 +26,7 @@ while not current_state.done:
     current_state.update(screen) # Update existing objects
     current_state.draw(screen) # Draw existing objects
     pygame.display.flip() # update the screen
+    current_state.collision() # collision detection
     current_state.handle_events(pygame.event.get()) # Check for events such as key presses
 
     # Handle state changes when state is done
