@@ -100,6 +100,9 @@ class MenuState:
         # Enemy Projectiles
         for epew in enemyprojectiles: epew.update()
 
+        # Wall of Death
+        for wod in wallsegments: wod.update()
+
     def draw(self,screen):
         screen.fill(('black'))
 
@@ -120,6 +123,7 @@ class MenuState:
         for enemy in enemies: enemy.draw(screen,player)
         for warning in warnings: warning.draw(screen)
         for biglaser in biglasers: biglaser.draw(screen)
+        for wod in wallsegments: wod.draw(screen)
 
         #region BUTTONS
         # Game Mode Button
@@ -222,10 +226,18 @@ class MenuState:
                         Variables.debugwindow = False
                     else:
                         Variables.debugwindow = True
+                if event.key == ord('h'):
+                    if Variables.hitboxshow == True:
+                        Variables.hitboxshow = False
+                    else:
+                        Variables.hitboxshow = True
+                if event.key == ord('i'): 
+                    for h in range(int(HEIGHT/32)):
+                        WallOfDeath.spawn(WIDTH,h*32)
                 if event.key == ord('f'): pygame.display.toggle_fullscreen()
                 if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn(player)
-                if event.key == ord('s'): write_csv('data/userkana',Variables.commasep)
+                # if event.key == ord('s'): write_csv('data/userkana',Variables.commasep)
 
 class GameState:
     def __init__(self):
@@ -408,6 +420,12 @@ class GameState:
             enemy.update()
             enemy.shoot(player)
 
+        # Wall of Death
+        for wod in wallsegments: wod.update()
+
+        # Brick debris
+        for brick in bricks: brick.update()
+
         # Player
         # player.update()
 
@@ -463,10 +481,10 @@ class GameState:
             enemy.shoot(player)
             enemy.draw(screen,player)
 
-        #CORRECT KANA
+        # CORRECT KANA
         for kana in correctkanas: kana.draw(screen)
 
-        #WRONG KANA
+        # WRONG KANA
         for kana in kanas: kana.draw(screen)
 
         # PLAYER
@@ -481,6 +499,12 @@ class GameState:
 
         # BIG LASER
         for biglaser in biglasers: biglaser.draw(screen)
+
+        # Wall of Death
+        for wod in wallsegments: wod.draw(screen)
+
+        # Brick debirs
+        for brick in bricks: brick.draw(screen)
 
         # EXPLOSION
         explosion_group.draw(screen)
@@ -537,6 +561,16 @@ class GameState:
         #region Player Projectiles
         for bullet in bullets:
 
+            for wod in wallsegments:
+                if wod.collide(bullet.pew_rect):
+                    wallsegments.pop(wallsegments.index(wod))
+                    try: bullets.pop(bullets.index(bullet))
+                    except: pass
+                    Brick.spawn(wod.x,wod.y)
+                    pygame.mixer.Sound.play(brickbreak_sound)
+                    explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
             #correct Kana
             for ckana in correctkanas:    
                 if ckana.collide(bullet.pew_rect):
@@ -551,7 +585,8 @@ class GameState:
                         Variables.score += 1
                     explosion = PlayAnimation(ckana.x, ckana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
-                    bullets.pop(bullets.index(bullet))
+                    try: bullets.pop(bullets.index(bullet))
+                    except: pass
                     correctkanas.pop(correctkanas.index(ckana))
                     kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
                     if kanaint <= num_to_shoot_new_kana: kanaint += 1
@@ -562,7 +597,8 @@ class GameState:
                 if kana.collide(bullet.pew_rect):
                     Variables.RGB[0] = 128
                     kanas.pop(kanas.index(kana))
-                    bullets.pop(bullets.index(bullet))
+                    try: bullets.pop(bullets.index(bullet)) 
+                    except: pass
                     kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
                     if kana.x >= 2*WIDTH // 3:
@@ -578,11 +614,11 @@ class GameState:
             for enemy in enemies:
                 if enemy.collide(bullet.pew_rect):
                     pygame.mixer.Sound.play(goodhit)
-                    Variables.score += 1
+                    Variables.score += 5
                     explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
-                    bullets.pop(bullets.index(bullet))
                     enemies.pop(enemies.index(enemy))
+                    bullets.pop(bullets.index(bullet))
 
             # if player's bullet hits powerup
             for powerup in powerups:
@@ -592,7 +628,6 @@ class GameState:
                     explosion_group.add(explosion)
                     bullets.pop(bullets.index(bullet))
                     powerups.pop(powerups.index(powerup))
-
         #endregion
         
         #region Enemy Projectiles
@@ -615,6 +650,7 @@ class GameState:
                     enemyprojectiles.pop(enemyprojectiles.index(epew))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
+                    pygame.mixer.Sound.play(goodhit)
 
             # if CORRECT kana
             for kana in correctkanas:
@@ -623,6 +659,7 @@ class GameState:
                     enemyprojectiles.pop(enemyprojectiles.index(epew))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
+                    pygame.mixer.Sound.play(goodhit)
         #endregion
 
         #region BIG LASER
@@ -663,8 +700,8 @@ class GameState:
             # if powerup hit by BIG LASER
             for powerup in powerups:
                 if powerup.collide(biglaser.hitbox):
-                    pygame.mixer.Sound.play(badhit)
                     explosion = PlayAnimation(powerup.x, powerup.y,explosion_surfs.images,0.5,False)
+                    pygame.mixer.Sound.play(goodhit)
                     explosion_group.add(explosion)
                     powerups.pop(powerups.index(powerup))
 
@@ -734,6 +771,14 @@ class GameState:
                     pygame.mixer.Sound.play(shiphit)
                     player.respawn()
 
+        # if player hits Wall of Death
+        for wod in wallsegments:
+            if Variables.shipcollision == True:
+                if wod.collide(player.spaceship_rect):
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
         #endregion
     
         #region Kana on Kana
@@ -794,6 +839,9 @@ class GameState:
                         kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-kana_rotate_rate,kana_rotate_rate)))
                         self.incorrectkana_timer = time.time()
                         self.incorrectkana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
+                if event.key == ord('i'): 
+                    for h in range(int(HEIGHT/32)):
+                        WallOfDeath.spawn(WIDTH,h*32)
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('n'): CenterWarning.spawn('Big Laser Active',biglaser_surf,0.5)
@@ -931,7 +979,7 @@ def displaydebug(x,y):
         ['NumCK',len(correctkanas)],
         ['NumIK',len(kanas)],
         ['COT',len(cuttoffline)],
-        # ['Sub Level',Variables.kananum],
+        ['Sub Level',Variables.kananum],
         # ["Player Pos",player.spaceship_rect.center],
         # ['Respawn',round(player.respawn_timer,1)],
         # ["XVel",round(player.Xvelocity,2)],

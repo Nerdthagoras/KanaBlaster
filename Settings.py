@@ -22,7 +22,7 @@ ship_normal_deceleration = 3
 ship_boosted_acceleration = 6
 ship_boosted_deceleration = 7
 
-ship_screen_boundary = 32
+ship_screen_boundary = 64
 
 ship_bullet_speed = 3000
 

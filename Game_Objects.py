@@ -331,7 +331,10 @@ class Bridge:
             Variables.kananum += 1
             if Variables.kananum >= len(Variables.gamekana[Variables.level]):
                 Variables.kananum = 0
-                Variables.level += 1
+                if Variables.level < 9:
+                    Variables.level += 1
+                else:
+                    random.shuffle(Variables.gamekana[Variables.level])
             self.drawn = True
             CutOffLine.spawn()
         screen.blit(self.img, (self.x,self.y))
@@ -341,8 +344,7 @@ class Bridge:
 
 class CutOffLine:
     def __init__(self,x,y,kanatohit,lastkana):
-        self.x = x
-        self.y = y
+        self.x, self.y = x, y
         self.lastkana = lastkana
         self.kanatohit = kanatohit
         self.velocity = kanax_velocity
@@ -701,3 +703,86 @@ class EnemyProjectiles:
     
     def spawn():
         enemyprojectiles.append(EnemyProjectiles())
+
+class WallOfDeath:
+    def __init__(self,x,y):
+        self.x, self.y = x, y
+        self.velocity = 100
+        self.image = wallsegment_surf
+
+    def update(self):
+        self.x -= self.velocity * Variables.dt
+        if self.x < -32: wallsegments.pop(wallsegments.index(self))
+        self.wallpiece_rect = self.image.get_rect(topleft = (self.x, self.y))
+
+    def draw(self, screen):
+        screen.blit(self.image, self.wallpiece_rect)
+
+        self.hitbox = self.wallpiece_rect
+        if Variables.hitboxshow:
+            pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self, rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+    def spawn(x,y):
+        wallsegments.append(WallOfDeath(x,y))
+
+class Brick:
+    def __init__(self,x,y,direction):
+        self.x, self.y = x, y
+        self.direction = direction
+        self.skewoffset = 20
+        self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
+        self.velocity = random.randint(100,300)
+        self.image = brick_surf
+        self.rotate = 0
+        self.rotate_rate = random.randint(-100,100)
+        self.brickscale = 1
+
+    def objectdirection(self,direction):
+        pewdir = direction - math.pi/2 + self.directionskew
+        sin_a = math.sin(pewdir)
+        cos_a = math.cos(pewdir)
+        self.x += self.velocity * sin_a * Variables.dt
+        self.y += self.velocity * cos_a * Variables.dt
+        return self.x, self.y
+
+    def update(self):
+        # self.x -= self.velocity * Variables.dt
+        self.x, self.y = self.objectdirection(self.direction)
+        if self.x < -32: bricks.pop(bricks.index(self))
+        self.brick_rect = self.image.get_rect(center = (self.x, self.y))
+
+    def draw(self, screen):
+        self.orig_rect = self.image.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.image,self.rotate)
+        self.rot_rect = self.orig_rect.copy()
+        self.rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
+        self.scale_image = pygame.transform.scale(self.rotated_image,(self.image.get_rect().width*self.brickscale,self.image.get_rect().height*self.brickscale))
+        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
+        screen.blit(self.scale_image, self.centered_image)
+        self.rotate += self.rotate_rate * Variables.dt
+
+        self.hitbox = self.brick_rect
+        if Variables.hitboxshow:
+            pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self, rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+    def spawn(x,y):
+        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
+        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
+        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
+        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
+        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))

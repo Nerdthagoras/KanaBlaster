@@ -16,6 +16,8 @@ allstates = [
 pygame.init()
 pygame.mixer.music.set_volume(.3)
 
+
+
 # Game loop
 while not current_state.done:
     pygame.display.set_caption(str(clock.get_fps()))

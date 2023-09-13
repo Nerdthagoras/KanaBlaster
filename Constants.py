@@ -38,6 +38,8 @@ pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha(
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
 biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
+wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).convert_alpha()
+brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 ship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
 
@@ -77,6 +79,7 @@ powerup_sound = pygame.mixer.Sound(os.path.join('sounds','powerup.wav'))
 shiplaser_sound = pygame.mixer.Sound(os.path.join('sounds','shiplaser.wav'))
 correct_kana_lost_sound = pygame.mixer.Sound(os.path.join('sounds','kanalost.wav'))
 correct_kana_dying_sound = pygame.mixer.Sound(os.path.join('sounds','kanagonnadie.wav'))
+brickbreak_sound = pygame.mixer.Sound(os.path.join('sounds','brickbreaks.wav'))
 
 # Timings
 pygame.time.set_timer(USEREVENT+1, 997) # Incorrect Kana
