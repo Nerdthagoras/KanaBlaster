@@ -707,7 +707,7 @@ class EnemyProjectiles:
 class WallOfDeath:
     def __init__(self,x,y):
         self.x, self.y = x, y
-        self.velocity = 100
+        self.velocity = 50
         self.image = wallsegment_surf
 
     def update(self):
@@ -730,7 +730,9 @@ class WallOfDeath:
         return False
 
     def spawn(x,y):
-        wallsegments.append(WallOfDeath(x,y))
+        for w in range(random.randint(1,5)):
+            for h in range(int(HEIGHT/32)):
+                wallsegments.append(WallOfDeath(x+w*32,y+h*32))
 
 class Brick:
     def __init__(self,x,y,direction):
@@ -781,8 +783,5 @@ class Brick:
         return False
 
     def spawn(x,y):
-        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
-        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
-        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
-        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
-        bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
+        for _ in range(random.randint(1,10)):
+            bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))

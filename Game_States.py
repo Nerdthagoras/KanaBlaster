@@ -705,25 +705,42 @@ class GameState:
                     explosion_group.add(explosion)
                     powerups.pop(powerups.index(powerup))
 
+            #if BIG LASER hits wall segments
+            for wod in wallsegments:
+                if wod.collide(biglaser.hitbox):
+                    wallsegments.pop(wallsegments.index(wod))
+                    Brick.spawn(wod.x,wod.y)
+                    pygame.mixer.Sound.play(brickbreak_sound)
+                    explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
         #endregion
 
         #region Space Junk
-        # correctKana hit by junk
-        for kana in correctkanas:
-            for junk in spacejunk:
+        for junk in spacejunk:
+            # correctKana hit by junk
+            for kana in correctkanas:
                 if kana.collide(junk.centered_image):
                     pygame.mixer.Sound.play(goodhit)
                     correctkanas.pop(correctkanas.index(kana))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
-        # Wrong Kana hit by junk
-        for kana in kanas:
-            for junk in spacejunk:
+            # Wrong Kana hit by junk
+            for kana in kanas:
                 if kana.collide(junk.centered_image):
                     pygame.mixer.Sound.play(goodhit)
                     kanas.pop(kanas.index(kana))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+
+            # Wall segments hit by junk
+            for wod in wallsegments:
+                if wod.collide(junk.centered_image):
+                    wallsegments.pop(wallsegments.index(wod))
+                    Brick.spawn(wod.x,wod.y)
+                    pygame.mixer.Sound.play(brickbreak_sound)
+                    explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
         #endregion
@@ -781,13 +798,24 @@ class GameState:
                     player.respawn()
         #endregion
     
-        #region Kana on Kana
+        #region Wrong Kana on Correct Kana
         for kana in kanas:
             for ckana in correctkanas:
                 if kana.collide(ckana.centered_image):
                     pygame.mixer.Sound.play(goodhit)
                     kanas.pop(kanas.index(kana))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    explosion_group.add(explosion)
+        #endregion
+
+        #region Correct Kana
+        for kana in correctkanas:
+            for wod in wallsegments:
+                if wod.collide(kana.hitbox):
+                    wallsegments.pop(wallsegments.index(wod))
+                    Brick.spawn(wod.x,wod.y)
+                    pygame.mixer.Sound.play(brickbreak_sound)
+                    explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
         #endregion
 
@@ -839,9 +867,7 @@ class GameState:
                         kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-kana_rotate_rate,kana_rotate_rate)))
                         self.incorrectkana_timer = time.time()
                         self.incorrectkana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
-                if event.key == ord('i'): 
-                    for h in range(int(HEIGHT/32)):
-                        WallOfDeath.spawn(WIDTH,h*32)
+                if event.key == ord('i'): WallOfDeath.spawn(WIDTH,0)
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('n'): CenterWarning.spawn('Big Laser Active',biglaser_surf,0.5)
