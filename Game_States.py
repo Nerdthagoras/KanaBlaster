@@ -156,6 +156,9 @@ class MenuState:
         # Game Title
         TITLE_text = GAME_OVER_font.render('KANA BLASTER', True, 'white')
         screen.blit(TITLE_text, (10, HEIGHT/8))
+        TITLE_shadow_text = GAME_OVER_font.render('KANA BLASTER', True, 'white')
+        TITLE_shadow_text.set_alpha(100)
+        screen.blit(TITLE_shadow_text, (18, HEIGHT/8+8))
         #endregion
 
         #region DEBUG
@@ -444,7 +447,8 @@ class GameState:
             if Variables.RGB[2] > 10: Variables.RGB[2] -= 500 * Variables.dt
             else: Variables.RGB[2] = 0
             self.bgfade_timer = time.time()
-        screen.fill((Variables.RGB[0],Variables.RGB[1],Variables.RGB[2]))
+        try: screen.fill((Variables.RGB[0],Variables.RGB[1],Variables.RGB[2]))
+        except: pass
         #endregion
 
         #region KANA LIST
@@ -618,7 +622,8 @@ class GameState:
                     explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
                     enemies.pop(enemies.index(enemy))
-                    bullets.pop(bullets.index(bullet))
+                    try: bullets.pop(bullets.index(bullet))
+                    except: pass
 
             # if player's bullet hits powerup
             for powerup in powerups:
