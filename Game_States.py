@@ -17,13 +17,17 @@ class IntroState:
         self.done = False
         self.timer = 0
         self.lt = time.time()
+        self.star_timer = 0
 
     def manifest(self):
-        pass
+        # Stars Timer
+        if time.time() - self.star_timer >= star_frequency:
+            Star.spawn()
+            self.star_timer = time.time()
 
     def update(self,screen):
-        if time.time() - self.lt >= 1:
-            self.done = True
+        starfield_group.update(player) # Update Stars
+        if time.time() - self.lt >= 2: self.done = True # End intro after 2 seconds
 
     def draw(self,screen):
         pass
@@ -77,40 +81,22 @@ class MenuState:
     def update(self,screen):
         pygame.mouse.set_visible(True)
 
-        # RANDOM JUNK
-        for junk in spacejunk: junk.update(player)
-
-        # STARS
-        for star in starfield: star.update(player)
-
-        # Kana
-        for kana in kanas: kana.update(player)
-
-        # Warning for BIG LASER
-        for warning in warnings: warning.update()
-
-        # BIG LASER
-        for biglaser in biglasers: biglaser.update()
-
-        # ENEMIES
-        for enemy in enemies:
-            enemy.update()
-            enemy.shoot(player)
-
-        # Enemy Projectiles
-        for epew in enemyprojectiles: epew.update()
-
-        # Wall of Death
-        for wod in wallsegments: wod.update()
+        for junk in spacejunk: junk.update(player)                      # RANDOM JUNK
+        starfield_group.update(player)                                  # STARS
+        for kana in kanas: kana.update(player)                          # Kana
+        for warning in warnings: warning.update()                       # Warning for BIG LASER
+        for biglaser in biglasers: biglaser.update()                    # BIG LASER
+        for enemy in enemies: enemy.update();enemy.shoot(player)        # Enemies
+        for epew in enemyprojectiles: epew.update()                     # Enemy Projectiles
+        for wod in wallsegments: wod.update()                           # Wall of Death
 
     def draw(self,screen):
-        screen.fill(('black'))
+        screen.fill(('black'))                                          # Refresh screen
 
-        for junk in spacejunk: junk.draw(screen)
-        for star in starfield: star.draw(screen)
-        for kana in kanas: kana.draw(screen)
-
-        # Bottom KANA LIST
+        for junk in spacejunk: junk.draw(screen)                        # RANDOM JUNK
+        starfield_group.draw(screen)                                    # STARS
+        for kana in kanas: kana.draw(screen)                            # Kana
+        #region Bottom KANA LIST                                        # Bottom Kana List
         kanalist.clear()
         for kana in range(int(Variables.levels[Variables.level])): kanalist.append(Variables.commasep[kana])
         for kana in range(int(Variables.levels[Variables.level])):
@@ -118,14 +104,14 @@ class MenuState:
             if kanakill >= 255: kanakill = 255
             kanalistthing = ui_font.render(kanalist[kana][Variables.gamemode], True, (kanakill,255,kanakill))
             screen.blit(kanalistthing,(25+(27*kana),HEIGHT-30))
+        #endregion
+        for epew in enemyprojectiles: epew.draw(screen)                 # Enemy Projectiles
+        for enemy in enemies: enemy.draw(screen,player)                 # Enemies
+        for warning in warnings: warning.draw(screen)                   # Warning for BIG LASER
+        for biglaser in biglasers: biglaser.draw(screen)                # BIG LASER
+        for wod in wallsegments: wod.draw(screen)                       # Wall of Death
 
-        for epew in enemyprojectiles: epew.draw(screen)
-        for enemy in enemies: enemy.draw(screen,player)
-        for warning in warnings: warning.draw(screen)
-        for biglaser in biglasers: biglaser.draw(screen)
-        for wod in wallsegments: wod.draw(screen)
-
-        #region BUTTONS
+        #region BUTTONS                                                 # BUTTONS
         # Game Mode Button
         self.game_mode_location = (10, 50, 200, 40)
         self.game_mode = pygame.Rect(self.game_mode_location)
@@ -161,7 +147,7 @@ class MenuState:
         screen.blit(TITLE_shadow_text, (18, HEIGHT/8+8))
         #endregion
 
-        #region DEBUG
+        #region DEBUG                                                   # DEBUG screen
         if Variables.debugwindow:
             displaydebug(debug_locationx,debug_locationy)
         #endregion
@@ -240,7 +226,6 @@ class MenuState:
                 if event.key == ord('f'): pygame.display.toggle_fullscreen()
                 if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn(player)
-                # if event.key == ord('s'): write_csv('data/userkana',Variables.commasep)
 
 class GameState:
     def __init__(self):
@@ -339,13 +324,13 @@ class GameState:
             self.bridge_thresh = random.randint(minimum_bridge_frequency,maximum_bridge_frequency)
 
     def update(self,screen):
-        # Extra Life
+        #region Extra Life
         if Variables.score >= self.extralife:
-            # Variables.lives += 1
             PowerUp.spawn(oneup_powerup_surf,"1up")
             self.extralife += ship_extra_life_increment
+        #endregion
 
-        # Warning Messages
+        #region Warning Messages
         if Variables.level == enemy_start_level and self.prev_level < enemy_start_level:
             CenterWarning.spawn('Enemies Active',enemy_surfs[0],3)
             self.enemy_wait_timer = 3
@@ -354,36 +339,26 @@ class GameState:
             CenterWarning.spawn('Big Laser Active',biglaser_surf)
             self.enemy_wait_timer = 3
             self.prev_level = biglaser_start_level
+        #endregion
 
-        # You lost all of your lives
+        #region You lost all of your lives
         if Variables.lives <= 0:
             pygame.mixer.Sound.stop(enginesound)
             write_csv('data/userkana.csv',Variables.commasep)
             self.done = True
+        #endregion
 
-        # Stop enemies from showing up right at the start
-        if self.enemy_wait_timer >= 0:
-            self.enemy_wait_timer -= 1 * Variables.dt
+        #region Stop enemies from showing up right at the start
+        if self.enemy_wait_timer >= 0: self.enemy_wait_timer -= 1 * Variables.dt
+        #endregion
 
-        # BULLETS
-        for bullet in bullets: bullet.update()
-
-        # BIG LASER
-        for biglaser in biglasers: biglaser.update()
-
-        # PLANETS
-        for planet in planets: planet.update(player)
-
-        # RANDOM JUNK
-        for junk in spacejunk: junk.update(player)
-
-        # STARS
-        for star in starfield: star.update(player)
-
-        # CUTOFF LINE
-        for cutoff in cuttoffline: cutoff.update(player)
-
-        # Correct Kanas
+        for bullet in bullets: bullet.update()                          # BULLETS
+        for biglaser in biglasers: biglaser.update()                    # BIG LASER
+        planet_group.update(player)                                     # PLANETS
+        for junk in spacejunk: junk.update(player)                      # RANDOM JUNK
+        starfield_group.update(player)                                  # STARS
+        for cutoff in cuttoffline: cutoff.update(player)                # CUTOFF LINE
+        #region Correct Kanas                                           # Correct Kanas
         for kana in correctkanas:
             kana.update(player)
 
@@ -405,36 +380,25 @@ class GameState:
                     explosion_group.add(explosion)
                     Variables.score -= 10
                     self.correct_kana_lost_sound_play = False
-
-        # Incorrect kanas
+        #endregion
+        #region Incorrect kanas                                         # Incorrect kanas
         for kana in kanas:
             kana.update(player)
             # remove kana if off screen
             if kana.x < -64: kanas.pop(kanas.index(kana))
-
-        # Big Laser Warning
-        for warning in warnings: warning.update()
-
-        # Enemy Projectiles
-        for epew in enemyprojectiles: epew.update()
-
-        # ENEMIES
+        # endregion
+        for warning in warnings: warning.update()                       # Big Laser Warning
+        for epew in enemyprojectiles: epew.update()                     # Enemy Projectiles
+        #region ENEMIES                                                 # ENEMIES
         for enemy in enemies:
             enemy.update()
             enemy.shoot(player)
-
-        # Wall of Death
-        for wod in wallsegments: wod.update()
-
-        # Brick debris
-        for brick in bricks: brick.update()
-
-        # Player
-        # player.update()
-
-        # UI
-        for centerwarn in centerwarning:
-            centerwarn.update()
+        #endregion
+        for wod in wallsegments: wod.update()                           # Wall of Death
+        for brick in bricks: brick.update()                             # Brick debris
+        player.update()                                                 # Player
+        for centerwarn in centerwarning: centerwarn.update()            # UI
+        bridge_group.update(player)                                     # BRIDGE WIPE
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
@@ -459,62 +423,35 @@ class GameState:
             screen.blit(kanalistthing,(25+(27*f),HEIGHT-30))
         #endregion
 
-        # PLANETS
-        for planet in planets: planet.draw(screen)
-
-        # RANDOM JUNK
-        for junk in spacejunk: junk.draw(screen)
-
-        # STARS
-        for star in starfield: star.draw(screen)
-
-        # WARNING for BIG LASER
-        for warning in warnings: warning.draw(screen)
-
-        # BULLETS
-        for bullet in bullets: bullet.draw(screen)
-
-        # CUTOFF LINE
-        for cutoff in cuttoffline: cutoff.draw(screen)
-
-        # ENEMY PEW
-        for epew in enemyprojectiles: epew.draw(screen)
-
-        # ENEMIES
+        planet_group.draw(screen)                                       # PLANETS
+        for junk in spacejunk: junk.draw(screen)                        # RANDOM JUNK
+        starfield_group.draw(screen)                                    # STARS
+        for warning in warnings: warning.draw(screen)                   # WARNING for BIG LASER
+        for bullet in bullets: bullet.draw(screen)                      # BULLETS
+        for cutoff in cuttoffline: cutoff.draw(screen)                  # CUTOFF LINE
+        for epew in enemyprojectiles: epew.draw(screen)                 # ENEMY PEW
+        #region ENEMIES                                                 # ENEMIES
         for enemy in enemies:
             enemy.shoot(player)
             enemy.draw(screen,player)
-
-        # CORRECT KANA
-        for kana in correctkanas: kana.draw(screen)
-
-        # WRONG KANA
-        for kana in kanas: kana.draw(screen)
-
-        # PLAYER
-        player.update()
-        player.draw(screen)
-
-        # POWERUP
+        #endregion
+        for kana in correctkanas: kana.draw(screen)                     # CORRECT KANA
+        for kana in kanas: kana.draw(screen)                            # WRONG KANA
+        player.draw(screen)                                             # PLAYER
+        #region POWERUP                                                 # POWERUP
         for powerup in powerups:
             powerup.update(player)
             powerup.effect(powerup.pueffect,player)
             powerup.draw(screen)
-
-        # BIG LASER
-        for biglaser in biglasers: biglaser.draw(screen)
-
-        # Wall of Death
-        for wod in wallsegments: wod.draw(screen)
-
-        # Brick debirs
-        for brick in bricks: brick.draw(screen)
-
-        # EXPLOSION
+        #endregion
+        for biglaser in biglasers: biglaser.draw(screen)                # BIG LASER
+        for wod in wallsegments: wod.draw(screen)                       # Wall of Death
+        for brick in bricks: brick.draw(screen)                         # Brick debirs
+        #region EXPLOSION                                               # EXPLOSION
         explosion_group.draw(screen)
         explosion_group.update()
-
-        #region QUESTION TEXT
+        #endregion
+        #region QUESTION TEXT                                           # QUESTION TEXT
         def scale_surface_from_center(surface, scale_factor):
             original_rect = surface.get_rect()
             scaled_width = int(original_rect.width * scale_factor)
@@ -532,8 +469,7 @@ class GameState:
         screen.blit(shoot_text, (question_position[0]-90,question_position[1]+13))
         screen.blit(romaji_scaled, (romaji_rect[0]+question_position[0],romaji_rect[1]+question_position[1]))
         #endregion
-
-        #region UI TEXT
+        #region UI TEXT                                                 # UI TEXT
         if Variables.score <=0: Variables.score = 0
         scoretext = ui_font.render("Score: " + str(Variables.score), True, 'white')
         screen.blit(scoretext, (WIDTH-200, 10))
@@ -547,13 +483,8 @@ class GameState:
         for centerwarn in centerwarning:
             centerwarn.draw()
         #endregion
-
-        # BRIDGE WIPE
-        for bridge in bridges:
-            bridge.update(player)
-            bridge.draw(screen)
-
-        #region DEBUG
+        bridge_group.draw(screen)                                       # BRIDGE WIPE
+        #region DEBUG                                                   # DEBUG
         if Variables.debugwindow: displaydebug(debug_locationx,debug_locationy)
         #endregion
 
@@ -564,9 +495,8 @@ class GameState:
 
         #region Player Projectiles
         for bullet in bullets:
-
             for wod in wallsegments:
-                if wod.collide(bullet.pew_rect):
+                if wod.collide(bullet.rect):
                     wallsegments.pop(wallsegments.index(wod))
                     try: bullets.pop(bullets.index(bullet))
                     except: pass
@@ -577,7 +507,7 @@ class GameState:
 
             #correct Kana
             for ckana in correctkanas:    
-                if ckana.collide(bullet.pew_rect):
+                if ckana.collide(bullet.rect):
                     pygame.mixer.Sound.play(goodhit)
                     kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
@@ -598,7 +528,7 @@ class GameState:
 
             # if player's bullet hits WRONG kana
             for kana in kanas:
-                if kana.collide(bullet.pew_rect):
+                if kana.collide(bullet.rect):
                     Variables.RGB[0] = 128
                     kanas.pop(kanas.index(kana))
                     try: bullets.pop(bullets.index(bullet)) 
@@ -616,7 +546,7 @@ class GameState:
 
             # if player's bullet hits Enemy
             for enemy in enemies:
-                if enemy.collide(bullet.pew_rect):
+                if enemy.collide(bullet.rect):
                     pygame.mixer.Sound.play(goodhit)
                     Variables.score += 5
                     explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
@@ -627,7 +557,7 @@ class GameState:
 
             # if player's bullet hits powerup
             for powerup in powerups:
-                if powerup.collide(bullet.pew_rect):
+                if powerup.collide(bullet.rect):
                     pygame.mixer.Sound.play(badhit)
                     explosion = PlayAnimation(powerup.x, powerup.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
@@ -725,7 +655,7 @@ class GameState:
         for junk in spacejunk:
             # correctKana hit by junk
             for kana in correctkanas:
-                if kana.collide(junk.centered_image):
+                if kana.collide(junk.hitbox):
                     pygame.mixer.Sound.play(goodhit)
                     correctkanas.pop(correctkanas.index(kana))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
@@ -733,7 +663,7 @@ class GameState:
 
             # Wrong Kana hit by junk
             for kana in kanas:
-                if kana.collide(junk.centered_image):
+                if kana.collide(junk.hitbox):
                     pygame.mixer.Sound.play(goodhit)
                     kanas.pop(kanas.index(kana))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
@@ -741,7 +671,7 @@ class GameState:
 
             # Wall segments hit by junk
             for wod in wallsegments:
-                if wod.collide(junk.centered_image):
+                if wod.collide(junk.hitbox):
                     wallsegments.pop(wallsegments.index(wod))
                     Brick.spawn(wod.x,wod.y)
                     pygame.mixer.Sound.play(brickbreak_sound)
@@ -834,11 +764,6 @@ class GameState:
             # KEYDOWN
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE: Variables.lives = 0
-                if event.key == ord('p'):
-                    if self.paused == False:
-                        self.paused = True
-                    else:
-                        self.paused = False
                 if event.key == ord('o'):
                     powerup_type = random.randint(0,2)
                     if powerup_type == 0:
@@ -872,6 +797,7 @@ class GameState:
                         kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(128,HEIGHT-200,),selection,random.randint(min_kana_alpha,256),random.randint(-kana_rotate_rate,kana_rotate_rate)))
                         self.incorrectkana_timer = time.time()
                         self.incorrectkana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
+                if event.key == ord('p'): Planet.spawn()
                 if event.key == ord('i'): WallOfDeath.spawn(WIDTH,0)
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
@@ -885,78 +811,161 @@ class GameOverState:
         self.star_timer = 0
         self.kana_timer = 0
         self.paused = False
+        self.correct_kana_lost_sound_play = True
+        self.kana_blip = time.time()
+        self.kana_thresh = 1
+        self.enemy_wait_timer = 10
 
     def manifest(self):
-        pass
+        # Stars Timer
+        if time.time() - self.star_timer >= star_frequency:
+            Star.spawn()
+            self.star_timer = time.time()
+
+        # All Kana Timer
+        if time.time() - self.kana_timer >= self.kana_thresh:
+            selection = random.randint(0,Variables.levels[Variables.level]-1)
+            kanas.append(Kana(WIDTH+off_screen_offset, random.randrange(300,HEIGHT-128,),selection,random.randint(min_kana_alpha,256),random.randint(-kana_rotate_rate,kana_rotate_rate)))
+            self.kana_timer = time.time()
+            self.kana_thresh = random.randint(minimum_incorrect_kana_frequency,maximum_incorrect_kana_frequency)/10
+
+        #Big Laser Timer
+        if Variables.level >= 3 and self.enemy_wait_timer <= 0:
+            if time.time() - self.biglaser_timer >= self.biglaser_randomness:
+                BigLaserWarning.spawn(player)
+                self.biglaser_timer = time.time()
+                self.biglaser_randomness = random.randint(5,30)
+
+        # Enemy Timer
+        if Variables.level >= 1 and self.enemy_wait_timer <= 0:
+            if time.time() - self.enemy_timer >= self.enemy_randomness:
+                Enemies.spawn()
+                self.enemy_timer = time.time()
+                self.enemy_randomness = random.randint(5,30)
 
     def update(self,screen):
-        # STARS
-        for star in starfield: star.update(player)
-
-        # PLANETS
-        for planet in planets: planet.update(player)
-
-        # RANDOM JUNK
-        for junk in spacejunk: junk.update(player)
-
-        #CORRECT KANA
+        for bullet in bullets: bullet.update()                          # BULLETS
+        for biglaser in biglasers: biglaser.update()                    # BIG LASER
+        planet_group.update(player)                                     # PLANETS
+        for junk in spacejunk: junk.update(player)                      # RANDOM JUNK
+        starfield_group.update(player)                                  # STARS
+        for cutoff in cuttoffline: cutoff.update(player)                # CUTOFF LINE
+        #region Correct Kanas                                           # Correct Kanas
         for kana in correctkanas:
-            # # Kana hit by junk
-            # for junk in spacejunk:
-            #     if kana.collide(junk.centered_image):
-            #         pygame.mixer.Sound.play(goodhit)
-            #         kanas.pop(kanas.index(kana))
-            #         explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-            #         explosion_group.add(explosion)
             kana.update(player)
 
-        # WRONG KANA
+            # remove kana if off screen
+            if kana.x < -64: correctkanas.pop(correctkanas.index(kana))
+
+            # Grow Kana at 2/5th of the screen with
+            elif kana.x < 2 * (WIDTH // 5) and kana.x > 10:
+                kana.kanascale += Variables.dt/5
+                if time.time() - self.kana_blip >= kana.x/500:
+                    pygame.mixer.Sound.play(correct_kana_dying_sound)
+                    self.kana_blip = time.time()
+
+            # Explode kana if touch left side of screen
+            elif kana.x < 0:
+                if self.correct_kana_lost_sound_play:
+                    pygame.mixer.Sound.play(correct_kana_lost_sound)
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,3,False)
+                    explosion_group.add(explosion)
+                    Variables.score -= 10
+                    self.correct_kana_lost_sound_play = False
+        #endregion
+        #region Incorrect kanas                                         # Incorrect kanas
         for kana in kanas:
             kana.update(player)
-    
-            # Stop Kana's from intersecting
-            for ckana in correctkanas:
-                if kana.collide(ckana.centered_image):
-                    pygame.mixer.Sound.play(goodhit)
-                    kanas.pop(kanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
-            # Kana hit by junk
-            for junk in spacejunk:
-                if kana.collide(junk.centered_image):
-                    pygame.mixer.Sound.play(goodhit)
-                    kanas.pop(kanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-
-        # EXPLOSION
-        explosion_group.update()
+            # remove kana if off screen
+            if kana.x < -64: kanas.pop(kanas.index(kana))
+        # endregion
+        for warning in warnings: warning.update()                       # Big Laser Warning
+        for epew in enemyprojectiles: epew.update()                     # Enemy Projectiles
+        #region ENEMIES                                                 # ENEMIES
+        for enemy in enemies:
+            enemy.update()
+            enemy.shoot(player)
+        #endregion
+        for wod in wallsegments: wod.update()                           # Wall of Death
+        for brick in bricks: brick.update()                             # Brick debris
+        for centerwarn in centerwarning: centerwarn.update()            # UI
+        bridge_group.update(player)                                     # BRIDGE WIPE
 
     def draw(self,screen):
         screen.fill(('black'))
 
-        # PLANETS
-        for planet in planets: planet.draw(screen)
-
-        # RANDOM JUNK
-        for junk in spacejunk: junk.draw(screen)
-
-        #STARS
-        for star in starfield: star.draw(screen)
-
-        # CORRECT KANA
-        for kana in correctkanas: kana.draw(screen)
-
-        # WRONG KANA
-        for kana in kanas: kana.draw(screen)
-        
-        # EXPLOSION
+        planet_group.draw(screen)                                       # PLANETS
+        for junk in spacejunk: junk.draw(screen)                        # RANDOM JUNK
+        starfield_group.draw(screen)                                    # STARS
+        for warning in warnings: warning.draw(screen)                   # WARNING for BIG LASER
+        for bullet in bullets: bullet.draw(screen)                      # BULLETS
+        for cutoff in cuttoffline: cutoff.draw(screen)                  # CUTOFF LINE
+        for epew in enemyprojectiles: epew.draw(screen)                 # ENEMY PEW
+        #region ENEMIES                                                 # ENEMIES
+        for enemy in enemies:
+            enemy.shoot(player)
+            enemy.draw(screen,player)
+        #endregion
+        for kana in correctkanas: kana.draw(screen)                     # CORRECT KANA
+        for kana in kanas: kana.draw(screen)                            # WRONG KANA
+        #region POWERUP                                                 # POWERUP
+        for powerup in powerups:
+            powerup.update(player)
+            powerup.effect(powerup.pueffect,player)
+            powerup.draw(screen)
+        #endregion
+        for biglaser in biglasers: biglaser.draw(screen)                # BIG LASER
+        for wod in wallsegments: wod.draw(screen)                       # Wall of Death
+        for brick in bricks: brick.draw(screen)                         # Brick debirs
+        #region EXPLOSION                                               # EXPLOSION
         explosion_group.draw(screen)
+        explosion_group.update()
+        #endregion
+        #region QUESTION TEXT                                           # QUESTION TEXT
+        def scale_surface_from_center(surface, scale_factor):
+            original_rect = surface.get_rect()
+            scaled_width = int(original_rect.width * scale_factor)
+            scaled_height = int(original_rect.height * scale_factor)
+            scaled_surface = pygame.transform.scale(surface, (scaled_width, scaled_height))
+            scaled_rect = scaled_surface.get_rect(center=original_rect.center)
+            return scaled_surface, scaled_rect
+        
+        shoot_text = ui_font.render('Shoot', True, 'white')
+        romajitext = question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
+        Variables.theta += 5 * Variables.dt
+        theta_scale = math.sin(Variables.theta)
+        romaji_scaled, romaji_rect = scale_surface_from_center(romajitext, 1.5 + (theta_scale*.5))
+
+        screen.blit(shoot_text, (question_position[0]-90,question_position[1]+13))
+        screen.blit(romaji_scaled, (romaji_rect[0]+question_position[0],romaji_rect[1]+question_position[1]))
+        #endregion
+        #region UI TEXT                                                 # UI TEXT
+        if Variables.score <=0: Variables.score = 0
+        scoretext = ui_font.render("Score: " + str(Variables.score), True, 'white')
+        screen.blit(scoretext, (WIDTH-200, 10))
+
+        livestext = ui_font.render("Lives: " + str(Variables.lives), True, 'white')
+        screen.blit(livestext, (WIDTH-400, 10))
+
+        leveltext = ui_font.render("Level: " + str(Variables.level), True, 'white')
+        screen.blit(leveltext, (WIDTH-600, 10))
+
+        for centerwarn in centerwarning:
+            centerwarn.draw()
+        #endregion
+        bridge_group.draw(screen)                                       # BRIDGE WIPE
+        #region DEBUG                                                   # DEBUG
+        if Variables.debugwindow: displaydebug(debug_locationx,debug_locationy)
+        #endregion
+
 
         # Game Over 
         GAME_OVER_text = GAME_OVER_font.render('GAME OVER', True, 'white')
         screen.blit(GAME_OVER_text, (10, HEIGHT/2))
+
+        GAME_OVER_Shadow_text = GAME_OVER_font.render('GAME OVER', True, 'white')
+        GAME_OVER_Shadow_text.set_alpha(100)
+        screen.blit(GAME_OVER_Shadow_text, (15, HEIGHT/2+5))
 
         # Score
         Score_text = question_font.render('Score: ' + str(Variables.score), True, 'white')
@@ -971,7 +980,7 @@ class GameOverState:
         for kana in correctkanas:
             # Kana hit by junk
             for junk in spacejunk:
-                if kana.collide(junk.centered_image):
+                if kana.collide(junk.hitbox):
                     pygame.mixer.Sound.play(goodhit)
                     kanas.pop(kanas.index(kana))
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
@@ -1002,6 +1011,29 @@ class GameOverState:
                     menu_state.done = False
                     game_state.done = False
                     self.done = True                    
+
+class CutScene:
+    def __init__(self):
+        self.done = False
+        self.timer = 0
+        self.lt = time.time()
+
+    def manifest(self):
+        pass
+
+    def update(self,screen):
+        if time.time() - self.lt >= 1:
+            self.done = True
+
+    def draw(self,screen):
+        pass
+
+    def collision(self):
+        pass
+
+    def handle_events(self, events):
+        pass
+
 
 #region DEBUG
 def displaydebug(x,y):
@@ -1035,6 +1067,7 @@ intro_state = IntroState()
 menu_state = MenuState()
 game_state = GameState()
 gameover_state = GameOverState()
+cutscene_state = CutScene()
 player = Ship(0,HEIGHT//2,spaceship_surf)
 
 # Set current state

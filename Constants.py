@@ -1,9 +1,7 @@
 from spritesheet import LoadSpritesheet
 
 import pygame
-from pygame.locals import USEREVENT
 import os
-import random
 
 # Initialize Pygame
 pygame.init()
@@ -62,7 +60,7 @@ for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('
 spacejunkfiles = [
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/spaaace.wav'],
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/lovebeinginspace.wav'],
-    ['/images/SpaceJunk/Kerbal.png','/sounds/SpaceJunk/kerbal.wav']
+    ['/images/SpaceJunk/Kerbal.png','/sounds/SpaceJunk/kerbal.wav'],
 ]
 
 # Sounds
@@ -80,13 +78,3 @@ shiplaser_sound = pygame.mixer.Sound(os.path.join('sounds','shiplaser.wav'))
 correct_kana_lost_sound = pygame.mixer.Sound(os.path.join('sounds','kanalost.wav'))
 correct_kana_dying_sound = pygame.mixer.Sound(os.path.join('sounds','kanagonnadie.wav'))
 brickbreak_sound = pygame.mixer.Sound(os.path.join('sounds','brickbreaks.wav'))
-
-# Timings
-pygame.time.set_timer(USEREVENT+1, 997) # Incorrect Kana
-pygame.time.set_timer(USEREVENT+2, 50) # Stars
-pygame.time.set_timer(USEREVENT+3, 30000) # Bridge
-pygame.time.set_timer(USEREVENT+4, 3533) # Correct Kana
-pygame.time.set_timer(USEREVENT+5, 29983) # Powerups
-pygame.time.set_timer(USEREVENT+7, random.randrange(30000,60000)) # Planet background
-pygame.time.set_timer(USEREVENT+8, random.randrange(60000,120000)) # Junk background
-# pygame.time.set_timer(USEREVENT+9, 5000) # Score decrease by 1

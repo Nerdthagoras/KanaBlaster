@@ -1,17 +1,14 @@
 import pygame
 
 #arrays
-starfield = []
 bullets = []
 kanas = []
 kanalist = []
 correctkanas = []
-bridges = []
 cuttoffline = []
 powerups = []
 laserpowerups = []
 speedpowerups = []
-planets = []
 spacejunk = []
 warnings = []
 biglasers = []
@@ -22,5 +19,7 @@ wallsegments = []
 bricks = []
 
 #spritegroups
+starfield_group = pygame.sprite.Group()
+planet_group = pygame.sprite.Group()
+bridge_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()

@@ -11,23 +11,22 @@ import os
 class Ship:
     def __init__(self,x,y,image):
         self.image = image
-        self.direction = pygame.math.Vector2(x,y)
-        self.spaceship_rect = self.image.get_rect(center = self.direction)
+        self.location = pygame.math.Vector2(x,y)
+        self.spaceship_rect = self.image.get_rect(center = self.location)
         self.deadzone = 20
-        self.Yvelocity = 0
-        self.Xvelocity = 0
+        self.Xvelocity, self.Yvelocity = 0, 0
         self.speed = ship_normal_top_speed
-        self.acceleration = self.speed*3
-        self.deceleration = self.speed*4
+        self.acceleration, self.deceleration = self.speed*3, self.speed*4
         self.shiprest = 100
-        self.speedup = 2
-        self.slowdown = 1
+        self.speedup, self.slowdown = 2, 1
         self.last_pewtimer = 0
         self.maxnumpew = 2
-        # self.shiprestpoint = 100
         self.shipborder = ship_screen_boundary
         self.respawn_timer = -1
+        self.hitbox = [0,0,0,0]
+        self.shieldradius = 64
 
+        #region Powerups
         self.poweruptimelength = 1000
         self.speedboost = False
         self.speedboostcounter = self.poweruptimelength
@@ -35,9 +34,11 @@ class Ship:
         self.lasersight = False
         self.lasersightcounter = self.poweruptimelength
         self.laserlength = 0
+        self.laser = pygame.Surface((self.laserlength,2))
 
         self.kanaswitch = False
         self.kanaswitchcounter = self.poweruptimelength
+        #endregion
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -67,7 +68,7 @@ class Ship:
         if keys[pygame.K_a]: 
             if self.Xvelocity <= self.speed:
                 self.Xvelocity += self.temp_acc
-        elif keys[pygame.K_d] and self.direction[0] < WIDTH-500:
+        elif keys[pygame.K_d] and self.location[0] < WIDTH-500:
             if self.Xvelocity >= -self.speed:
                 self.Xvelocity -= self.temp_acc
         else:
@@ -84,23 +85,22 @@ class Ship:
         #endregion
         # Pew
         if keys[pygame.K_SPACE]:
-            # if Variables.shipcollision == True:
-                Pew.spawn(self)
+            Pew.spawn(self)
 
     def move(self):
-        self.direction[0] -= (self.Xvelocity + 2*kanax_velocity/3) * Variables.dt
-        self.direction[1] -= self.Yvelocity * Variables.dt
-        if self.direction[1] < self.shipborder:
-            self.direction[1] = self.shipborder
+        self.location[0] -= (self.Xvelocity + 2*kanax_velocity/3) * Variables.dt
+        self.location[1] -= self.Yvelocity * Variables.dt
+        if self.location[1] < self.shipborder:
+            self.location[1] = self.shipborder
             self.Yvelocity = 0
-        elif self.direction[1] > HEIGHT-self.shipborder:
-            self.direction[1] = HEIGHT-self.shipborder
+        elif self.location[1] > HEIGHT-self.shipborder:
+            self.location[1] = HEIGHT-self.shipborder
             self.Yvelocity = 0
-        elif self.direction[0] <= 48:
-            self.direction[0] = 48
+        elif self.location[0] <= 48:
+            self.location[0] = 48
             # self.Xvelocity = 0
         # elif self.direction[0] > WIDTH-500: self.direction[0] = WIDTH-500
-        self.spaceship_rect.center = self.direction
+        self.spaceship_rect.center = self.location
 
     def update(self):
         self.movement()
@@ -112,7 +112,7 @@ class Ship:
             Variables.shipcollision = False
             self.lasersight = False
             self.speedboost = False
-            self.direction = pygame.math.Vector2(100, HEIGHT // 2)
+            self.location = pygame.math.Vector2(100, HEIGHT // 2)
             self.respawn_timer -= 1 * Variables.dt
         elif self.respawn_timer > 0:
             self.respawn_timer -= 1 * Variables.dt
@@ -135,16 +135,14 @@ class Ship:
 
         # LASER PowerUp
         if self.lasersight and self.lasersightcounter > 256:
-            laser = pygame.Surface((self.laserlength,2))
-            laser.set_alpha(128)
-            laser.fill((255,0,0))
-            screen.blit(laser,self.spaceship_rect.midright)
+            self.laser = pygame.Surface((self.laserlength,2))
+            self.laser.set_alpha(128)
+            self.laser.fill((255,0,0))
             self.lasersightcounter -= 100 * Variables.dt
             self.laserlength += 3000 * Variables.dt
         elif self.lasersight and self.lasersightcounter <= 256 and self.lasersightcounter > 0:
-            laser = pygame.Surface((WIDTH,2))
-            laser.fill((self.lasersightcounter/2,0,0))
-            screen.blit(laser,self.spaceship_rect.midright)
+            self.laser = pygame.Surface((WIDTH,2))
+            self.laser.fill((self.lasersightcounter/2,0,0))
             self.lasersightcounter -= 100 * Variables.dt
         elif self.lasersight and self.lasersightcounter <= 0:
             self.lasersight = False
@@ -169,7 +167,6 @@ class Ship:
             Variables.RGB = [255,255,255]
 
     def draw(self,screen):
-        from Variables import hitboxshow
 
         if Variables.shipcollision == False:
             if int(self.respawn_timer*100) % 3 == 0: self.image.set_alpha(200)
@@ -178,10 +175,31 @@ class Ship:
         else:
             self.image.set_alpha(255)
         screen.blit(self.image, self.spaceship_rect)
+        if self.lasersight: screen.blit(self.laser,self.spaceship_rect.midright)
 
         # Draw hitbox
-        if hitboxshow:
+        if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.spaceship_rect, 2)
+
+    def collide(self,rect):
+        if Variables.shipforcefield:
+            x = abs(self.location[0] - (rect[0] + rect[2] / 2))
+            y = abs(self.location[1] - (rect[1] + rect[3] / 2))
+
+            if x > (rect[2] / 2 + self.shieldradius): return False
+            if y > (rect[3] / 2 + self.shieldradius): return False
+
+            if x <= (rect[2] / 2): return True
+            if y <= (rect[3] / 2): return True
+
+            corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
+            return corner_distance <= self.shieldradius**2
+
+        else:
+            if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+                if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                    return True
+        return False
 
     def respawn(self):
         Variables.lives -= 1
@@ -190,25 +208,20 @@ class Ship:
 class Pew:
     def __init__(self,x,y,image):
         self.x, self.y = x, y
-        self.image = image
-        self.pew_rect = self.image.get_rect(midleft = (self.x, self.y))
+        self.image = pygame.transform.scale(image,(256,16))
+        self.rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = ship_bullet_speed
         self.hitbox = [0,0,0,0]
 
     def update(self):
-        self.hitbox = self.pew_rect
+        self.rect = self.image.get_rect(midleft = (self.x, self.y))
+        self.hitbox = self.rect
         self.x += self.velocity * Variables.dt
-        if self.x > WIDTH+200:
-            bullets.pop(bullets.index(self))
+        if self.x > WIDTH+500: bullets.pop(bullets.index(self))
 
     def draw(self,screen):
-        self.image = pygame.transform.scale(self.image,(256,16))
-        self.pew_rect = self.image.get_rect(midleft = (self.x, self.y))
-        screen.blit(self.image, self.pew_rect)
-
-        # Draw hitbox
-        if Variables.hitboxshow:
-            pygame.draw.rect(screen, (0,255,0),self.hitbox, 2)
+        screen.blit(self.image, self.rect)
+        if Variables.hitboxshow: pygame.draw.rect(screen, (0,255,0),self.hitbox, 2)
     
     def spawn(player):
         if len(bullets) < player.maxnumpew:
@@ -224,104 +237,67 @@ class Pew:
         return False
 
 # ENVIRONMENT
-class Planet:
+class Planet(pygame.sprite.Sprite):
     def __init__(self):
-        self.num = random.randint(0,len(planet_surfs)-1)
-        self.planet_surf = planet_surfs[self.num]
+        super().__init__()
+        self.x, self.y = WIDTH+500, random.randrange(0,HEIGHT)
         self.scale = random.randint(5,15)/10
-        self.planet_surf = pygame.transform.scale(self.planet_surf,(self.planet_surf.get_width()*self.scale,self.planet_surf.get_height()*self.scale))
-        self.x = WIDTH+500
-        self.y = random.randrange(0,HEIGHT)
+        self.num = random.randint(0,len(planet_surfs)-1)
+        self.image = planet_surfs[self.num]
+        self.image = pygame.transform.scale(self.image,(self.image.get_width()*self.scale,self.image.get_height()*self.scale))
+        self.rect = self.image.get_rect(center = (self.x,self.y))
         self.velocity = 50
     
     def update(self,player):
+        self.rect = self.image.get_rect(center = (self.x,self.y))
         self.x -= self.velocity * Variables.dt
-        if self.x < -1000:
-            planets.pop(planets.index(self))
-
-    def draw(self,screen):
-        self.planet_surf.set_alpha(255)
-        self.planet_rect = self.planet_surf.get_rect(center = (self.x,self.y))
-        screen.blit(self.planet_surf, self.planet_rect)
+        if self.x < -500: self.kill()
     
     def spawn():
-        planets.append(Planet())
+        planet_group.add(Planet())
 
-class SpaceJunk:
-    def __init__(self,num,rotate,scale):
-        self.img = pygame.image.load(os.getcwd() + spacejunkfiles[num][0]).convert_alpha()
-        self.img = pygame.transform.scale(self.img,(self.img.get_width()*scale,self.img.get_height()*scale))
-        self.x, self.y = WIDTH+50, random.randrange(128,HEIGHT-128)
-        self.velocity = 600
-        self.rotate = 0
-        self.rotate_rate = rotate / 100
-        self.rotated_image = pygame.transform.rotate(self.img,self.rotate)
-        self.centered_image = self.rotated_image.get_rect(center = (self.x,self.y))
-
-    def update(self,player):
-        self.x -= self.velocity * Variables.dt
-        if self.x < -100: spacejunk.pop(spacejunk.index(self))
-
-    def draw(self,screen):
-        self.img.set_alpha(255)
-        orig_rect = self.img.get_rect()
-        self.rotated_image = pygame.transform.rotate(self.img,self.rotate)
-        rot_rect = orig_rect.copy()
-        rot_rect.center = self.rotated_image.get_rect().center
-        self.rotated_image = self.rotated_image.subsurface(rot_rect).copy()
-        self.centered_image = self.rotated_image.get_rect(center = (self.x,self.y))
-        screen.blit(self.rotated_image, self.centered_image)
-        self.rotate += self.rotate_rate
-
-    def spawn():
-        whichjunk = random.randint(0,len(spacejunkfiles)-1)
-        junksize = random.randrange(2,10)
-        spacejunk.append(SpaceJunk(whichjunk,random.randrange(-100,100),junksize*0.1))
-        junkobject = pygame.mixer.Sound(os.getcwd() + spacejunkfiles[whichjunk][1])
-        junkobject.set_volume(junksize*0.1)
-        pygame.mixer.Sound.play(junkobject)
-
-class Star:
+class Star(pygame.sprite.Sprite):
     def __init__(self):
-        self.depth = random.randrange(100,1000)
+        super().__init__()
         self.x, self.y = WIDTH, random.randrange(50,HEIGHT-50)
-        self.gamemode = Variables.gamemode
         self.kana = random.randint(0,45)
-        self.velocity = float(self.depth)
         fontsize = 15
         star_font = pygame.font.SysFont(font_name, fontsize)
-        self.startext = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], False, 'white')
-        if Variables.lives <= 0: self.startext = star_font.render('GAME OVER', True, 'white')
+        if Variables.lives <= 0: self.image = star_font.render('GAME OVER', True, 'white')
+        else: self.image = star_font.render(Variables.commasep[self.kana][(Variables.gamemode+1)%2], False, 'white')
+        self.rect = self.image.get_rect(center = (self.x, self.y))
+        self.depth = random.randrange(100,1000)
+        self.image.set_alpha(self.depth/900*255)
+        self.gamemode = Variables.gamemode
+        self.velocity = float(self.depth)
 
         # scale = (self.depth*2)/fontsize
         # self.startext = pygame.transform.scale(self.startext,(self.startext.get_width()*scale,self.startext.get_height()*scale))
 
     def update(self,player):
+        self.rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.dt
-        if self.x < -100: starfield.pop(starfield.index(self))
-
-    def draw(self,screen):
-        self.startext.set_alpha(self.depth/900*255)
-        screen.blit(self.startext, (self.x,self.y))
+        # if self.x < -100: starfield.pop(starfield.index(self))
+        if self.x < -10: self.kill()
 
     def spawn():
-        starfield.append(Star())
+        # starfield.append(Star())
+        new_star = Star()
+        starfield_group.add(new_star)
 
-class Bridge:
+class Bridge(pygame.sprite.Sprite):
     def __init__(self,x,y,image):
-        self.img = image
+        super().__init__()
+        self.image = image
         self.x, self.y = x, y
+        self.rect = self.image.get_rect(center = (self.x, self.y))
         self.velocity = 3000
         self.drawn = False
         self.sound = True
 
     def update(self,player):
+        self.rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.dt
-        if self.x < -1000:
-            bridges.pop(bridges.index(self))
-            self.drawn = False
-
-    def draw(self,screen):
         Variables.last_kananum = Variables.kananum
         Variables.last_level = Variables.level
         if self.sound == True:
@@ -337,34 +313,75 @@ class Bridge:
                     random.shuffle(Variables.gamekana[Variables.level])
             self.drawn = True
             CutOffLine.spawn()
-        screen.blit(self.img, (self.x,self.y))
+
+        if self.x < -1000:
+            self.kill
+            self.drawn = False
+
+    def draw(self,screen):
+        screen.blit(self.image, self.rect)
 
     def spawn():
-        bridges.append(Bridge(WIDTH,0,bridge_surf))
+        bridge_group.add(Bridge(WIDTH,0,bridge_surf))
+
+class SpaceJunk:
+    def __init__(self,num,rotate,scale):
+        self.image = pygame.image.load(os.getcwd() + spacejunkfiles[num][0]).convert_alpha()
+        self.image = pygame.transform.scale(self.image,(self.image.get_width()*scale,self.image.get_height()*scale))
+        self.x, self.y = WIDTH+50, random.randrange(128,HEIGHT-128)
+        self.velocity = 600
+        self.rotate = 0
+        self.rotate_rate = rotate / 100
+        self.hitbox = None
+
+    def update(self,player):
+        orig_rect = self.image.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.image,self.rotate)
+        rot_rect = orig_rect.copy()
+        rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(rot_rect).copy()
+        self.rect = self.rotated_image.get_rect(center = (self.x,self.y))
+        self.hitbox = self.rect
+        self.x -= self.velocity * Variables.dt
+        self.rotate += self.rotate_rate
+        if self.x < -100: spacejunk.pop(spacejunk.index(self))
+
+    def draw(self,screen):
+        screen.blit(self.rotated_image, self.rect)
+        if Variables.hitboxshow == True: pygame.draw.rect(screen,'red',self.hitbox,2)
+
+    def spawn():
+        whichjunk = random.randint(0,len(spacejunkfiles)-1)
+        junksize = random.randrange(2,10)
+        spacejunk.append(SpaceJunk(whichjunk,random.randrange(-100,100),junksize*0.1))
+        junkobject = pygame.mixer.Sound(os.getcwd() + spacejunkfiles[whichjunk][1])
+        junkobject.set_volume(junksize*0.1)
+        pygame.mixer.Sound.play(junkobject)
 
 class CutOffLine:
     def __init__(self,x,y,kanatohit,lastkana):
         self.x, self.y = x, y
         self.lastkana = lastkana
         self.kanatohit = kanatohit
+        self.last_kana_text = question_font.render(self.lastkana, True, 'white')
+        self.next_kana_text = question_font.render(self.kanatohit, True, 'white')
+        self.lkt_rect = self.last_kana_text.get_rect()
+        self.nkt_rect = self.next_kana_text.get_rect()
         self.velocity = kanax_velocity
+        self.kanaoffset = 40
+        self.box = pygame.Rect(self.x,0,2,HEIGHT)
 
     def update(self,player):
         self.x -= self.velocity * Variables.dt
+        self.box = pygame.Rect(self.x,0,2,HEIGHT)
         if self.x < -50: cuttoffline.pop(cuttoffline.index(self))
 
     def draw(self,screen):
-        self.box = pygame.Rect(self.x,0,2,HEIGHT)
-        kanaoffset = 40
         pygame.draw.rect(screen, (128,0,0), self.box, 2)
-        last_kana_text = question_font.render(self.lastkana, True, 'white')
-        next_kana_text = question_font.render(self.kanatohit, True, 'white')
-        lkt_rect = last_kana_text.get_rect()
-        nkt_rect = next_kana_text.get_rect()
-        screen.blit(last_kana_text, (self.x-kanaoffset-(lkt_rect.centerx), HEIGHT-64))
-        screen.blit(next_kana_text, (self.x+kanaoffset-(nkt_rect.centerx), HEIGHT-64))
-        screen.blit(last_kana_text, (self.x-kanaoffset-(lkt_rect.centerx), 64))
-        screen.blit(next_kana_text, (self.x+kanaoffset-(nkt_rect.centerx), 64))
+        screen.blit(self.last_kana_text, (self.x-self.kanaoffset-(self.lkt_rect.centerx), HEIGHT-64))
+        screen.blit(self.next_kana_text, (self.x+self.kanaoffset-(self.nkt_rect.centerx), HEIGHT-64))
+        screen.blit(self.last_kana_text, (self.x-self.kanaoffset-(self.lkt_rect.centerx), 64))
+        screen.blit(self.next_kana_text, (self.x+self.kanaoffset-(self.nkt_rect.centerx), 64))
 
     def spawn():
         cuttoffline.append(CutOffLine(WIDTH+off_screen_offset,0,Variables.gamekana[Variables.level][Variables.kananum][2],Variables.gamekana[Variables.last_level][Variables.last_kananum][2]))
@@ -373,11 +390,16 @@ class BigLaser:
     def __init__(self,x,y):
         self.x, self.y = x, y
         self.image = biglaser_surf
+        self.biglaser_rect = self.image.get_rect(center = (self.x, self.y))
         self.velocity = 8000
         self.hitboxYshrink = 50
+        self.hitbox = [0,0,0,0]
     
     def update(self):
         self.x -= self.velocity * Variables.dt
+        self.hitbox = self.biglaser_rect
+        self.hitbox[1] += self.hitboxYshrink
+        self.hitbox[3] -= (self.hitboxYshrink*2)
         if self.x < -512:
             biglasers.pop(biglasers.index(self))
             self.laserdelay = 100
@@ -386,10 +408,6 @@ class BigLaser:
         self.image = pygame.transform.scale(self.image,(2048,256))
         self.biglaser_rect = self.image.get_rect(center = (self.x, self.y))
         screen.blit(self.image, self.biglaser_rect)
-
-        self.hitbox = self.biglaser_rect
-        self.hitbox[1] += self.hitboxYshrink
-        self.hitbox[3] -= (self.hitboxYshrink*2)
         if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
 
@@ -538,7 +556,8 @@ class PowerUp:
         self.img = pygame.transform.scale(self.img,(64,64))
         self.x, self.y = x, y
         self.xvelocity, self.yvelocity = xvelocity, yvelocity
-        self.hitbox = self.img_rect = self.img.get_rect(center = (self.x, self.y))
+        self.hitbox = [0,0,0,0]
+        self.shieldradius = 32
 
     def update(self,player):
         self.x -= self.xvelocity * Variables.dt
@@ -560,10 +579,17 @@ class PowerUp:
         powerups.append(PowerUp(WIDTH+64, random.randrange(128,HEIGHT-128,),100,random.randrange(100,200),graphic,effect))
 
     def collide(self,rect):
-        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
-            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
-                return True
-        return False
+        x = abs(self.x - (rect[0] + rect[2] / 2))
+        y = abs(self.y - (rect[1] + rect[3] / 2))
+
+        if x > (rect[2] / 2 + self.shieldradius): return False
+        if y > (rect[3] / 2 + self.shieldradius): return False
+
+        if x <= (rect[2] / 2): return True
+        if y <= (rect[3] / 2): return True
+
+        corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
+        return corner_distance <= self.shieldradius**2
     
     def effect(self,pueffect,player):
         if pueffect == "laser":
@@ -671,6 +697,7 @@ class EnemyProjectiles:
         self.image = pygame.transform.scale(self.image,(32, 32))
         self.enemy_pew_rect = self.image.get_rect(center = (self.x, self.y))
         self.velocity = 500
+        self.hitradius = 16
         self.hitbox = [0,0,0,0]
 
     def objectdirection(self,direction):
@@ -693,13 +720,21 @@ class EnemyProjectiles:
 
         self.hitbox = self.enemy_pew_rect
         if Variables.hitboxshow:
-            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+            # pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+            pygame.draw.circle(screen,'red',(self.x,self.y),self.hitradius,2)
 
     def collide(self,rect):
-        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
-            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
-                return True
-        return False
+        x = abs(self.x - (rect[0] + rect[2] / 2))
+        y = abs(self.y - (rect[1] + rect[3] / 2))
+
+        if x > (rect[2] / 2 + self.hitbox[2]/2): return False
+        if y > (rect[3] / 2 + self.hitbox[3]/2): return False
+
+        if x <= (rect[2] / 2): return True
+        if y <= (rect[3] / 2): return True
+
+        corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
+        return corner_distance <= self.hitradius**2
     
     def spawn():
         enemyprojectiles.append(EnemyProjectiles())

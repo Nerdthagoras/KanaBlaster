@@ -14,7 +14,7 @@ allstates = [
 
 # Initialize pygame
 pygame.init()
-pygame.mixer.music.set_volume(.3)
+pygame.mixer.music.set_volume(0)
 
 # Game loop
 while not current_state.done:
