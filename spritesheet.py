@@ -28,27 +28,24 @@ class LoadSpritesheet:
 
 class PlayAnimation(pygame.sprite.Sprite):
     def __init__(self, x, y, spritearray, scale, repeat):
-        pygame.sprite.Sprite.__init__(self)
-        self.explode_last_update = pygame.time.get_ticks()
-        self.spritearray = spritearray
+        super().__init__()
+        self.x, self.y = x, y
         self.index = 0
-        self.image = self.spritearray[self.index]
-        self.rect = self.image.get_rect(center = (x,y))
         self.counter = 0
+        self.explosion_speed = 1
+        self.spritearray = spritearray
+        self.image = self.spritearray[self.index]
+        self.rect = self.image.get_rect(center = (self.x, self.y))
         self.repeat = repeat
         self.scale = scale
 
     def update(self):
-        explosion_speed = 1
         self.counter += 100 * Variables.dt
-
-        if self.counter >= explosion_speed and self.index < len(self.spritearray) - 1:
+        if self.counter >= self.explosion_speed and self.index < len(self.spritearray) - 1:
             self.counter = 0
             self.index += 1
             self.image = self.spritearray[self.index]
 
-        if self.index >= len(self.spritearray) - 1 and self.counter >= explosion_speed:
-            if self.repeat:
-                self.index = 0
-            else:
-                self.kill()
+        if self.index >= len(self.spritearray) - 1 and self.counter >= self.explosion_speed:
+            if self.repeat: self.index = 0
+            else: self.kill()

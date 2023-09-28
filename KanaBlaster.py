@@ -1,9 +1,12 @@
 from Constants import clock,fps,screen
-from Game_States import intro_state,current_state,menu_state,game_state,gameover_state
+from Game_States import intro_state,menu_state,game_state,gameover_state
 import time
 import Variables
 import pygame
 import os
+
+# Set current state
+current_state = intro_state
 
 allstates = [
     [intro_state,menu_state,'GameIntro'],

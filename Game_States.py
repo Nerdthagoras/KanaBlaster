@@ -91,6 +91,7 @@ class MenuState:
         for wod in wallsegments: wod.update()                           # Wall of Death
 
     def draw(self,screen):
+        # Must be in order of Top/Bottom = Background/Foreground
         screen.fill(('black'))                                          # Refresh screen
 
         for junk in spacejunk: junk.draw(screen)                        # RANDOM JUNK
@@ -144,7 +145,8 @@ class MenuState:
         screen.blit(TITLE_text, (10, HEIGHT/8))
         TITLE_shadow_text = GAME_OVER_font.render('KANA BLASTER', True, 'white')
         TITLE_shadow_text.set_alpha(100)
-        screen.blit(TITLE_shadow_text, (18, HEIGHT/8+8))
+        offset = 8
+        screen.blit(TITLE_shadow_text, (10+offset, HEIGHT/8+offset))
         #endregion
 
         #region DEBUG                                                   # DEBUG screen
@@ -1034,7 +1036,6 @@ class CutScene:
     def handle_events(self, events):
         pass
 
-
 #region DEBUG
 def displaydebug(x,y):
     debugitems = [
@@ -1043,16 +1044,6 @@ def displaydebug(x,y):
         ['NumIK',len(kanas)],
         ['COT',len(cuttoffline)],
         ['Sub Level',Variables.kananum],
-        # ["Player Pos",player.spaceship_rect.center],
-        # ['Respawn',round(player.respawn_timer,1)],
-        # ["XVel",round(player.Xvelocity,2)],
-        # ["YVel",round(player.Yvelocity,2)],
-        # ['Laser Counter',player.lasersightcounter],
-        # ["Enemy Wait Timer",game_state.enemy_wait_timer],
-        # ['Enemy Timer',round(game_state.enemy_randomness - (time.time() - game_state.enemy_timer),1)],
-        # ['Big Laser Timer',round(game_state.biglaser_randomness - (time.time() - game_state.biglaser_timer),1)],
-        # ['Kana Switch Timer',round(player.kanaswitchcounter,1)],
-        # ['Bridge Timer',round(game_state.bridge_thresh - (time.time() - game_state.bridge_timer),1)],
     ]
     currentline = y
     for item in debugitems:
@@ -1068,8 +1059,5 @@ menu_state = MenuState()
 game_state = GameState()
 gameover_state = GameOverState()
 cutscene_state = CutScene()
-player = Ship(0,HEIGHT//2,spaceship_surf)
-
-# Set current state
-current_state = intro_state
+player = Ship(0,HEIGHT//2,spaceship_surfs)
 #endregion

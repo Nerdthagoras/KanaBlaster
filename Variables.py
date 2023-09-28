@@ -7,13 +7,12 @@ lt = time.time()
 dt = 0
 
 # Kanas CSV
-if os.path.isfile('data/userkana.csv'):
-    commasep = read_csv('data/userkana.csv')
-else:
-    commasep = read_csv('data/kana.csv')
+if os.path.isfile('data/userkana.csv'): commasep = read_csv('data/userkana.csv')
+else: commasep = read_csv('data/kana.csv')
+
 levels = (5,10,15,20,25,30,35,38,43,46)
 gamekana = []
-for i in range(len(levels)):
+for i in range(len(levels)):    # Shuffle Kana and create levels
     level = commasep[0:levels[i]]
     random.shuffle(level)
     gamekana.append(level)
@@ -34,7 +33,6 @@ bridgewipecounter = 0
 debugwindow = False
 hitboxshow = False
 shipcollision = True
-shipdistance = 1
 
 RGB = [0,0,0]
 theta = 0

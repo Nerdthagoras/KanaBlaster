@@ -9,8 +9,11 @@ import os
 
 # PLAYER
 class Ship:
-    def __init__(self,x,y,image):
-        self.image = image
+    def __init__(self,x,y,spritearray):
+        self.spritearray = spritearray
+        self.animindex = 0
+        self.animspeed = 10
+        self.image = self.spritearray.images[self.animindex]
         self.location = pygame.math.Vector2(x,y)
         self.spaceship_rect = self.image.get_rect(center = self.location)
         self.deadzone = 20
@@ -39,6 +42,11 @@ class Ship:
         self.kanaswitch = False
         self.kanaswitchcounter = self.poweruptimelength
         #endregion
+
+    def animate(self):
+        self.animindex += self.animspeed * Variables.dt
+        if self.animindex > len(self.spritearray.images)-1: self.animindex = 0
+        self.image = self.spritearray.images[int(self.animindex)]
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -85,7 +93,7 @@ class Ship:
         #endregion
         # Pew
         if keys[pygame.K_SPACE]:
-            Pew.spawn(self)
+            Pew.spawn(self)    
 
     def move(self):
         self.location[0] -= (self.Xvelocity + 2*kanax_velocity/3) * Variables.dt
@@ -103,6 +111,7 @@ class Ship:
         self.spaceship_rect.center = self.location
 
     def update(self):
+        self.animate()
         self.movement()
         self.move()
 
@@ -619,10 +628,12 @@ class PowerUp:
 
 class Enemies:
     def __init__(self,typeof):
+        self.spritearray = enemy_spritesheet_surfs
+        self.animindex = 0
+        self.animspeed = 10
         self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
         self.type = typeof
-        self.image = enemy_surfs[self.type]
-        self.image = pygame.transform.scale(self.image,(64, 64))
+        self.image = self.spritearray[self.type].images[self.animindex]
         self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = random.randint(100,400)
         self.Yvelocity = random.randint(-50,50)
@@ -636,7 +647,13 @@ class Enemies:
         angles = [i * angle_step for i in range(number_of_angles)]
         return angles
 
+    def animate(self):
+        self.animindex += self.animspeed * Variables.dt
+        if self.animindex > len(self.spritearray[self.type].images)-1: self.animindex = 0
+        self.image = self.spritearray[self.type].images[int(self.animindex)]
+
     def update(self):
+        self.animate()
         if self.type == 0 or self.type == 1:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         elif self.type == 2:
