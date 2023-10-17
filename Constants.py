@@ -38,8 +38,10 @@ biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png'))
 biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
 wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).convert_alpha()
 brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
+debris_surf = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
 explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
-spaceship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','spaceship.png')).convert_alpha(),32,16,3)
+spaceship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','ArpShip.png')).convert_alpha(),64,64,1)
+spaceship_flame_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','flames.png')).convert_alpha(),128,64,0.75)
 
 #PowerUp Files
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
@@ -59,7 +61,7 @@ for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('
 #Enemy Spritesheets
 enemyspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/enemies')]
 enemy_spritesheet_surfs = []
-for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,3))
+for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,2))
 
 # Space Junk
 spacejunkfiles = [

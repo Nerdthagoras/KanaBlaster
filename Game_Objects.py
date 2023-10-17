@@ -11,6 +11,7 @@ import os
 class Ship:
     def __init__(self,x,y,spritearray):
         self.spritearray = spritearray
+        self.flamearray = spaceship_flame_surfs
         self.animindex = 0
         self.animspeed = 10
         self.image = self.spritearray.images[self.animindex]
@@ -28,6 +29,16 @@ class Ship:
         self.respawn_timer = -1
         self.hitbox = [0,0,0,0]
         self.shieldradius = 64
+        # Flames
+        self.xflamedir = 0
+        self.yflamedir = 0
+        self.xflameindex = 0
+        self.yflameindex = 0
+        self.flamespeed = 30
+        self.xflameimage = pygame.transform.rotate(self.flamearray.images[self.xflameindex],0)
+        self.xflame_rect = self.xflameimage.get_rect(center = self.location)
+        self.yflameimage = pygame.transform.rotate(self.flamearray.images[self.yflameindex],90)
+        self.yflame_rect = self.yflameimage.get_rect(center = self.location)
 
         #region Powerups
         self.poweruptimelength = 1000
@@ -43,6 +54,20 @@ class Ship:
         self.kanaswitchcounter = self.poweruptimelength
         #endregion
 
+    def xflame(self,dir):
+        self.xflameindex += self.flamespeed * Variables.dt
+        if self.xflameindex > 12: self.xflameindex = 5
+        self.xflameimage = pygame.transform.rotate(self.flamearray.images[int(self.xflameindex)],dir)
+        if dir == 0:self.xflame_rect = self.xflameimage.get_rect(midleft = self.spaceship_rect.center)
+        elif dir == 180:self.xflame_rect = self.xflameimage.get_rect(midright = self.spaceship_rect.center)
+
+    def yflame(self,dir):
+        self.yflameindex += self.flamespeed * Variables.dt
+        if self.yflameindex > 12: self.yflameindex = 5
+        self.yflameimage = pygame.transform.rotate(self.flamearray.images[int(self.yflameindex)],dir)
+        if dir == -90:self.yflame_rect = self.yflameimage.get_rect(midtop = self.spaceship_rect.center)
+        elif dir == 90:self.yflame_rect = self.yflameimage.get_rect(midbottom = self.spaceship_rect.center)
+
     def animate(self):
         self.animindex += self.animspeed * Variables.dt
         if self.animindex > len(self.spritearray.images)-1: self.animindex = 0
@@ -52,15 +77,45 @@ class Ship:
         keys = pygame.key.get_pressed()
         self.temp_acc = self.acceleration * Variables.dt
         self.temp_dec = self.deceleration * Variables.dt
+
         #region Vecors
+        # Horizontal
+        if keys[pygame.K_a]: 
+            self.xflame(0)
+            screen.blit(self.xflameimage, self.xflame_rect)
+            if self.Xvelocity <= self.speed:
+                self.Xvelocity += self.temp_acc
+        elif keys[pygame.K_d] and self.location[0] < WIDTH-500:
+            self.xflame(180)
+            screen.blit(self.xflameimage, self.xflame_rect)
+            if self.Xvelocity >= -self.speed:
+                self.Xvelocity -= self.temp_acc
+        else:
+            self.xflameindex = 0
+            if self.Xvelocity < 0:
+                if self.Xvelocity >= -self.deadzone:
+                    self.Xvelocity = 0
+                else:
+                    self.Xvelocity += self.temp_dec
+            elif self.Xvelocity > 0:
+                if self.Xvelocity <= self.deadzone:
+                    self.Xvelocity = 0
+                else:
+                    self.Xvelocity -= self.temp_dec
+
         # Vertical
         if keys[pygame.K_w]:
+            self.yflame(-90)
+            screen.blit(self.yflameimage, self.yflame_rect)
             if self.Yvelocity <= self.speed:
                 self.Yvelocity += self.temp_acc
         elif keys[pygame.K_s]:
+            self.yflame(90)
+            screen.blit(self.yflameimage, self.yflame_rect)
             if self.Yvelocity >= -self.speed:
                 self.Yvelocity -= self.temp_acc
         else:
+            self.yflameindex = 0
             if self.Yvelocity < 0:
                 if self.Yvelocity >= -self.deadzone:
                     self.Yvelocity = 0
@@ -72,24 +127,6 @@ class Ship:
                 else:
                     self.Yvelocity -= self.temp_dec
 
-        # Horizontal
-        if keys[pygame.K_a]: 
-            if self.Xvelocity <= self.speed:
-                self.Xvelocity += self.temp_acc
-        elif keys[pygame.K_d] and self.location[0] < WIDTH-500:
-            if self.Xvelocity >= -self.speed:
-                self.Xvelocity -= self.temp_acc
-        else:
-            if self.Xvelocity < 0:
-                if self.Xvelocity >= -self.deadzone:
-                    self.Xvelocity = 0
-                else:
-                    self.Xvelocity += self.temp_dec
-            elif self.Xvelocity > 0:
-                if self.Xvelocity <= self.deadzone:
-                    self.Xvelocity = 0
-                else:
-                    self.Xvelocity -= self.temp_dec
         #endregion
         # Pew
         if keys[pygame.K_SPACE]:
@@ -112,7 +149,7 @@ class Ship:
 
     def update(self):
         self.animate()
-        self.movement()
+        # self.movement()
         self.move()
 
         # RESPAWN
@@ -176,7 +213,7 @@ class Ship:
             Variables.RGB = [255,255,255]
 
     def draw(self,screen):
-
+        self.movement()
         if Variables.shipcollision == False:
             if int(self.respawn_timer*100) % 3 == 0: self.image.set_alpha(200)
             elif int(self.respawn_timer*100) % 3 == 1: self.image.set_alpha(128)
@@ -536,11 +573,11 @@ class Kana:
             alpha = 255 - self.kanakill
             if alpha <= 0: alpha = 0
 
-            shoot_here_surf = pygame.Surface((100,100),pygame.SRCALPHA)
+            shoot_here_surf = pygame.Surface((200,100),pygame.SRCALPHA)
             shoot_here_pos = shoot_here_surf.get_rect(bottomleft = (top_right_of_kana))
             # pygame.draw.circle(screen,'blue',top_right_of_kana,3)
             pygame.draw.line(shoot_here_surf,(255,0,0),(0,100),(25,50),3)
-            shoot_text = ui_font.render('Shoot',True,(255,0,0))
+            shoot_text = ui_font.render('Collect',True,(255,0,0))
             shoot_here_surf.set_alpha(alpha)
             shoot_here_surf.blit(shoot_text,(20,0))
 
@@ -635,9 +672,15 @@ class Enemies:
         self.type = typeof
         self.image = self.spritearray[self.type].images[self.animindex]
         self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
-        self.velocity = random.randint(100,400)
+        self.velocity = random.randint(50,200)
         self.Yvelocity = random.randint(-50,50)
         self.last_enemy_pew = 0
+
+        self.maxhealth = 5
+        self.health = self.maxhealth
+        self.healthbar_height = 5
+        self.healthbar = pygame.Surface((self.enemy_rect.width,5))
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
 
     def calculate_angles(self,number_of_angles):
         if number_of_angles < 1:
@@ -653,6 +696,9 @@ class Enemies:
         self.image = self.spritearray[self.type].images[int(self.animindex)]
 
     def update(self):
+        self.healthdisplay = self.enemy_rect.width/self.maxhealth*self.health
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
         self.animate()
         if self.type == 0 or self.type == 1:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
@@ -688,6 +734,10 @@ class Enemies:
 
     def draw(self,screen,player):
         screen.blit(self.image, self.enemy_rect)
+        
+        screen.blit(self.healthbar, (self.enemy_rect.left,self.enemy_rect.top-20,self.enemy_rect.width,10))
+        self.healthbar.fill('black')
+        pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
 
         self.hitbox = self.enemy_rect
         if Variables.hitboxshow:
@@ -837,3 +887,64 @@ class Brick:
     def spawn(x,y):
         for _ in range(random.randint(1,10)):
             bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
+
+class Debris:
+    def __init__(self,x,y,direction,image):
+        self.x, self.y = x, y
+        self.direction = direction
+        self.skewoffset = 20
+        self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
+        self.velocity = random.randint(100,300)
+        self.image = image
+        self.rotate = 0
+        self.rotate_rate = random.randint(-100,100)
+        self.debrisscale = 1
+        self.hitradius = self.image.get_rect().centerx
+        self.hitbox = [0,0,0,0]
+
+    def objectdirection(self,direction):
+        pewdir = direction - math.pi/2 + self.directionskew
+        sin_a = math.sin(pewdir)
+        cos_a = math.cos(pewdir)
+        self.x += self.velocity * sin_a * Variables.dt
+        self.y += self.velocity * cos_a * Variables.dt
+        return self.x, self.y
+
+    def update(self):
+        # self.x -= self.velocity * Variables.dt
+        self.x, self.y = self.objectdirection(self.direction)
+        if self.x < -32: debris.pop(debris.index(self))
+        self.debris_rect = self.image.get_rect(center = (self.x, self.y))
+
+    def draw(self, screen):
+        self.orig_rect = self.image.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.image,self.rotate)
+        self.rot_rect = self.orig_rect.copy()
+        self.rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
+        self.scale_image = pygame.transform.scale(self.rotated_image,(self.image.get_rect().width*self.debrisscale,self.image.get_rect().height*self.debrisscale))
+        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
+        screen.blit(self.scale_image, self.centered_image)
+        self.rotate += self.rotate_rate * Variables.dt
+
+        self.hitbox = self.debris_rect
+        if Variables.hitboxshow:
+            pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
+            pygame.draw.circle(screen,'red',(self.x,self.y),self.hitradius,2)
+
+    def collide(self, rect):
+        x = abs(self.x - (rect[0] + rect[2] / 2))
+        y = abs(self.y - (rect[1] + rect[3] / 2))
+
+        if x > (rect[2] / 2 + self.hitbox[2]/2): return False
+        if y > (rect[3] / 2 + self.hitbox[3]/2): return False
+
+        if x <= (rect[2] / 2): return True
+        if y <= (rect[3] / 2): return True
+
+        corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
+        return corner_distance <= self.hitradius**2
+
+    def spawn(x,y,image):
+        for _ in range(random.randint(1,5)):
+            debris.append(Debris(x,y,math.radians(random.randint(-170,170)),image))

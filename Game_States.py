@@ -398,6 +398,7 @@ class GameState:
         #endregion
         for wod in wallsegments: wod.update()                           # Wall of Death
         for brick in bricks: brick.update()                             # Brick debris
+        for bits in debris: bits.update()                                # Debris
         player.update()                                                 # Player
         for centerwarn in centerwarning: centerwarn.update()            # UI
         bridge_group.update(player)                                     # BRIDGE WIPE
@@ -432,6 +433,7 @@ class GameState:
         for bullet in bullets: bullet.draw(screen)                      # BULLETS
         for cutoff in cuttoffline: cutoff.draw(screen)                  # CUTOFF LINE
         for epew in enemyprojectiles: epew.draw(screen)                 # ENEMY PEW
+        for bits in debris: bits.draw(screen)                           # Bits debris
         #region ENEMIES                                                 # ENEMIES
         for enemy in enemies:
             enemy.shoot(player)
@@ -507,26 +509,26 @@ class GameState:
                     explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
-            #correct Kana
+            # if player's bullet hits CORRECT Kana
             for ckana in correctkanas:    
                 if ckana.collide(bullet.rect):
                     pygame.mixer.Sound.play(goodhit)
                     kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
                     if ckana.x >= 2*WIDTH // 3:
-                        Variables.score += 3
+                        Variables.score -= 3
                     elif ckana.x > WIDTH // 3 and ckana.x < 2*WIDTH // 3:
-                        Variables.score += 2
+                        Variables.score -= 2
                     else:
-                        Variables.score += 1
+                        Variables.score -= 1
                     explosion = PlayAnimation(ckana.x, ckana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
                     try: bullets.pop(bullets.index(bullet))
                     except: pass
                     correctkanas.pop(correctkanas.index(ckana))
-                    kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
-                    if kanaint <= num_to_shoot_new_kana: kanaint += 1
-                    Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3] = kanaint
+                    # kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
+                    # if kanaint <= num_to_shoot_new_kana: kanaint += 1
+                    #Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3] = kanaint
 
             # if player's bullet hits WRONG kana
             for kana in kanas:
@@ -538,11 +540,11 @@ class GameState:
                     kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', kana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
                     if kana.x >= 2*WIDTH // 3:
-                        Variables.score -= 3
+                        Variables.score += 3
                     elif kana.x > WIDTH // 3 and kana.x < 2*WIDTH // 3:
-                        Variables.score -= 2
+                        Variables.score += 2
                     else:
-                        Variables.score -= 1
+                        Variables.score += 1
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
@@ -550,10 +552,13 @@ class GameState:
             for enemy in enemies:
                 if enemy.collide(bullet.rect):
                     pygame.mixer.Sound.play(goodhit)
-                    Variables.score += 5
-                    explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
-                    explosion_group.add(explosion)
-                    enemies.pop(enemies.index(enemy))
+                    Variables.score += 1
+                    enemy.health -= 1
+                    Debris.spawn(enemy.enemy_rect.centerx,enemy.y,debris_surf)
+                    if enemy.health == 0:
+                        enemies.pop(enemies.index(enemy))
+                        explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                        explosion_group.add(explosion)
                     try: bullets.pop(bullets.index(bullet))
                     except: pass
 
@@ -688,14 +693,23 @@ class GameState:
             if Variables.shipcollision == True:
                 if kana.collide(player.spaceship_rect):
                     correctkanas.pop(correctkanas.index(kana))
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
-                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
-                    explosion_group.add(explosion)
-                    explosion_group.add(ship_explosion)
-                    pygame.mixer.Sound.play(shiphit)
+                    #explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
+                    #ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    #explosion_group.add(explosion)
+                    #explosion_group.add(ship_explosion)
+                    # pygame.mixer.Sound.play(goodhit)
+                    if kana.x >= 2*WIDTH // 3:
+                        Variables.score += 3
+                    elif kana.x > WIDTH // 3 and kana.x < 2*WIDTH // 3:
+                        Variables.score += 2
+                    else:
+                        Variables.score += 1
                     kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
-                    player.respawn()
+                    kanaint = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])
+                    if kanaint <= num_to_shoot_new_kana: kanaint += 1
+                    Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3] = kanaint
+                    #player.respawn()
 
             # if player hits kana
         
@@ -719,6 +733,18 @@ class GameState:
                 if enemy.collide(player.spaceship_rect):
                     enemies.pop(enemies.index(enemy))
                     explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                    ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    explosion_group.add(ship_explosion)
+                    pygame.mixer.Sound.play(shiphit)
+                    player.respawn()
+
+        # if player hits enemy debris
+        for bits in debris:
+            if Variables.shipcollision == True:
+                if bits.collide(player.spaceship_rect):
+                    debris.pop(debris.index(bits))
+                    explosion = PlayAnimation(bits.x, bits.y,explosion_surfs.images,0.25,False)
                     ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
                     explosion_group.add(explosion)
                     explosion_group.add(ship_explosion)
@@ -984,7 +1010,8 @@ class GameOverState:
             for junk in spacejunk:
                 if kana.collide(junk.hitbox):
                     pygame.mixer.Sound.play(goodhit)
-                    kanas.pop(kanas.index(kana))
+                    try: kanas.pop(kanas.index(kana))
+                    except: pass
                     explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
