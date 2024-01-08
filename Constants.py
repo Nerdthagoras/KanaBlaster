@@ -62,6 +62,7 @@ for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('
 enemyspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/enemies')]
 enemy_spritesheet_surfs = []
 for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,2))
+print(len(enemyspritesheets))
 
 # Space Junk
 spacejunkfiles = [

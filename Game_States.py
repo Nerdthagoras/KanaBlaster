@@ -499,6 +499,8 @@ class GameState:
 
         #region Player Projectiles
         for bullet in bullets:
+
+            #if player's bullet hits Wall of Death
             for wod in wallsegments:
                 if wod.collide(bullet.rect):
                     wallsegments.pop(wallsegments.index(wod))
@@ -570,6 +572,17 @@ class GameState:
                     explosion_group.add(explosion)
                     bullets.pop(bullets.index(bullet))
                     powerups.pop(powerups.index(powerup))
+
+            # if player's bullet hits ship debirs
+            for shipdeb in debris:
+                if shipdeb.collide(bullet.rect):
+                    pygame.mixer.Sound.play(goodhit)
+                    explosion = PlayAnimation(shipdeb.x, shipdeb.y,explosion_surfs.images,0.2,False)
+                    explosion_group.add(explosion)
+                    try: bullets.pop(bullets.index(bullet))
+                    except: pass
+                    debris.pop(debris.index(shipdeb))
+
         #endregion
         
         #region Enemy Projectiles

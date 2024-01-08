@@ -36,8 +36,8 @@ class PlayAnimation(pygame.sprite.Sprite):
         self.spritearray = spritearray
         self.image = self.spritearray[self.index]
         self.rect = self.image.get_rect(center = (self.x, self.y))
-        self.repeat = repeat
         self.scale = scale
+        self.repeat = repeat
 
     def update(self):
         self.counter += 100 * Variables.dt
@@ -45,6 +45,9 @@ class PlayAnimation(pygame.sprite.Sprite):
             self.counter = 0
             self.index += 1
             self.image = self.spritearray[self.index]
+            self.image = pygame.transform.scale(self.image,(256 * self.scale,256 * self.scale))
+            self.rect = self.image.get_rect(center = (self.x, self.y))
+            
 
         if self.index >= len(self.spritearray) - 1 and self.counter >= self.explosion_speed:
             if self.repeat: self.index = 0

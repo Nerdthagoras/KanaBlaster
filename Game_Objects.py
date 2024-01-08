@@ -752,7 +752,7 @@ class Enemies:
 
     def spawn():
         # enemies.append(Enemies(random.randint(0,2)))
-        enemies.append(Enemies(random.randint(0,2)))
+        enemies.append(Enemies(random.randint(0,5)))
 
 class EnemyProjectiles:
     def __init__(self,x,y,direction):
