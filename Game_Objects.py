@@ -700,9 +700,9 @@ class Enemies:
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
 
         self.animate()
-        if self.type == 0 or self.type == 1:
+        if self.type%3 == 0 or self.type%3 == 1:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
-        elif self.type == 2:
+        elif self.type%3 == 2:
             self.enemy_rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.dt
         self.y += self.Yvelocity * Variables.dt
@@ -719,14 +719,14 @@ class Enemies:
     def shoot(self,player):
         angle = self.findobjectangle(player)
         if pygame.time.get_ticks() - self.last_enemy_pew >= random.randint(2000,10000):
-            if self.type == 0: # AIMED SHOT
+            if self.type%3 == 0: # AIMED SHOT
                 if angle < math.pi/3 and angle > -math.pi/3:
                     pygame.mixer.Sound.play(enemypew_sound)
                     enemyprojectiles.append(EnemyProjectiles(self.x, self.y,angle))
-            elif self.type == 1: # FORWARD SHOT
+            elif self.type%3 == 1: # FORWARD SHOT
                 pygame.mixer.Sound.play(enemypew_sound)
                 enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(random.randint(-10,10))))
-            elif self.type == 2: #AoE SHOT
+            elif self.type%3 == 2: #AoE SHOT
                 pygame.mixer.Sound.play(enemypew_sound)
                 for angle in self.calculate_angles(8):
                     enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(angle)))
@@ -752,7 +752,7 @@ class Enemies:
 
     def spawn():
         # enemies.append(Enemies(random.randint(0,2)))
-        enemies.append(Enemies(random.randint(0,5)))
+        enemies.append(Enemies(random.randint(0,3)))
 
 class EnemyProjectiles:
     def __init__(self,x,y,direction):
