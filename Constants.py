@@ -29,7 +29,6 @@ pygame.display.set_caption('Kana Blaster')
 # Graphics
 off_screen_offset = 64
 min_kana_alpha = 200
-question_position = (100, 20)
 spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_alpha()
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()

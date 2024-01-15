@@ -24,6 +24,7 @@ maxlives = 5
 lives = 5
 score = 0
 kananum = 0
+laserpower = 1
 
 #trackables
 last_question_num = 0

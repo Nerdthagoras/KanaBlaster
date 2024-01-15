@@ -17,11 +17,12 @@ allstates = [
 
 # Initialize pygame
 pygame.init()
-pygame.mixer.music.set_volume(.1)
+pygame.mixer.music.set_volume(.3)
 
 # Game loop
 while not current_state.done:
-    pygame.display.set_caption(str(clock.get_fps()))
+    #pygame.display.set_caption(str(clock.get_fps()))
+    pygame.display.set_caption('Kana Blaster')
     clock.tick(fps)
     Variables.dt = time.time() - Variables.lt; Variables.lt = time.time()
 

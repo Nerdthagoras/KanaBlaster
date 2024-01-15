@@ -1,3 +1,5 @@
+from Constants import *
+
 #region Kana
 num_to_shoot_new_kana = 5
 kanax_velocity = 100
@@ -42,6 +44,7 @@ maximum_bridge_frequency = 35
 enemy_start_level = 1
 minimum_enemy_frequency = 5
 maximum_enemy_frequency = 10
+enemy_health = 100
 #endregion
 
 #region Big Laser
@@ -49,4 +52,11 @@ biglaser_start_level = 3
 #endregion
 
 #region Junk
+#endregion
+
+#region UI
+score_position = (0, 10)
+lives_position = (200, 10)
+level_position = (400, 10)
+question_position = (WIDTH/2+60, HEIGHT-80)
 #endregion

@@ -378,7 +378,7 @@ class GameState:
             elif kana.x < 0:
                 if self.correct_kana_lost_sound_play:
                     pygame.mixer.Sound.play(correct_kana_lost_sound)
-                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,3,False)
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,1,False)
                     explosion_group.add(explosion)
                     Variables.score -= 10
                     self.correct_kana_lost_sound_play = False
@@ -402,6 +402,8 @@ class GameState:
         player.update()                                                 # Player
         for centerwarn in centerwarning: centerwarn.update()            # UI
         bridge_group.update(player)                                     # BRIDGE WIPE
+
+        Variables.laserpower = int(Variables.score) + 1
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
@@ -451,6 +453,8 @@ class GameState:
         for biglaser in biglasers: biglaser.draw(screen)                # BIG LASER
         for wod in wallsegments: wod.draw(screen)                       # Wall of Death
         for brick in bricks: brick.draw(screen)                         # Brick debirs
+        for shield in shields: shield.draw(screen)                      # Shields
+        for damagenumber in damagenumbers: damagenumber.draw(screen)    # Damage values 
         #region EXPLOSION                                               # EXPLOSION
         explosion_group.draw(screen)
         explosion_group.update()
@@ -464,25 +468,25 @@ class GameState:
             scaled_rect = scaled_surface.get_rect(center=original_rect.center)
             return scaled_surface, scaled_rect
         
-        shoot_text = ui_font.render('Shoot', True, 'white')
+        shoot_text = ui_font.render('Collect', True, 'white')
         romajitext = question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
         Variables.theta += 5 * Variables.dt
         theta_scale = math.sin(Variables.theta)
         romaji_scaled, romaji_rect = scale_surface_from_center(romajitext, 1.5 + (theta_scale*.5))
 
-        screen.blit(shoot_text, (question_position[0]-90,question_position[1]+13))
+        screen.blit(shoot_text, (question_position[0]-120,question_position[1]+13))
         screen.blit(romaji_scaled, (romaji_rect[0]+question_position[0],romaji_rect[1]+question_position[1]))
         #endregion
         #region UI TEXT                                                 # UI TEXT
         if Variables.score <=0: Variables.score = 0
         scoretext = ui_font.render("Score: " + str(Variables.score), True, 'white')
-        screen.blit(scoretext, (WIDTH-200, 10))
+        screen.blit(scoretext, score_position)
 
         livestext = ui_font.render("Lives: " + str(Variables.lives), True, 'white')
-        screen.blit(livestext, (WIDTH-400, 10))
+        screen.blit(livestext, lives_position)
 
         leveltext = ui_font.render("Level: " + str(Variables.level), True, 'white')
-        screen.blit(leveltext, (WIDTH-600, 10))
+        screen.blit(leveltext, level_position)
 
         for centerwarn in centerwarning:
             centerwarn.draw()
@@ -506,7 +510,7 @@ class GameState:
                     wallsegments.pop(wallsegments.index(wod))
                     try: bullets.pop(bullets.index(bullet))
                     except: pass
-                    Brick.spawn(wod.x,wod.y)
+                    Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),brick_surf,0)
                     pygame.mixer.Sound.play(brickbreak_sound)
                     explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
@@ -514,7 +518,8 @@ class GameState:
             # if player's bullet hits CORRECT Kana
             for ckana in correctkanas:    
                 if ckana.collide(bullet.rect):
-                    pygame.mixer.Sound.play(goodhit)
+                    Variables.RGB[0] = 128
+                    pygame.mixer.Sound.play(badhit)
                     kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                     pygame.mixer.Sound.play(kana_sound)
                     if ckana.x >= 2*WIDTH // 3:
@@ -535,7 +540,8 @@ class GameState:
             # if player's bullet hits WRONG kana
             for kana in kanas:
                 if kana.collide(bullet.rect):
-                    Variables.RGB[0] = 128
+                    Variables.RGB[1] = 64
+                    pygame.mixer.Sound.play(goodhit)
                     kanas.pop(kanas.index(kana))
                     try: bullets.pop(bullets.index(bullet)) 
                     except: pass
@@ -554,13 +560,15 @@ class GameState:
             for enemy in enemies:
                 if enemy.collide(bullet.rect):
                     pygame.mixer.Sound.play(goodhit)
-                    Variables.score += 1
-                    enemy.health -= 1
-                    Debris.spawn(enemy.enemy_rect.centerx,enemy.y,debris_surf)
-                    if enemy.health == 0:
+                    damage = random.randint(int(Variables.laserpower/5),Variables.laserpower)
+                    enemy.health -= damage
+                    Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),debris_surf,enemies.index(enemy))
+                    Damagenum.spawn(enemy.enemy_rect.centerx,enemy.velocity,enemy.y,damage)
+                    if enemy.health <= 0:
                         enemies.pop(enemies.index(enemy))
                         explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
                         explosion_group.add(explosion)
+                        Variables.score += 1
                     try: bullets.pop(bullets.index(bullet))
                     except: pass
 
@@ -570,7 +578,8 @@ class GameState:
                     pygame.mixer.Sound.play(badhit)
                     explosion = PlayAnimation(powerup.x, powerup.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
-                    bullets.pop(bullets.index(bullet))
+                    try: bullets.pop(bullets.index(bullet))
+                    except: pass
                     powerups.pop(powerups.index(powerup))
 
             # if player's bullet hits ship debirs
@@ -664,7 +673,7 @@ class GameState:
             for wod in wallsegments:
                 if wod.collide(biglaser.hitbox):
                     wallsegments.pop(wallsegments.index(wod))
-                    Brick.spawn(wod.x,wod.y)
+                    Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),brick_surf,0)
                     pygame.mixer.Sound.play(brickbreak_sound)
                     explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
@@ -693,18 +702,36 @@ class GameState:
             for wod in wallsegments:
                 if wod.collide(junk.hitbox):
                     wallsegments.pop(wallsegments.index(wod))
-                    Brick.spawn(wod.x,wod.y)
+                    Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),brick_surf,0)
                     pygame.mixer.Sound.play(brickbreak_sound)
                     explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
 
         #endregion
 
+        #region Enemy Debris
+        for edebs in debris:
+            # if enemy debris hits Enemy
+            for enemy in enemies:
+                if enemy.collide(edebs.hitbox) and edebs.origin != enemies.index(enemy):
+                    pygame.mixer.Sound.play(goodhit)
+                    #Variables.score += 1
+                    enemy.health -= 1
+                    Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),debris_surf,enemies.index(enemy))
+                    if enemy.health == 0:
+                        enemies.pop(enemies.index(enemy))
+                        explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
+                        explosion_group.add(explosion)
+                    try: debris.pop(debris.index(edebs))
+                    except: pass
+            pass
+
         #region Ship
         # if player's ship hits correct kana
         for kana in correctkanas:
             if Variables.shipcollision == True:
                 if kana.collide(player.spaceship_rect):
+                    Variables.RGB[1] = 64
                     correctkanas.pop(correctkanas.index(kana))
                     #explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,0.5,False)
                     #ship_explosion = PlayAnimation(player.spaceship_rect.center[0], player.spaceship_rect.center[1],explosion_surfs.images,1,False)
@@ -789,7 +816,7 @@ class GameState:
             for wod in wallsegments:
                 if wod.collide(kana.hitbox):
                     wallsegments.pop(wallsegments.index(wod))
-                    Brick.spawn(wod.x,wod.y)
+                    Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),brick_surf,0)
                     pygame.mixer.Sound.play(brickbreak_sound)
                     explosion = PlayAnimation(wod.x, wod.y,explosion_surfs.images,0.5,False)
                     explosion_group.add(explosion)
@@ -971,13 +998,13 @@ class GameOverState:
             scaled_rect = scaled_surface.get_rect(center=original_rect.center)
             return scaled_surface, scaled_rect
         
-        shoot_text = ui_font.render('Shoot', True, 'white')
+        shoot_text = ui_font.render('Collect', True, 'white')
         romajitext = question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
         Variables.theta += 5 * Variables.dt
         theta_scale = math.sin(Variables.theta)
         romaji_scaled, romaji_rect = scale_surface_from_center(romajitext, 1.5 + (theta_scale*.5))
 
-        screen.blit(shoot_text, (question_position[0]-90,question_position[1]+13))
+        screen.blit(shoot_text, (question_position[0]-120,question_position[1]+13))
         screen.blit(romaji_scaled, (romaji_rect[0]+question_position[0],romaji_rect[1]+question_position[1]))
         #endregion
         #region UI TEXT                                                 # UI TEXT

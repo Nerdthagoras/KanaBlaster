@@ -18,6 +18,8 @@ centerwarning = []
 wallsegments = []
 bricks = []
 debris = []
+shields = []
+damagenumbers = []
 
 #spritegroups
 starfield_group = pygame.sprite.Group()

@@ -28,6 +28,7 @@ class Ship:
         self.shipborder = ship_screen_boundary
         self.respawn_timer = -1
         self.hitbox = [0,0,0,0]
+        self.shield = False
         self.shieldradius = 64
         # Flames
         self.xflamedir = 0
@@ -676,7 +677,7 @@ class Enemies:
         self.Yvelocity = random.randint(-50,50)
         self.last_enemy_pew = 0
 
-        self.maxhealth = 5
+        self.maxhealth = Variables.level * enemy_health + 1
         self.health = self.maxhealth
         self.healthbar_height = 5
         self.healthbar = pygame.Surface((self.enemy_rect.width,5))
@@ -698,7 +699,6 @@ class Enemies:
     def update(self):
         self.healthdisplay = self.enemy_rect.width/self.maxhealth*self.health
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
-
         self.animate()
         if self.type%3 == 0 or self.type%3 == 1:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
@@ -836,71 +836,21 @@ class WallOfDeath:
             for h in range(int(HEIGHT/32)):
                 wallsegments.append(WallOfDeath(x+w*32,y+h*32))
 
-class Brick:
-    def __init__(self,x,y,direction):
-        self.x, self.y = x, y
-        self.direction = direction
-        self.skewoffset = 20
-        self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
-        self.velocity = random.randint(100,300)
-        self.image = brick_surf
-        self.rotate = 0
-        self.rotate_rate = random.randint(-100,100)
-        self.brickscale = 1
-
-    def objectdirection(self,direction):
-        pewdir = direction - math.pi/2 + self.directionskew
-        sin_a = math.sin(pewdir)
-        cos_a = math.cos(pewdir)
-        self.x += self.velocity * sin_a * Variables.dt
-        self.y += self.velocity * cos_a * Variables.dt
-        return self.x, self.y
-
-    def update(self):
-        # self.x -= self.velocity * Variables.dt
-        self.x, self.y = self.objectdirection(self.direction)
-        if self.x < -32: bricks.pop(bricks.index(self))
-        self.brick_rect = self.image.get_rect(center = (self.x, self.y))
-
-    def draw(self, screen):
-        self.orig_rect = self.image.get_rect()
-        self.rotated_image = pygame.transform.rotate(self.image,self.rotate)
-        self.rot_rect = self.orig_rect.copy()
-        self.rot_rect.center = self.rotated_image.get_rect().center
-        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
-        self.scale_image = pygame.transform.scale(self.rotated_image,(self.image.get_rect().width*self.brickscale,self.image.get_rect().height*self.brickscale))
-        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
-        screen.blit(self.scale_image, self.centered_image)
-        self.rotate += self.rotate_rate * Variables.dt
-
-        self.hitbox = self.brick_rect
-        if Variables.hitboxshow:
-            pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
-            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
-
-    def collide(self, rect):
-        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
-            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
-                return True
-        return False
-
-    def spawn(x,y):
-        for _ in range(random.randint(1,10)):
-            bricks.append(Brick(x,y,math.radians(random.randint(-10,10))))
-
 class Debris:
-    def __init__(self,x,y,direction,image):
+    def __init__(self,x,y,direction,velocity,image,origin):
         self.x, self.y = x, y
         self.direction = direction
         self.skewoffset = 20
         self.directionskew = random.randint(-self.skewoffset,self.skewoffset)/100
-        self.velocity = random.randint(100,300)
+        self.velocity = velocity
         self.image = image
         self.rotate = 0
         self.rotate_rate = random.randint(-100,100)
         self.debrisscale = 1
+        self.debris_rect = self.image.get_rect(center = (self.x, self.y))
         self.hitradius = self.image.get_rect().centerx
         self.hitbox = [0,0,0,0]
+        self.origin = origin
 
     def objectdirection(self,direction):
         pewdir = direction - math.pi/2 + self.directionskew
@@ -913,7 +863,7 @@ class Debris:
     def update(self):
         # self.x -= self.velocity * Variables.dt
         self.x, self.y = self.objectdirection(self.direction)
-        if self.x < -32: debris.pop(debris.index(self))
+        if self.x < -32 or self.x > WIDTH or self.y < -10 or self.y > HEIGHT: debris.pop(debris.index(self))
         self.debris_rect = self.image.get_rect(center = (self.x, self.y))
 
     def draw(self, screen):
@@ -945,6 +895,28 @@ class Debris:
         corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
         return corner_distance <= self.hitradius**2
 
-    def spawn(x,y,image):
-        for _ in range(random.randint(1,5)):
-            debris.append(Debris(x,y,math.radians(random.randint(-170,170)),image))
+    def spawn(x,y,direction,velocity,image,origin):
+        for _ in range(random.randint(1,3)):
+            debris.append(Debris(x,y,direction,velocity,image,origin))
+
+class Damagenum:
+    def __init__(self,x,xvel,y,damage):
+        self.x, self.y, self.orgy = x, y-32, y-32
+        self.xvelocity, self.yvelocity = xvel, 100
+        damage_font = pygame.font.SysFont(font_name, 20)
+        self.image = damage_font.render(str(damage), True, 'yellow')
+        self.alpha = 255
+
+    def update(self):
+        self.y -= self.yvelocity * Variables.dt
+        self.x -= (self.xvelocity - 50) * Variables.dt
+        self.alpha -= 0.5
+        if self.y < self.orgy - 200: damagenumbers.pop(damagenumbers.index(self))
+
+    def draw(self, screen):
+        self.update()
+        self.image.set_alpha(int(self.alpha))
+        screen.blit(self.image, (self.x, self.y))
+
+    def spawn(x,xvel,y,damage):
+        damagenumbers.append(Damagenum(x,xvel,y,damage))
