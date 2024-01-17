@@ -1,5 +1,5 @@
 from Constants import clock,fps,screen
-from Game_States import intro_state,menu_state,game_state,gameover_state
+from Game_States import intro_state,menu_state,game_state,boss_state,gameover_state
 import time
 import Variables
 import pygame
@@ -15,9 +15,14 @@ allstates = [
     [gameover_state,menu_state,'GameIntro'],
 ]
 
+bossstates = [
+    [game_state,boss_state,'BossFight'],
+    [boss_state,game_state,'TimeDilation'],
+]
+
 # Initialize pygame
 pygame.init()
-pygame.mixer.music.set_volume(.3)
+pygame.mixer.music.set_volume(.1)
 
 # Game loop
 while not current_state.done:
@@ -41,7 +46,17 @@ while not current_state.done:
                 if len(state) == 3:
                     music = pygame.mixer.music.load(os.path.join('music',str(state[2]) + '.wav'))
                     pygame.mixer.music.play(-1)
+                    print(current_state)
                 break
-    
+    elif current_state.boss:
+        for state in bossstates:
+            if current_state == state[0]:
+                current_state = state[1]
+                if len(state) == 3:
+                    music = pygame.mixer.music.load(os.path.join('music',str(state[2]) + '.wav'))
+                    pygame.mixer.music.play(-1)
+                    print(current_state)
+                break
+
 # Quit
 pygame.quit() 

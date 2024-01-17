@@ -29,5 +29,8 @@ def reset_game():
     warnings.clear()
     biglasers.clear()
     enemies.clear()
+    debris.clear()
     enemyprojectiles.clear()
     Variables.kananum = 0
+    Variables.laserpower = 1
+    Variables.enemy_health_multiplier = 0

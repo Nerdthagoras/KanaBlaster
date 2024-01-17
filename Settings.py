@@ -44,7 +44,7 @@ maximum_bridge_frequency = 35
 enemy_start_level = 1
 minimum_enemy_frequency = 5
 maximum_enemy_frequency = 10
-enemy_health = 100
+enemy_health = 10
 #endregion
 
 #region Big Laser

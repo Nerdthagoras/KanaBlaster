@@ -25,6 +25,7 @@ lives = 5
 score = 0
 kananum = 0
 laserpower = 1
+enemy_health_multiplier = 0
 
 #trackables
 last_question_num = 0

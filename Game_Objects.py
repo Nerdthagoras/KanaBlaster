@@ -30,6 +30,8 @@ class Ship:
         self.hitbox = [0,0,0,0]
         self.shield = False
         self.shieldradius = 64
+        self.laserpower = int(Variables.score / 10) + 1
+        self.power_grapic = ui_font.render(str(self.laserpower), True, 'green')
         # Flames
         self.xflamedir = 0
         self.yflamedir = 0
@@ -213,6 +215,9 @@ class Ship:
             self.kanaswitch = False
             Variables.RGB = [255,255,255]
 
+        self.laserpower = int(Variables.score / 10) + 1
+        self.power_grapic = ui_font.render(str(self.laserpower), True, 'green')
+
     def draw(self,screen):
         self.movement()
         if Variables.shipcollision == False:
@@ -226,6 +231,7 @@ class Ship:
 
         # Draw hitbox
         if Variables.hitboxshow:
+            screen.blit(self.power_grapic, self.spaceship_rect.topleft)
             pygame.draw.rect(screen, (255,0,0),self.spaceship_rect, 2)
 
     def collide(self,rect):
@@ -369,6 +375,7 @@ class Bridge(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
     def spawn():
+        Variables.enemy_health_multiplier += 1
         bridge_group.add(Bridge(WIDTH,0,bridge_surf))
 
 class SpaceJunk:
@@ -535,11 +542,13 @@ class Kana:
         self.xvelocity, self.yvelocity = kanax_velocity, random.randint(-kanay_velocity,kanay_velocity)
         self.shrink = 5
         self.kana = kana
+        self.level = Variables.level
         self.fade = fade
         self.rotate = 0
         self.rotate_rate = (rotate * Variables.level) / 2
-        self.kanasound = Variables.gamekana[Variables.level][self.kana][2]
-        self.kanatext = kana_font.render(Variables.gamekana[Variables.level][self.kana][Variables.gamemode], True, self.color)
+        self.kanasound = Variables.gamekana[self.level][self.kana][2]
+        self.kanatext = kana_font.render(Variables.gamekana[self.level][self.kana][Variables.gamemode], True, self.color)
+        self.kana_graphic = ui_font.render(Variables.gamekana[self.level][self.kana][0] + Variables.gamekana[self.level][self.kana][1] + Variables.gamekana[self.level][self.kana][2],True,'yellow')
         self.kanascale = 1
         self.orig_rect = self.kanatext.get_rect()
         self.rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
@@ -551,6 +560,7 @@ class Kana:
         self.hitbox = [0,0,0,0]
 
     def update(self,player):
+        self.kana_graphic = ui_font.render(Variables.gamekana[self.level][self.kana][0] + Variables.gamekana[self.level][self.kana][1] + Variables.gamekana[self.level][self.kana][2],True,'yellow')
         self.x -= self.xvelocity * Variables.dt
         if self.y > ship_screen_boundary and self.y < HEIGHT - ship_screen_boundary:
             self.y += self.yvelocity * Variables.dt
@@ -587,6 +597,7 @@ class Kana:
         # Draw hitbox
         self.hitbox = self.centered_image
         if Variables.hitboxshow:
+            screen.blit(self.kana_graphic,self.centered_image.bottomleft)
             pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
 
@@ -677,8 +688,10 @@ class Enemies:
         self.Yvelocity = random.randint(-50,50)
         self.last_enemy_pew = 0
 
-        self.maxhealth = Variables.level * enemy_health + 1
+        self.maxhealth = random.randint(int((Variables.enemy_health_multiplier * enemy_health)*0.8) + 1,Variables.enemy_health_multiplier * enemy_health + 1)
         self.health = self.maxhealth
+        self.maxhealth_grapic = ui_font.render(str(self.maxhealth), True, 'green')
+        self.curhealth_grapic = ui_font.render(str(self.health), True, 'yellow')
         self.healthbar_height = 5
         self.healthbar = pygame.Surface((self.enemy_rect.width,5))
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
@@ -699,6 +712,7 @@ class Enemies:
     def update(self):
         self.healthdisplay = self.enemy_rect.width/self.maxhealth*self.health
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        self.curhealth_grapic = ui_font.render(str(self.health), True, 'yellow')
         self.animate()
         if self.type%3 == 0 or self.type%3 == 1:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
@@ -737,10 +751,13 @@ class Enemies:
         
         screen.blit(self.healthbar, (self.enemy_rect.left,self.enemy_rect.top-20,self.enemy_rect.width,10))
         self.healthbar.fill('black')
-        pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        except: pass
 
         self.hitbox = self.enemy_rect
         if Variables.hitboxshow:
+            screen.blit(self.maxhealth_grapic, self.enemy_rect.topright)
+            screen.blit(self.curhealth_grapic, self.enemy_rect.topleft)
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
             pygame.draw.line(screen, (255,255,0), (self.x, self.y),player.spaceship_rect.center)
 
