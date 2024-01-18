@@ -52,7 +52,7 @@ planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
 planet_surfs = []
 for plfile in planetfiles: planet_surfs.append(pygame.image.load(os.path.join('images','Planets',plfile)).convert_alpha())
 
-#Enemy Files
+#Enemy Files (this is only used for the graphic showing enemies are enabled)
 enemyfiles = [f for f in os.listdir(os.getcwd() + '/images/Enemies')]
 enemy_surfs = []
 for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
@@ -61,7 +61,16 @@ for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('
 enemyspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/enemies')]
 enemy_spritesheet_surfs = []
 for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,2))
-print(len(enemyspritesheets))
+
+#Boss Files
+#bossfiles = [f for f in os.listdir(os.getcwd() + '/images/Bosses')]
+#enemy_surfs = []
+#for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
+
+#Boss Spritesheets
+bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses')]
+boss_spritesheet_surfs = []
+for bossfile in bossspritesheets: boss_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses',bossfile)).convert_alpha(),32,32,8))
 
 # Space Junk
 spacejunkfiles = [

@@ -12,6 +12,7 @@ allstates = [
     [intro_state,menu_state,'GameIntro'],
     [menu_state,game_state,'TimeDilation'],
     [game_state,gameover_state,'ColinTheme'],
+    [boss_state,gameover_state,'ColinTheme'],
     [gameover_state,menu_state,'GameIntro'],
 ]
 

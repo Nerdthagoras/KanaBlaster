@@ -234,7 +234,7 @@ class MenuState:
 class GameState:
     def __init__(self):
         self.done = False
-        self.boss = False
+        self.boss = Variables.GAMESTATE
         self.bgfade_timer = time.time()
         self.enemy_wait_timer = 10
         self.star_timer = time.time()
@@ -329,6 +329,7 @@ class GameState:
             self.bridge_thresh = random.randint(minimum_bridge_frequency,maximum_bridge_frequency)
 
     def update(self,screen):
+        self.boss = Variables.GAMESTATE
         #region Extra Life
         if Variables.score >= self.extralife:
             PowerUp.spawn(oneup_powerup_surf,"1up")
@@ -877,8 +878,8 @@ class GameState:
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('n'):
-                    boss_state.boss = False
-                    self.boss = True
+                    Variables.BOSSSTATE = False
+                    Variables.GAMESTATE = True
                 if event.key == ord('e'): Enemies.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn(player)
                 if event.key == ord('.'): Variables.level += 1
@@ -889,7 +890,7 @@ class GameState:
 class BossFight:
     def __init__(self):
         self.done = False
-        self.boss = False
+        self.boss = Variables.BOSSSTATE
         self.bgfade_timer = time.time()
         self.enemy_wait_timer = 10
         self.star_timer = time.time()
@@ -897,6 +898,8 @@ class BossFight:
         self.incorrectkana_thresh = 1
         self.correctkana_timer = time.time()
         self.correctkana_thresh = 4
+        self.WoD_timer = time.time()
+        self.WoD_thresh = 60
         self.junk_timer = time.time()
         self.junk_thresh = 60
         self.planet_timer = time.time()
@@ -918,7 +921,7 @@ class BossFight:
     def manifest(self):
         # Stars Timer
         if time.time() - self.star_timer >= 0.05:
-            #Star.spawn()
+            Star.spawn()
             self.star_timer = time.time()
 
         # Big Laser Timer
@@ -947,7 +950,14 @@ class BossFight:
             self.junk_timer = time.time()
             self.junk_thresh = random.randint(60,90)
 
+        # Wall of Death Timer
+        if time.time() - self.WoD_timer >= self.WoD_thresh:
+            WallOfDeath.spawn(WIDTH,0)
+            self.WoD_timer = time.time()
+            self.WoD_thresh = random.randint(30,60)
+
     def update(self,screen):
+        self.boss = Variables.BOSSSTATE
         #region Extra Life
         if Variables.score >= self.extralife:
             PowerUp.spawn(oneup_powerup_surf,"1up")
@@ -978,6 +988,36 @@ class BossFight:
         for junk in spacejunk: junk.update(player)                      # RANDOM JUNK
         starfield_group.update(player)                                  # STARS
         for cutoff in cuttoffline: cutoff.update(player)                # CUTOFF LINE
+        #region Correct Kanas                                           # Correct Kanas
+        for kana in correctkanas:
+            kana.update(player)
+
+            # remove kana if off screen
+            if kana.x < -64: correctkanas.pop(correctkanas.index(kana))
+
+            # Grow Kana at 2/5th of the screen with
+            elif kana.x < 2 * (WIDTH // 5) and kana.x > 10:
+                kana.kanascale += Variables.dt/5
+                if time.time() - self.kana_blip >= kana.x/500:
+                    pygame.mixer.Sound.play(correct_kana_dying_sound)
+                    self.kana_blip = time.time()
+
+            # Explode kana if touch left side of screen
+            elif kana.x < 0:
+                if self.correct_kana_lost_sound_play:
+                    pygame.mixer.Sound.play(correct_kana_lost_sound)
+                    explosion = PlayAnimation(kana.x, kana.y,explosion_surfs.images,1,False)
+                    explosion_group.add(explosion)
+                    Variables.score -= 10
+                    self.correct_kana_lost_sound_play = False
+        #endregion
+        #region Incorrect kanas                                         # Incorrect kanas
+        for kana in kanas:
+            kana.update(player)
+            # remove kana if off screen
+            if kana.x < -64: kanas.pop(kanas.index(kana))
+        # endregion
+
         for warning in warnings: warning.update()                       # Big Laser Warning
         for epew in enemyprojectiles: epew.update()                     # Enemy Projectiles
         #region ENEMIES                                                 # ENEMIES
@@ -985,6 +1025,12 @@ class BossFight:
             enemy.update()
             enemy.shoot(player)
         #endregion
+        #region BOSS                                                    # BOSS
+        for boss in bosses:
+            boss.update()
+            boss.shoot(player)
+        #endregion
+
         for wod in wallsegments: wod.update()                           # Wall of Death
         for brick in bricks: brick.update()                             # Brick debris
         for bits in debris: bits.update()                                # Debris
@@ -1007,6 +1053,14 @@ class BossFight:
         except: pass
         #endregion
 
+        #region KANA LIST
+        for f in range(int(Variables.levels[Variables.level])): kanalist.append(Variables.commasep[f])
+        for f in range(int(Variables.levels[Variables.level])):
+            if Variables.gamemode == 0: kanalistthing = ui_font.render(kanalist[f][0], True, (20,20,20))
+            else: kanalistthing = ui_font.render(kanalist[f][1], True, (20,20,20))
+            screen.blit(kanalistthing,(25+(27*f),HEIGHT-30))
+        #endregion
+
         planet_group.draw(screen)                                       # PLANETS
         for junk in spacejunk: junk.draw(screen)                        # RANDOM JUNK
         starfield_group.draw(screen)                                    # STARS
@@ -1019,6 +1073,13 @@ class BossFight:
             enemy.shoot(player)
             enemy.draw(screen,player)
         #endregion
+        #region BOSS                                                    # BOSS
+        for boss in bosses:
+            boss.shoot(player)
+            boss.draw(screen,player)
+        #endregion
+        for kana in correctkanas: kana.draw(screen)                     # CORRECT KANA
+        for kana in kanas: kana.draw(screen)                            # WRONG KANA
         player.draw(screen)                                             # PLAYER
         #region POWERUP                                                 # POWERUP
         for powerup in powerups:
@@ -1140,13 +1201,29 @@ class BossFight:
                     enemy.health -= damage
                     Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),debris_surf,enemies.index(enemy))
                     Damagenum.spawn(enemy.enemy_rect.centerx,enemy.velocity,enemy.y,damage)
-                    print('Health:',enemy.health)
-                    print('Damage:',damage)
                     if enemy.health <= 0:
                         enemies.pop(enemies.index(enemy))
                         explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
                         explosion_group.add(explosion)
                         Variables.score += 1
+                    try: bullets.pop(bullets.index(bullet))
+                    except: pass
+
+            # if player's bullet hits Boss
+            for boss in bosses:
+                if boss.collide(bullet.rect):
+                    pygame.mixer.Sound.play(goodhit)
+                    damage = 1 + random.randint(int(player.laserpower/5),player.laserpower)
+                    boss.health -= damage
+                    Debris.spawn(boss.boss_rect.centerx,boss.y,math.radians(random.randint(80,280)),random.randint(50,200),debris_surf,bosses.index(boss))
+                    Damagenum.spawn(boss.boss_rect.centerx,boss.velocity,boss.y,damage)
+                    if boss.health <= 0:
+                        bosses.pop(bosses.index(boss))
+                        explosion = PlayAnimation(boss.x, boss.y,explosion_surfs.images,8,False)
+                        explosion_group.add(explosion)
+                        Variables.score += 99
+                        Variables.GAMESTATE = False
+                        Variables.BOSSSTATE = True
                     try: bullets.pop(bullets.index(bullet))
                     except: pass
 
@@ -1452,9 +1529,9 @@ class BossFight:
                 if event.key == ord('b'): Bridge.spawn()
                 if event.key == ord('q'): SpaceJunk.spawn()
                 if event.key == ord('n'): 
-                    game_state.boss = False
-                    self.boss = True
-                if event.key == ord('e'): Enemies.spawn()
+                    Variables.GAMESTATE = False
+                    Variables.BOSSSTATE = True
+                if event.key == ord('e'): Bosses.spawn()
                 if event.key == ord('r'): BigLaserWarning.spawn(player)
                 if event.key == ord('.'): Variables.level += 1
                 if event.key == ord(','): Variables.level -= 1

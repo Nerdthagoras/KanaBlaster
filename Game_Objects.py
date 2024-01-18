@@ -360,6 +360,8 @@ class Bridge(pygame.sprite.Sprite):
             Variables.kananum += 1
             if Variables.kananum >= len(Variables.gamekana[Variables.level]):
                 Variables.kananum = 0
+                #Variables.BOSSSTATE = False
+                #Variables.GAMESTATE = True
                 if Variables.level < 9:
                     Variables.level += 1
                 else:
@@ -770,6 +772,104 @@ class Enemies:
     def spawn():
         # enemies.append(Enemies(random.randint(0,2)))
         enemies.append(Enemies(random.randint(0,3)))
+
+class Bosses:
+    def __init__(self,typeof):
+        self.spritearray = boss_spritesheet_surfs
+        self.enter_screen = False
+        self.animindex = 0
+        self.animspeed = 10
+        self.x, self.y = WIDTH, random.randrange(128,HEIGHT-128)
+        self.type = typeof
+        self.image = self.spritearray[0].images[self.animindex]
+        self.boss_rect = self.image.get_rect(midleft = (self.x, self.y))
+        self.velocity = random.randint(10,100)
+        self.Yvelocity = random.randint(-100,100)
+        self.last_enemy_pew = 0
+        self.maxhealth = random.randint(800, 1000)
+        self.health = self.maxhealth
+        self.maxhealth_grapic = ui_font.render(str(self.maxhealth), True, 'green')
+        self.curhealth_grapic = ui_font.render(str(self.health), True, 'yellow')
+        self.healthbar_height = 5
+        self.healthbar = pygame.Surface((self.boss_rect.width,5))
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
+    def calculate_angles(self,number_of_angles):
+        if number_of_angles < 1:
+            return []
+        
+        angle_step = 360 / number_of_angles
+        angles = [i * angle_step for i in range(number_of_angles)]
+        return angles
+
+    def animate(self):
+        self.animindex += self.animspeed * Variables.dt
+        if self.animindex > len(self.spritearray[0].images)-1: self.animindex = 0
+        self.image = self.spritearray[0].images[int(self.animindex)]
+
+    def update(self):
+        self.healthdisplay = self.boss_rect.width/self.maxhealth*self.health
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        self.curhealth_grapic = ui_font.render(str(self.health), True, 'yellow')
+        self.animate()
+        if self.type%3 == 0 or self.type%3 == 1: self.boss_rect = self.image.get_rect(midleft = (self.x, self.y))
+        elif self.type%3 == 2: self.boss_rect = self.image.get_rect(center = (self.x, self.y))
+        self.x -= self.velocity * Variables.dt
+        self.y += self.Yvelocity * Variables.dt
+        if self.y <= 50 or self.y >= HEIGHT-50: self.Yvelocity *= -1
+        if self.x <= 3*WIDTH/5:
+            self.enter_screen = True
+            self.velocity *= -1
+        if self.x > WIDTH and self.enter_screen == True:
+            self.velocity *= -1
+    
+    def findobjectangle(self,player):
+            # Find angle of player
+            dx = self.x - player.spaceship_rect.center[0]
+            dy = self.y - player.spaceship_rect.center[1]
+            self.theta = math.atan2(-dy,dx)
+            return self.theta
+
+    def shoot(self,player):
+        angle = self.findobjectangle(player)
+        if pygame.time.get_ticks() - self.last_enemy_pew >= random.randint(2000,10000):
+            if self.type%3 == 0: # AIMED SHOT
+                if angle < math.pi/3 and angle > -math.pi/3:
+                    pygame.mixer.Sound.play(enemypew_sound)
+                    enemyprojectiles.append(EnemyProjectiles(self.x, self.y,angle))
+            elif self.type%3 == 1: # FORWARD SHOT
+                pygame.mixer.Sound.play(enemypew_sound)
+                enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(random.randint(-10,10))))
+            elif self.type%3 == 2: #AoE SHOT
+                pygame.mixer.Sound.play(enemypew_sound)
+                for angle in self.calculate_angles(32):
+                    enemyprojectiles.append(EnemyProjectiles(self.x, self.y,math.radians(angle)))
+            self.last_enemy_pew = pygame.time.get_ticks()
+
+    def draw(self,screen,player):
+        screen.blit(self.image, self.boss_rect)
+        
+        screen.blit(self.healthbar, (self.boss_rect.left,self.boss_rect.top-20,self.boss_rect.width,10))
+        self.healthbar.fill('black')
+        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        except: pass
+
+        self.hitbox = self.boss_rect
+        if Variables.hitboxshow:
+            screen.blit(self.maxhealth_grapic, self.boss_rect.topright)
+            screen.blit(self.curhealth_grapic, self.boss_rect.topleft)
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+            pygame.draw.line(screen, (255,255,0), (self.x, self.y),player.spaceship_rect.center)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+    def spawn():
+        # enemies.append(Enemies(random.randint(0,2)))
+        bosses.append(Bosses(2))
 
 class EnemyProjectiles:
     def __init__(self,x,y,direction):

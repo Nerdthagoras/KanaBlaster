@@ -28,6 +28,8 @@ laserpower = 1
 enemy_health_multiplier = 0
 
 #trackables
+BOSSSTATE = False
+GAMESTATE = False
 last_question_num = 0
 last_kananum = 0
 last_level = 0
