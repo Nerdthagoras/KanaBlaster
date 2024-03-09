@@ -41,6 +41,11 @@ maximum_bridge_frequency = 35
 #endregion
 
 #region Enemy Ships
+enemy_max_knockbackx = 300
+enemy_knockbackx = 0
+enemy_knockbacky = 0
+enemy_knockback_recoveryx = 300
+enemy_knockback_recoveryy = 400
 enemy_start_level = 1
 minimum_enemy_frequency = 5
 maximum_enemy_frequency = 10

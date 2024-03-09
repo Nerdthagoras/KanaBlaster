@@ -688,6 +688,8 @@ class Enemies:
         self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = random.randint(50,200)
         self.Yvelocity = random.randint(-50,50)
+        self.knockbackx = 0
+        self.knockbacky = 0
         self.last_enemy_pew = 0
 
         self.maxhealth = random.randint(int((Variables.enemy_health_multiplier * enemy_health)*0.8) + 1,Variables.enemy_health_multiplier * enemy_health + 1)
@@ -720,8 +722,11 @@ class Enemies:
             self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         elif self.type%3 == 2:
             self.enemy_rect = self.image.get_rect(center = (self.x, self.y))
-        self.x -= self.velocity * Variables.dt
-        self.y += self.Yvelocity * Variables.dt
+        self.x -= (self.velocity - self.knockbackx) * Variables.dt
+        self.y -= (self.Yvelocity - self.knockbacky) * Variables.dt
+        if self.knockbackx > 0: self.knockbackx -= enemy_knockback_recoveryx * Variables.dt
+        if self.knockbacky > 0: self.knockbacky -= enemy_knockback_recoveryy * Variables.dt
+        if self.knockbacky < 0: self.knockbacky += enemy_knockback_recoveryy * Variables.dt
         if self.x < -128:
             enemies.pop(enemies.index(self))
     
@@ -766,7 +771,7 @@ class Enemies:
     def collide(self,rect):
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
             if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
-                return True
+                return (self.hitbox[1]-rect[1]+32)*8
         return False
 
     def spawn():

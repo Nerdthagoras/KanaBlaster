@@ -47,7 +47,6 @@ while not current_state.done:
                 if len(state) == 3:
                     music = pygame.mixer.music.load(os.path.join('music',str(state[2]) + '.wav'))
                     pygame.mixer.music.play(-1)
-                    print(current_state)
                 break
     elif current_state.boss:
         for state in bossstates:
@@ -56,7 +55,6 @@ while not current_state.done:
                 if len(state) == 3:
                     music = pygame.mixer.music.load(os.path.join('music',str(state[2]) + '.wav'))
                     pygame.mixer.music.play(-1)
-                    print(current_state)
                 break
 
 # Quit

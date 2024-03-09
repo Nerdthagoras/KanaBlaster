@@ -4,7 +4,7 @@ from graphicgroups import *
 from Game_Objects import *
 from spritesheet import PlayAnimation
 from debug import debug
-from Functions import reset_game,write_csv
+from Functions import write_csv
 from Settings import *
 
 import Variables
@@ -194,6 +194,9 @@ class MenuState:
                     game_state.enemy_wait_timer = 10
                     gameover_state.done = False
                     game_state.done = False
+                    boss_state.done = False
+                    Variables.BOSSSTATE = False
+                    Variables.GAMESTATE = False
                     self.done = True
 
             # Key Events
@@ -208,6 +211,7 @@ class MenuState:
                     game_state.bridge_thresh = random.randint(minimum_bridge_frequency,maximum_bridge_frequency)
                     gameover_state.done = False
                     game_state.done = False
+                    boss_state.done = False
                     self.done = True
                 if event.key == ord('p'):
                     if self.paused == False:
@@ -566,8 +570,8 @@ class GameState:
                     enemy.health -= damage
                     Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),debris_surf,enemies.index(enemy))
                     Damagenum.spawn(enemy.enemy_rect.centerx,enemy.velocity,enemy.y,damage)
-                    print('Health:',enemy.health)
-                    print('Damage:',damage)
+                    enemy.knockbackx = enemy_max_knockbackx
+                    enemy.knockbacky = enemy.collide(bullet.rect)
                     if enemy.health <= 0:
                         enemies.pop(enemies.index(enemy))
                         explosion = PlayAnimation(enemy.x, enemy.y,explosion_surfs.images,0.5,False)
@@ -1770,22 +1774,6 @@ class CutScene:
     def handle_events(self, events):
         pass
 
-#region DEBUG
-def displaydebug(x,y):
-    debugitems = [
-        ["NEL",game_state.extralife],
-        ['NumCK',len(correctkanas)],
-        ['NumIK',len(kanas)],
-        ['COT',len(cuttoffline)],
-        ['Sub Level',Variables.kananum],
-    ]
-    currentline = y
-    for item in debugitems:
-        if len(item) == 3: debug(item[0],item[1],x,currentline,item[2])
-        else: debug(item[0],item[1],x,currentline)
-        currentline += 20
-#endregion
-
 #region INSTANCING
 # Instantiate Classes
 intro_state = IntroState()
@@ -1796,3 +1784,43 @@ gameover_state = GameOverState()
 cutscene_state = CutScene()
 player = Ship(0,HEIGHT//2,spaceship_surfs)
 #endregion
+
+#region DEBUG
+def displaydebug(x,y):
+    debugitems = [
+        ['Intro State',intro_state.done],
+        ['Menu State',menu_state.done],
+        ['Game State',game_state.done],
+        ['Game Over',gameover_state.done],
+        ['Bossfight',boss_state.done],
+    ]
+    currentline = y
+    for item in debugitems:
+        if len(item) == 3: debug(item[0],item[1],x,currentline,item[2])
+        else: debug(item[0],item[1],x,currentline)
+        currentline += 20
+#endregion
+        
+def reset_game():
+    bullets.clear()
+    kanas.clear()
+    kanalist.clear()
+    correctkanas.clear()
+    bridge_group.empty()
+    cuttoffline.clear()
+    powerups.clear()
+    laserpowerups.clear()
+    speedpowerups.clear()
+    planet_group.empty()
+    spacejunk.clear()
+    warnings.clear()
+    wallsegments.clear()
+    biglasers.clear()
+    enemies.clear()
+    debris.clear()
+    enemyprojectiles.clear()
+    Variables.kananum = 0
+    Variables.laserpower = 1
+    Variables.enemy_health_multiplier = 0
+    Variables.BOSSSTATE = False
+    Variables.GAMESTATE = False

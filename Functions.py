@@ -13,24 +13,3 @@ def write_csv(file_name,csv_object):
         csv_writer = csv.writer(csvfile)
         csv_writer.writerows(csv_object)
 
-
-def reset_game():
-    bullets.clear()
-    kanas.clear()
-    kanalist.clear()
-    correctkanas.clear()
-    bridge_group.empty()
-    cuttoffline.clear()
-    powerups.clear()
-    laserpowerups.clear()
-    speedpowerups.clear()
-    planet_group.empty()
-    spacejunk.clear()
-    warnings.clear()
-    biglasers.clear()
-    enemies.clear()
-    debris.clear()
-    enemyprojectiles.clear()
-    Variables.kananum = 0
-    Variables.laserpower = 1
-    Variables.enemy_health_multiplier = 0
