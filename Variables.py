@@ -1,4 +1,5 @@
 from Functions import read_csv
+
 import time
 import random
 import os
@@ -17,6 +18,8 @@ for i in range(len(levels)):    # Shuffle Kana and create levels
     random.shuffle(level)
     gamekana.append(level)
 
+STATE = "intro"
+
 #changables
 level = 0
 gamemode = 0
@@ -24,19 +27,27 @@ maxlives = 5
 lives = 5
 score = 0
 kananum = 0
-laserpower = 1
+pewtype = 0
 enemy_health_multiplier = 0
 
 #trackables
 BOSSSTATE = False
 GAMESTATE = False
+TRANSSTATE= False
+TRANSITION = False
+bossexist = False
+debugwindow = False
+hitboxshow = False
+shipcollision = True
+maxmusicvolume = 0.2
+musicvolume = maxmusicvolume
+transcooldown = 10
 last_question_num = 0
 last_kananum = 0
 last_level = 0
 bridgewipecounter = 0
-debugwindow = False
-hitboxshow = False
-shipcollision = True
+generatedcorrectkanacounter = 0
+generatedincorrectkanacounter = 0
 
 RGB = [0,0,0]
 theta = 0

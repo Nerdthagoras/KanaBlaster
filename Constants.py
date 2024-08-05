@@ -1,7 +1,6 @@
-from spritesheet import LoadSpritesheet
-
 import pygame
 import os
+import Spritesheet
 
 # Initialize Pygame
 pygame.init()
@@ -14,11 +13,19 @@ WIDTH, HEIGHT = 1440,900
 # Debug Location
 debug_locationx,debug_locationy = WIDTH-300,100
 
+# Menu Starfield Messages
+menustarmessage = [
+    "Music by Nerdthagoras",
+    "SUBSCRIBE",
+    "Also on Twtich",
+]
+
 # Define some font sizes
 font_name = "MSGothic"
 kana_font = pygame.font.SysFont(font_name, 60)
 question_font = pygame.font.SysFont(font_name, 50)
 ui_font = pygame.font.SysFont(font_name, 30)
+kana_ui_font = pygame.font.SysFont(font_name, 20)
 GAME_OVER_font = pygame.font.SysFont(font_name, 200)
 WARNING_font = pygame.font.SysFont(font_name, 100)
 
@@ -31,21 +38,30 @@ off_screen_offset = 64
 min_kana_alpha = 200
 spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_alpha()
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
-pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
 biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
 wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).convert_alpha()
 brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 debris_surf = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
-explosion_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
-spaceship_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','ArpShip.png')).convert_alpha(),64,64,1)
-spaceship_flame_surfs = LoadSpritesheet(pygame.image.load(os.path.join('sprites','flames.png')).convert_alpha(),128,64,0.75)
+explosion_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
+spaceship_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','ArpShip.png')).convert_alpha(),64,64,1)
+spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','flames.png')).convert_alpha(),128,64,0.75)
 
 #PowerUp Files
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
 speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
 oneup_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', '1up.png')).convert_alpha()
+
+pufiles = [f for f in os.listdir(os.getcwd() + '/images/PowerUps')]
+powerup_array = []
+for pu in pufiles: powerup_array.append(pygame.image.load(os.path.join('images','PowerUps',pu)).convert_alpha())
+
+#Pew Files
+pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
+pewfiles = [f for f in os.listdir(os.getcwd() + '/images/Pews')]
+pew_surfs = []
+for pew in pewfiles: pew_surfs.append(pygame.image.load(os.path.join('images','Pews',pew)).convert_alpha())
 
 #Planet Files
 planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
@@ -60,18 +76,29 @@ for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('
 #Enemy Spritesheets
 enemyspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/enemies')]
 enemy_spritesheet_surfs = []
-for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,2))
-
-#Boss Files
-#bossfiles = [f for f in os.listdir(os.getcwd() + '/images/Bosses')]
-#enemy_surfs = []
-#for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
+for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,2))
 
 #Boss Spritesheets
 bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses')]
 boss_spritesheet_surfs = []
-for bossfile in bossspritesheets: boss_spritesheet_surfs.append(LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses',bossfile)).convert_alpha(),32,32,8))
+for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses',bossfile)).convert_alpha(),32,32,8))
 
+#pews
+pew_array = [
+    {"imgindx":2,"pewsound":1,"laserpower":1,"maxnumpew":2,"pewrate":200,"pewspeed":3000,"width":256,"height":16,"persist":False},
+    {"imgindx":0,"pewsound":1,"laserpower":1,"maxnumpew":4,"pewrate":200,"pewspeed":4000,"width":256,"height":16,"persist":False},
+    {"imgindx":1,"pewsound":1,"laserpower":1,"maxnumpew":1000,"pewrate":1,"pewspeed":3000,"width":16,"height":16,"persist":False},
+    {"imgindx":1,"pewsound":0,"laserpower":10,"maxnumpew":1,"pewrate":1000,"pewspeed":6000,"width":512,"height":128,"persist":True},
+]
+
+#Bosses
+bosses_array = [
+    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16},
+    {"imgindx":1,"type":0,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16},
+    {"imgindx":1,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16},
+    {"imgindx":2,"type":2,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16},
+    {"imgindx":2,"type":2,"healthmultiplier":10,"numofbullets":40,"Xvel":300,"Yvel":300,"anglenum":28},
+    ]
 # Space Junk
 spacejunkfiles = [
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/spaaace.wav'],
@@ -79,8 +106,16 @@ spacejunkfiles = [
     ['/images/SpaceJunk/Kerbal.png','/sounds/SpaceJunk/kerbal.wav'],
 ]
 
+tips = [
+    "Collect the requested Kana, Shoot all other Kana",
+]
+
 # Sounds
 pewsound = pygame.mixer.Sound(os.path.join('sounds','pew.wav'))
+pewsoundfiles = [f for f in os.listdir(os.getcwd() + '/sounds/Pewsounds')]
+pew_sounds = []
+for pew in pewsoundfiles: pew_sounds.append(pygame.mixer.Sound(os.path.join('sounds','Pewsounds',pew)))
+
 enginesound = pygame.mixer.Sound(os.path.join('sounds','engine.wav'))
 goodhit = pygame.mixer.Sound(os.path.join('sounds','goodhit.wav'))
 badhit = pygame.mixer.Sound(os.path.join('sounds','badhit.wav'))

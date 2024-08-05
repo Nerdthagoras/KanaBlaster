@@ -48,7 +48,6 @@ class PlayAnimation(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image,(256 * self.scale,256 * self.scale))
             self.rect = self.image.get_rect(center = (self.x, self.y))
             
-
         if self.index >= len(self.spritearray) - 1 and self.counter >= self.explosion_speed:
             if self.repeat: self.index = 0
             else: self.kill()

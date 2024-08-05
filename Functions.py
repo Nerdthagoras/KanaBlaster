@@ -1,5 +1,5 @@
 import csv
-from graphicgroups import *
+import Graphicgroups
 import Variables
 
 def read_csv(file_name):
@@ -12,4 +12,3 @@ def write_csv(file_name,csv_object):
     with open(file_name, 'w', newline='', encoding='utf-8') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerows(csv_object)
-

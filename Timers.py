@@ -1,0 +1,1 @@
+star_timer = 0

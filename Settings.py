@@ -1,7 +1,7 @@
-from Constants import *
+import Constants
 
 #region Kana
-num_to_shoot_new_kana = 5
+num_to_shoot_new_kana = 10
 kanax_velocity = 100
 kanay_velocity = 15
 
@@ -25,6 +25,7 @@ ship_boosted_acceleration = 6
 ship_boosted_deceleration = 7
 
 ship_screen_boundary = 64
+# ship_screen_boundary_X = 100
 
 ship_bullet_speed = 3000
 
@@ -40,6 +41,10 @@ minimum_bridge_frequency = 30
 maximum_bridge_frequency = 35
 #endregion
 
+#region Boss Ships
+bosshealthmultiplier = 10
+#endregion Boss Ships
+
 #region Enemy Ships
 enemy_max_knockbackx = 300
 enemy_knockbackx = 0
@@ -50,6 +55,7 @@ enemy_start_level = 1
 minimum_enemy_frequency = 5
 maximum_enemy_frequency = 10
 enemy_health = 10
+enemy_powerup_freq = 10
 #endregion
 
 #region Big Laser
@@ -63,5 +69,5 @@ biglaser_start_level = 3
 score_position = (0, 10)
 lives_position = (200, 10)
 level_position = (400, 10)
-question_position = (WIDTH/2+60, HEIGHT-80)
+question_position = (Constants.WIDTH/2+60, Constants.HEIGHT-80)
 #endregion
