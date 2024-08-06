@@ -69,5 +69,5 @@ biglaser_start_level = 3
 score_position = (0, 10)
 lives_position = (200, 10)
 level_position = (400, 10)
-question_position = (Constants.WIDTH/2+60, Constants.HEIGHT-80)
+question_position = (Constants.WIDTH/2+60, 20)
 #endregion

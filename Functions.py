@@ -1,6 +1,4 @@
 import csv
-import Graphicgroups
-import Variables
 
 def read_csv(file_name):
     with open(file_name, newline='', encoding='utf-8') as file:

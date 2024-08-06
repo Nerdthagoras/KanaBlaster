@@ -386,6 +386,52 @@ class Bridge(pygame.sprite.Sprite):
         Variables.enemy_health_multiplier += 1
         Graphicgroups.bridge_group.add(Bridge(Constants.WIDTH,0,Constants.bridge_surf))
 
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, x, y, spritearray, scale, repeat):
+        super().__init__()
+        self.x, self.y = x, y
+        self.animspeed = random.randint(40,100)
+        self.index = 0
+        self.counter = 0
+        self.explosion_speed = 1
+        self.spritearray = spritearray
+        self.image = self.spritearray[self.index]
+        self.rect = self.image.get_rect(center = (self.x, self.y))
+        self.scale = scale
+        self.repeat = repeat
+
+    def update(self):
+        self.counter += self.animspeed * Variables.dt
+        if self.counter >= self.explosion_speed and self.index < len(self.spritearray) - 1:
+            self.counter = 0
+            self.index += 1
+            self.image = self.spritearray[self.index]
+            self.image = pygame.transform.scale(self.image,(256 * self.scale,256 * self.scale))
+            self.rect = self.image.get_rect(center = (self.x, self.y))
+            
+        if self.index >= len(self.spritearray) - 1 and self.counter >= self.explosion_speed:
+            if self.repeat: self.index = 0
+            else: self.kill()
+
+class TipTicker(pygame.sprite.Sprite):
+    def __init__(self,message,velocity):
+        super().__init__()
+        self.message = message
+        tip_font = pygame.font.SysFont(Constants.font_name, 30)
+        self.image = tip_font.render(self.message, True, 'yellow')
+        self.messagebox = self.image.get_rect()
+        self.x, self.y = Constants.WIDTH + self.messagebox.centerx, 60
+        self.rect = self.image.get_rect(center = (self.x, self.y))
+        self.velocity = velocity
+
+    def update(self):
+        self.rect = self.image.get_rect(center = (self.x, self.y))
+        self.x -= self.velocity * Variables.dt
+        if self.x < -1000: self.kill()
+
+    def spawn(message,velocity):
+        Graphicgroups.tip_group.add(TipTicker(message,velocity))
+
 class SpaceJunk:
     def __init__(self,num,rotate,scale):
         self.image = pygame.image.load(os.getcwd() + Constants.spacejunkfiles[num][0]).convert_alpha()
@@ -540,25 +586,6 @@ class CenterWarning:
     def spawn(message,surface,scale=1):
         Graphicgroups.centerwarning.append(CenterWarning(message,surface,scale))
 
-class TipTicker(pygame.sprite.Sprite):
-    def __init__(self,message,velocity):
-        super().__init__()
-        self.message = message
-        tip_font = pygame.font.SysFont(Constants.font_name, 30)
-        self.image = tip_font.render(self.message, True, 'yellow')
-        self.messagebox = self.image.get_rect()
-        self.x, self.y = Constants.WIDTH + self.messagebox.centerx, 60
-        self.rect = self.image.get_rect(center = (self.x, self.y))
-        self.velocity = velocity
-
-    def update(self):
-        self.rect = self.image.get_rect(center = (self.x, self.y))
-        self.x -= self.velocity * Variables.dt
-        if self.x < -1000: self.kill()
-
-    def spawn(message,velocity):
-        Graphicgroups.tip_group.add(TipTicker(message,velocity))
-
 # INTERACTABLES
 class Kana:
     def __init__(self,x,y,kana,fade,rotate,newmessage="",color='white',new=False):
@@ -653,6 +680,26 @@ class PowerUp:
         if self.x < -64:
             Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
 
+# class PowerUp:
+#     def __init__(self,x,y,xvelocity,yvelocity,image,pueffect):
+#         self.spritearray = Constants.enemy_spritesheet_surfs #Sprite Animation
+#         self.animindex = 0  #Sprite Animation
+#         self.animspeed = random.randint(10,20) #Sprite Animation
+#         self.image = self.spritearray.images[self.animindex] #Sprite Animation
+#         self.pueffect = pueffect
+#         self.img = image
+#         self.img = pygame.transform.scale(self.img,(64,64))
+#         self.x, self.y = x, y
+#         self.xvelocity, self.yvelocity = xvelocity, yvelocity
+#         self.hitbox = [0,0,0,0]
+#         self.shieldradius = 32
+
+#     def update(self,player):
+#         self.x -= self.xvelocity * Variables.dt
+#         self.y += self.yvelocity * Variables.dt * math.sin(self.x/100)
+#         if self.x < -64:
+#             Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+
     def draw(self,screen):
         self.hitbox = self.img_rect = self.img.get_rect(center = (self.x, self.y))
         self.img.set_alpha(255)
@@ -714,12 +761,12 @@ class PowerUp:
 
 class Enemies:
     def __init__(self,typeof):
-        self.spritearray = Constants.enemy_spritesheet_surfs
-        self.animindex = 0
-        self.animspeed = 10
-        self.x, self.y = Constants.WIDTH, random.randrange(128,Constants.HEIGHT-128)
         self.type = typeof
-        self.image = self.spritearray[self.type].images[self.animindex]
+        self.spritearray = Constants.enemy_spritesheet_surfs #Sprite Animation
+        self.animindex = 0  #Sprite Animation
+        self.animspeed = random.randint(10,20) #Sprite Animation
+        self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
+        self.x, self.y = Constants.WIDTH, random.randrange(128,Constants.HEIGHT-128)
         self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = random.randint(50,200)
         self.Yvelocity = random.randint(-50,50)
@@ -815,12 +862,12 @@ class Enemies:
         Graphicgroups.enemies.append(Enemies(random.randint(0,3)))
 
 class Bosses:
-    def __init__(self,typeof,health,bossimage,numofbullets,Xvel,Yvel,anglenum):
+    def __init__(self,typeof,health,bossimage,numofbullets,Xvel,Yvel,anglenum,animspeed):
         self.spritearray = Constants.boss_spritesheet_surfs
         self.bossimage = bossimage
         self.enter_screen = False
         self.animindex = 0
-        self.animspeed = 10
+        self.animspeed = animspeed
         self.rapidfire = 0
         self.lastrapidfire = 0
         self.numberofbullets = numofbullets
@@ -927,26 +974,16 @@ class Bosses:
         return False
 
     def spawn():
-        # print(
-        #         "Type",bosses_array[Variables.level]["type"],
-        #         # "Health",bosses_array[Variables.level]["healthmultiplier"],
-        #         "Health",(Variables.generatedincorrectkanacounter + Variables.generatedcorrectkanacounter)*bosses_array[Variables.level]["healthmultiplier"],
-        #         "ImgIndex",bosses_array[Variables.level]["imgindx"],
-        #         "Num of Bullets",bosses_array[Variables.level]["numofbullets"],
-        #         "X",bosses_array[Variables.level]["Xvel"],
-        #         "Y",bosses_array[Variables.level]["Yvel"],
-        #         "Angle",bosses_array[Variables.level]["anglenum"],
-        # )
         Graphicgroups.bosses.append(
             Bosses(
                 Constants.bosses_array[Variables.level]["type"],
-                #bosses_array[Variables.level]["health"],
                 (Variables.generatedincorrectkanacounter + Variables.generatedcorrectkanacounter)*Constants.bosses_array[Variables.level]["healthmultiplier"],
                 Constants.bosses_array[Variables.level]["imgindx"],
                 Constants.bosses_array[Variables.level]["numofbullets"],
                 Constants.bosses_array[Variables.level]["Xvel"],
                 Constants.bosses_array[Variables.level]["Yvel"],
                 Constants.bosses_array[Variables.level]["anglenum"],
+                Constants.bosses_array[Variables.level]["animspeed"],
             )
         )
 
@@ -1117,26 +1154,4 @@ class Damagenum:
     def spawn(x,xvel,y,damage):
         Graphicgroups.damagenumbers.append(Damagenum(x,xvel,y,damage))
 
-class Debug(pygame.sprite.Sprite):
-    def __init__(self,x,y,item,value):
-        super().__init__()
-        self.x, self.y = x, y
-        self.item, self.value = item, value
-        self.debug_font = pygame.font.SysFont(Constants.font_name, 30)
-        self.currenty = 0
-        self.debugitems = []
-
-    def update(self):
-        self.debugitem = [self.item,str(self.value)]
-        self.currenty = 0
-        self.image = self.debug_font.render(self.debugitem[0] + ": " + self.debugitem[1], True, 'yellow','red')
-        self.rect = self.image.get_rect(center = (self.x, self.y))
-
-    def spawn(x,y):
-        debugitems = [
-            ["Lives",Variables.lives],
-            ["Score",Variables.score],
-        ]
-        for line in debugitems:
-            Graphicgroups.debug_window.add(Debug(x,y,line[0],line[1]))
-            y += 30
+player = Ship(0,Constants.HEIGHT//2,Constants.spaceship_surfs)

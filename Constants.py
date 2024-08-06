@@ -52,10 +52,11 @@ spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.jo
 laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
 speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
 oneup_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', '1up.png')).convert_alpha()
-
-pufiles = [f for f in os.listdir(os.getcwd() + '/images/PowerUps')]
-powerup_array = []
-for pu in pufiles: powerup_array.append(pygame.image.load(os.path.join('images','PowerUps',pu)).convert_alpha())
+pickup_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','pickup.png')).convert_alpha(),32,32,1)
+# laser_powerup_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha(),32,32,1)
+# pufiles = [f for f in os.listdir(os.getcwd() + '/images/PowerUps')]
+# powerup_array = []
+# for pu in pufiles: powerup_array.append(pygame.image.load(os.path.join('images','PowerUps',pu)).convert_alpha())
 
 #Pew Files
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
@@ -79,9 +80,9 @@ enemy_spritesheet_surfs = []
 for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','enemies',enemyfile)).convert_alpha(),32,32,2))
 
 #Boss Spritesheets
-bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses')]
+bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses128')]
 boss_spritesheet_surfs = []
-for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses',bossfile)).convert_alpha(),32,32,8))
+for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses128',bossfile)).convert_alpha(),128,128,2))
 
 #pews
 pew_array = [
@@ -93,17 +94,21 @@ pew_array = [
 
 #Bosses
 bosses_array = [
-    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16},
-    {"imgindx":1,"type":0,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16},
-    {"imgindx":1,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16},
-    {"imgindx":2,"type":2,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16},
-    {"imgindx":2,"type":2,"healthmultiplier":10,"numofbullets":40,"Xvel":300,"Yvel":300,"anglenum":28},
+    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16,"animspeed":10},
+    {"imgindx":1,"type":1,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16,"animspeed":10},
+    {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10},
+    {"imgindx":4,"type":2,"healthmultiplier":10,"numofbullets":40,"Xvel":300,"Yvel":300,"anglenum":28,"animspeed":10},
     ]
 # Space Junk
 spacejunkfiles = [
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/spaaace.wav'],
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/lovebeinginspace.wav'],
     ['/images/SpaceJunk/Kerbal.png','/sounds/SpaceJunk/kerbal.wav'],
+    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
+    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
+    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
+    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
 ]
 
 tips = [

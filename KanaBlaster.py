@@ -8,7 +8,7 @@ import os
 if __name__ == "__main__":
     # Set current state
     current_state = Game_States.intro_state
-
+    
     allstates = [
         [Game_States.intro_state,Game_States.menu_state,'GameIntro'],
         [Game_States.menu_state,Game_States.game_state,'TimeDilation'],
