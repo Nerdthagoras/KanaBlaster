@@ -18,6 +18,7 @@ menustarmessage = [
     "Music by Nerdthagoras",
     "SUBSCRIBE",
     "Also on Twtich",
+    "Please Donate!",
 ]
 
 # Define some font sizes
@@ -40,7 +41,6 @@ spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_a
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
-biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
 wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).convert_alpha()
 brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 debris_surf = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
@@ -48,15 +48,18 @@ explosion_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sp
 spaceship_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','ArpShip.png')).convert_alpha(),64,64,1)
 spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','flames.png')).convert_alpha(),128,64,0.75)
 
+#BigLaser Files
+# biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
+biglaser_spritesheet_surf = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha(),1024,360,1)
+
+blfiles = [f for f in os.listdir(os.getcwd() + '/sprites/BigLasers')]
+biglaser_surfs = []
+for bl in blfiles: biglaser_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BigLasers',bl)).convert_alpha(),1024,360,1))
+
 #PowerUp Files
-laser_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha()
-speed_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', 'speedpowerup.png')).convert_alpha()
-oneup_powerup_surf = pygame.image.load(os.path.join('images', 'PowerUps', '1up.png')).convert_alpha()
-pickup_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','pickup.png')).convert_alpha(),32,32,1)
-# laser_powerup_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('images', 'PowerUps', 'laserpowerup.png')).convert_alpha(),32,32,1)
-# pufiles = [f for f in os.listdir(os.getcwd() + '/images/PowerUps')]
-# powerup_array = []
-# for pu in pufiles: powerup_array.append(pygame.image.load(os.path.join('images','PowerUps',pu)).convert_alpha())
+pufiles = [f for f in os.listdir(os.getcwd() + '/sprites/PowerUps')]
+powerup_surfs = []
+for pu in pufiles: powerup_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','PowerUps',pu)).convert_alpha(),64,64,1))
 
 #Pew Files
 pew_surf = pygame.image.load(os.path.join('images', 'laser.png')).convert_alpha()
@@ -70,9 +73,9 @@ planet_surfs = []
 for plfile in planetfiles: planet_surfs.append(pygame.image.load(os.path.join('images','Planets',plfile)).convert_alpha())
 
 #Enemy Files (this is only used for the graphic showing enemies are enabled)
-enemyfiles = [f for f in os.listdir(os.getcwd() + '/images/Enemies')]
-enemy_surfs = []
-for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
+# enemyfiles = [f for f in os.listdir(os.getcwd() + '/images/Enemies')]
+# enemy_surfs = []
+# for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
 
 #Enemy Spritesheets
 enemyspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/enemies')]
@@ -83,6 +86,14 @@ for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(Spritesheet.L
 bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses128')]
 boss_spritesheet_surfs = []
 for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses128',bossfile)).convert_alpha(),128,128,2))
+
+#powerups
+powerup_array = [
+    {"xvel":100,"surfindx":0,"pueffect":"1up"},
+    {"xvel":100,"surfindx":1,"pueffect":"laser"},
+    {"xvel":100,"surfindx":2,"pueffect":"speed"},
+    {"xvel":100,"surfindx":3,"pueffect":"powerup"},
+]
 
 #pews
 pew_array = [
@@ -98,7 +109,7 @@ bosses_array = [
     {"imgindx":1,"type":1,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16,"animspeed":10},
     {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10},
     {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10},
-    {"imgindx":4,"type":2,"healthmultiplier":10,"numofbullets":40,"Xvel":300,"Yvel":300,"anglenum":28,"animspeed":10},
+    # {"imgindx":4,"type":2,"healthmultiplier":10,"numofbullets":40,"Xvel":300,"Yvel":300,"anglenum":28,"animspeed":10},
     ]
 # Space Junk
 spacejunkfiles = [

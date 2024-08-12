@@ -1,7 +1,3 @@
-# from Constants import off_screen_offset,min_kana_alpha,ui_font,question_font,GAME_OVER_font,debug_locationx,debug_locationy,enginesound,speed_powerup_surf,laser_powerup_surf,oneup_powerup_surf,enemy_surfs,biglaser_surf,correct_kana_dying_sound,correct_kana_lost_sound,explosion_surfs,badhit,pew_array,brick_surf,brickbreak_sound,goodhit,debris_surf,powerup_array,shiphit,tips,boss_spritesheet_surfs,bosses_array,shiplaser_sound,spaceship_surfs,spaceship_flame_surfs,screen,pew_surfs,pew_sounds,planet_surfs,menustarmessage,font_name,bridgewhoosh,bridge_surf,spacejunkfiles,biglaser_sound,biglaser_warning_surf,warning_sound,WARNING_font,kana_font,kana_ui_font,powerup_sound,enemy_spritesheet_surfs,enemypew_sound,enemy_pew_surf,wallsegment_surf
-# from Graphicgroups import starfield_group,kanas,spacejunk,warnings,biglasers,wallsegments,enemies,enemyprojectiles,kanalist,correctkanas,bullets,planet_group,cuttoffline,explosion_group,bricks,debris,centerwarning,bridge_group,tip_group,powerups,shields,damagenumbers,bosses,laserpowerups,speedpowerups
-# from Settings import ship_normal_top_speed,ship_screen_boundary,kanax_velocity,ship_boosted_top_speed,ship_boosted_acceleration,ship_boosted_deceleration,ship_normal_acceleration,ship_normal_deceleration,question_position,num_to_shoot_new_kana,kanay_velocity,enemy_knockback_recoveryx,enemy_knockback_recoveryy
-
 import Variables
 import Constants
 import Settings
@@ -76,9 +72,8 @@ class Ship:
         elif dir == 90:self.yflame_rect = self.yflameimage.get_rect(midbottom = self.spaceship_rect.center)
 
     def animate(self):
-        self.animindex += self.animspeed * Variables.dt
-        if self.animindex > len(self.spritearray.images)-1: self.animindex = 0
-        self.image = self.spritearray.images[int(self.animindex)]
+        import Functions
+        Functions.soanimate(self)
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -161,7 +156,6 @@ class Ship:
 
     def update(self):
         self.animate()
-        # self.movement()
         self.move()
 
         # RESPAWN
@@ -275,6 +269,11 @@ class Pew:
         self.rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = Constants.pew_array[Variables.pewtype]["pewspeed"]
         self.hitbox = [0,0,0,0]
+
+    def animate(self):
+        self.animindex += self.animspeed * Variables.dt #length of ime before we advance the animation frame
+        if self.animindex > len(self.spritearray.images)-1: self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
+        self.image = self.spritearray.images[int(self.animindex)] # update the current frame
 
     def update(self):
         self.rect = self.image.get_rect(midleft = (self.x, self.y))
@@ -496,13 +495,22 @@ class CutOffLine:
 
 class BigLaser:
     def __init__(self,x,y):
+        self.type = 0
+        self.spritearray = Constants.biglaser_surfs #Sprite Animation
+        self.animindex = 0  #Sprite Animation
+        self.animspeed = random.randint(10,20) #Sprite Animation
+        self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
         self.x, self.y = x, y
-        self.image = Constants.biglaser_surf
+        # self.image = Constants.biglaser_surf
         self.biglaser_rect = self.image.get_rect(center = (self.x, self.y))
         self.velocity = 8000
         self.hitboxYshrink = 50
         self.hitbox = [0,0,0,0]
-    
+
+    def animate(self):
+        import Functions
+        Functions.moanimate(self)
+
     def update(self):
         self.x -= self.velocity * Variables.dt
         self.hitbox = self.biglaser_rect
@@ -664,54 +672,38 @@ class Kana:
                 return True
         return False
 
-class PowerUp:
-    def __init__(self,x,y,xvelocity,yvelocity,image,pueffect):
-        self.pueffect = pueffect
-        self.img = image
-        self.img = pygame.transform.scale(self.img,(64,64))
+class AnimatedPowerUp:
+    def __init__(self,x,y,xvelocity,yvelocity,typeof,pueffect):
+        self.type = typeof #Sprite Animation
+        self.spritearray = Constants.powerup_surfs #Sprite Animation
+        self.animindex = 0  #Sprite Animation
+        self.animspeed = 10 #Sprite Animation
+        self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
         self.x, self.y = x, y
+        self.powerup_rect = self.image.get_rect(center = (self.x, self.y))
         self.xvelocity, self.yvelocity = xvelocity, yvelocity
         self.hitbox = [0,0,0,0]
         self.shieldradius = 32
+        self.pueffect = pueffect
 
-    def update(self,player):
-        self.x -= self.xvelocity * Variables.dt
+    def animate(self):
+        import Functions
+        Functions.moanimate(self)
+
+    def update(self):
+        self.x -= (self.xvelocity) * Variables.dt
         self.y += self.yvelocity * Variables.dt * math.sin(self.x/100)
-        if self.x < -64:
-            Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
-
-# class PowerUp:
-#     def __init__(self,x,y,xvelocity,yvelocity,image,pueffect):
-#         self.spritearray = Constants.enemy_spritesheet_surfs #Sprite Animation
-#         self.animindex = 0  #Sprite Animation
-#         self.animspeed = random.randint(10,20) #Sprite Animation
-#         self.image = self.spritearray.images[self.animindex] #Sprite Animation
-#         self.pueffect = pueffect
-#         self.img = image
-#         self.img = pygame.transform.scale(self.img,(64,64))
-#         self.x, self.y = x, y
-#         self.xvelocity, self.yvelocity = xvelocity, yvelocity
-#         self.hitbox = [0,0,0,0]
-#         self.shieldradius = 32
-
-#     def update(self,player):
-#         self.x -= self.xvelocity * Variables.dt
-#         self.y += self.yvelocity * Variables.dt * math.sin(self.x/100)
-#         if self.x < -64:
-#             Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+        self.powerup_rect = self.image.get_rect(center = (self.x, self.y))
+        if self.x < -128: Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
+        self.animate()
 
     def draw(self,screen):
-        self.hitbox = self.img_rect = self.img.get_rect(center = (self.x, self.y))
-        self.img.set_alpha(255)
-        self.img_rect = self.img.get_rect(center = (self.x, self.y))
-        screen.blit(self.img, self.img_rect)
+        self.hitbox = self.image.get_rect(center = (self.x, self.y))
+        screen.blit(self.image, self.powerup_rect)
 
         # Draw hitbox
         if Variables.hitboxshow:
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
-
-    def spawn(graphic,effect):
-        Graphicgroups.powerups.append(PowerUp(Constants.WIDTH+64, random.randrange(128,Constants.HEIGHT-128,),100,random.randrange(100,200),graphic,effect))
 
     def collide(self,rect):
         x = abs(self.x - (rect[0] + rect[2] / 2))
@@ -725,39 +717,46 @@ class PowerUp:
 
         corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
         return corner_distance <= self.shieldradius**2
-    
+
     def effect(self,pueffect,player):
         if pueffect == "laser":
             if self.collide(player.spaceship_rect):
-                Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+                Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
                 player.lasersight = True
                 player.lasersightcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(Constants.powerup_sound)
                 pygame.mixer.Sound.play(Constants.shiplaser_sound)
         if pueffect == "speed":
             if self.collide(player.spaceship_rect):
-                Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+                Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
                 player.speedboost = True
                 player.speedboostcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(Constants.powerup_sound)
         if pueffect == "switch":
             if self.collide(player.spaceship_rect):
-                Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+                Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
                 player.kanaswitch = True
                 player.kanaswitchcounter = player.poweruptimelength
                 pygame.mixer.Sound.play(Constants.powerup_sound)
         if pueffect == "1up":
             if self.collide(player.spaceship_rect):
-                Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+                Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
                 Variables.lives += 1
                 pygame.mixer.Sound.play(Constants.powerup_sound)
         if pueffect == "powerup":
             if self.collide(player.spaceship_rect):
-                Graphicgroups.powerups.pop(Graphicgroups.powerups.index(self))
+                Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
                 if Variables.pewtype < len(Constants.pew_array)-1:
                     Variables.pewtype += 1
                     pygame.mixer.Sound.play(Constants.powerup_sound)
                 else: Variables.pewtype = 0
+
+    def spawn(xvel,typeof,pueffect):
+        x = Constants.WIDTH+64
+        y = random.randrange(128,Constants.HEIGHT-128,)
+        xvelocity = xvel
+        yvelocity = random.randrange(100,200)
+        Graphicgroups.animatedpowerup.append(AnimatedPowerUp(x, y,xvelocity,yvelocity,typeof,pueffect))
 
 class Enemies:
     def __init__(self,typeof):
@@ -792,9 +791,8 @@ class Enemies:
         return angles
 
     def animate(self):
-        self.animindex += self.animspeed * Variables.dt
-        if self.animindex > len(self.spritearray[self.type].images)-1: self.animindex = 0
-        self.image = self.spritearray[self.type].images[int(self.animindex)]
+        import Functions
+        Functions.moanimate(self)
 
     def update(self):
         self.healthdisplay = self.enemy_rect.width/self.maxhealth*self.health
@@ -810,8 +808,7 @@ class Enemies:
         if self.knockbackx > 0: self.knockbackx -= Settings.enemy_knockback_recoveryx * Variables.dt
         if self.knockbacky > 0: self.knockbacky -= Settings.enemy_knockback_recoveryy * Variables.dt
         if self.knockbacky < 0: self.knockbacky += Settings.enemy_knockback_recoveryy * Variables.dt
-        if self.x < -128:
-            Graphicgroups.enemies.pop(Graphicgroups.enemies.index(self))
+        if self.x < -128: Graphicgroups.enemies.pop(Graphicgroups.enemies.index(self))
     
     def findobjectangle(self,player):
             # Find angle of player
@@ -838,12 +835,10 @@ class Enemies:
 
     def draw(self,screen,player):
         screen.blit(self.image, self.enemy_rect)
-        
         screen.blit(self.healthbar, (self.enemy_rect.left,self.enemy_rect.top-20,self.enemy_rect.width,10))
         self.healthbar.fill('black')
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
-
         self.hitbox = self.enemy_rect
         if Variables.hitboxshow:
             screen.blit(self.maxhealth_grapic, self.enemy_rect.topright)
@@ -897,9 +892,9 @@ class Bosses:
         return angles
 
     def animate(self):
-        self.animindex += self.animspeed * Variables.dt
-        if self.animindex > len(self.spritearray[self.bossimage].images)-1: self.animindex = 0
-        self.image = self.spritearray[self.bossimage].images[int(self.animindex)]
+        self.animindex += self.animspeed * Variables.dt #length of ime before we advance the animation frame
+        if self.animindex > len(self.spritearray[self.bossimage].images)-1: self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
+        self.image = self.spritearray[self.bossimage].images[int(self.animindex)] # update the current frame
 
     def update(self):
         self.healthdisplay = self.boss_rect.width/self.maxhealth*self.health
@@ -1007,6 +1002,10 @@ class EnemyProjectiles:
         self.x += self.velocity * sin_a * Variables.dt
         self.y += self.velocity * cos_a * Variables.dt
         return self.x, self.y
+
+    def animate(self):
+        import Functions
+        Functions.soanimate(self)
 
     def update(self):
         self.x, self.y = self.objectdirection(self.direction)
@@ -1135,8 +1134,8 @@ class Debris:
 class Damagenum:
     def __init__(self,x,xvel,y,damage):
         self.x, self.y, self.orgy = x, y-32, y-32
-        self.xvelocity, self.yvelocity = xvel, 100
-        damage_font = pygame.font.SysFont(Constants.font_name, 20)
+        self.xvelocity, self.yvelocity = xvel, 50
+        damage_font = pygame.font.SysFont(Constants.font_name, Settings.damage_num_font_size)
         self.image = damage_font.render(str(damage), True, 'yellow')
         self.alpha = 255
 

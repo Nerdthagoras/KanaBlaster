@@ -43,6 +43,8 @@ maximum_bridge_frequency = 35
 
 #region Boss Ships
 bosshealthmultiplier = 10
+boss_bonus_score = 50
+get_ready_timer_max = 5
 #endregion Boss Ships
 
 #region Enemy Ships
@@ -55,7 +57,8 @@ enemy_start_level = 1
 minimum_enemy_frequency = 5
 maximum_enemy_frequency = 10
 enemy_health = 10
-enemy_powerup_freq = 10
+enemy_powerup_freq = 3
+damage_num_font_size = 40
 #endregion
 
 #region Big Laser
@@ -69,5 +72,6 @@ biglaser_start_level = 3
 score_position = (0, 10)
 lives_position = (200, 10)
 level_position = (400, 10)
+bonus_position = (Constants.WIDTH/2-60, 60)
 question_position = (Constants.WIDTH/2+60, 20)
 #endregion

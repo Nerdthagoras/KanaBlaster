@@ -6,9 +6,9 @@ import pygame
 import os
 
 if __name__ == "__main__":
-    # Set current state
+    # Set current state 
     current_state = Game_States.intro_state
-    
+
     allstates = [
         [Game_States.intro_state,Game_States.menu_state,'GameIntro'],
         [Game_States.menu_state,Game_States.game_state,'TimeDilation'],
@@ -28,10 +28,8 @@ if __name__ == "__main__":
 
     # Game loop
     while not current_state.done:
-        #pygame.display.set_caption(str(clock.get_fps()))
-        # print(Variables.STATE)
         pygame.mixer.music.set_volume(Variables.musicvolume)
-        pygame.display.set_caption('Kana Blaster')
+        pygame.display.set_caption('Kana Blaster ' + str(int(Constants.clock.get_fps())))
         Constants.clock.tick(Constants.fps)
         Variables.dt = time.time() - Variables.lt; Variables.lt = time.time()
 
