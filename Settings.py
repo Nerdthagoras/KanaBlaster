@@ -44,7 +44,7 @@ maximum_bridge_frequency = 35
 #region Boss Ships
 bosshealthmultiplier = 10
 boss_bonus_score = 50
-get_ready_timer_max = 5
+get_ready_timer_max = 3
 #endregion Boss Ships
 
 #region Enemy Ships

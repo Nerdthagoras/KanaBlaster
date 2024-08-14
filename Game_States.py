@@ -1078,13 +1078,13 @@ class BossFight:
         #region Rest period before re-entering game
         if Variables.TRANSITION == False and self.boss_end_state == "getready":
             if self.get_ready_timer <= 0:
+                self.boss_end_state = "musicfade"
                 Variables.GAMESTATE = False
                 Variables.BOSSSTATE = True
                 Variables.level += 1
                 Variables.musicvolume = Variables.maxmusicvolume
                 self.bonus_score = Settings.boss_bonus_score
                 self.get_ready_timer = Settings.get_ready_timer_max
-                self.boss_end_state == "musicfade"
             else: self.get_ready_timer -= Variables.dt
         #endregion Rest period before re-entering game
 
@@ -1178,6 +1178,7 @@ class BossFight:
             powerup.effect(powerup.pueffect,Game_Objects.player)
         for centerwarn in Graphicgroups.centerwarning: centerwarn.update()              # UI
         Graphicgroups.bridge_group.update(Game_Objects.player)                          # BRIDGE WIPE
+        Graphicgroups.tip_group.update()                                                # Tip Ticker
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
@@ -1915,6 +1916,8 @@ class Debug:
             ["PlayerXY",Game_Objects.player.location],
             # ["Powerup Timer",int(game_state.powerup_thresh - (time.time() - game_state.powerup_timer))],
             ["GetReady",boss_state.get_ready_timer],
+            ["Transition",Variables.TRANSITION],
+            ["BossEnd",boss_state.boss_end_state]
         ]
         currentline = y
         for item in debugitems:
