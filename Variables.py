@@ -21,6 +21,8 @@ for i in range(len(levels)):    # Shuffle Kana and create levels
 STATE = "intro"
 
 #changables
+shiptype = 0
+maxshiptype = 0
 level = 0
 gamemode = 0
 maxlives = 5

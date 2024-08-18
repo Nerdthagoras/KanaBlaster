@@ -9,12 +9,13 @@ import os
 
 # PLAYER
 class Ship:
-    def __init__(self,x,y,spritearray):
-        self.spritearray = spritearray
+    def __init__(self,x,y):
+        self.spritearray = Constants.spaceship_surfs
         self.flamearray = Constants.spaceship_flame_surfs
+        self.type = Variables.shiptype
         self.animindex = 0
         self.animspeed = 10
-        self.image = self.spritearray.images[self.animindex]
+        self.image = self.spritearray[self.type].images[self.animindex]
         self.location = pygame.math.Vector2(x,y)
         self.spaceship_rect = self.image.get_rect(center = self.location)
         self.deadzone = 20
@@ -73,7 +74,7 @@ class Ship:
 
     def animate(self):
         import Functions
-        Functions.soanimate(self)
+        Functions.moanimate(self)
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -155,6 +156,7 @@ class Ship:
         self.spaceship_rect.center = self.location
 
     def update(self):
+        self.type = Variables.shiptype
         self.animate()
         self.move()
 
@@ -569,17 +571,55 @@ class BigLaserWarning:
     def spawn(player):
         Graphicgroups.warnings.append(BigLaserWarning(random.randint(player.spaceship_rect.center[1]-64,player.spaceship_rect.center[1]+64)))
 
+class AnimCenterWarning:
+    def __init__(self,message,surface,typeof,scale,fade=True,pos=(Constants.WIDTH // 2, Constants.HEIGHT // 2)):
+        self.spritearray = surface #Sprite Animation
+        self.type = typeof
+        self.animindex = 0  #Sprite Animation
+        self.animspeed = 10
+        self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
+        self.pos = pos
+        self.fade = fade
+        self.alpha = 255
+        self.message = message
+        self.scale = scale
+
+    def animate(self):
+        import Functions
+        Functions.moanimate(self)
+        
+    def update(self):
+        self.animate()
+        if self.fade:
+            self.alpha -= 100 * Variables.dt
+            if self.alpha <= 0: Graphicgroups.animcenterwarning.pop(Graphicgroups.animcenterwarning.index(self))
+
+    def draw(self):
+        warning_text = Constants.WARNING_font.render(self.message, True, 'white')
+        warning_text.set_alpha(self.alpha)
+        self.image_scaled = pygame.transform.scale(self.image,(self.image.get_rect().width*self.scale,self.image.get_rect().height*self.scale))
+        self.image_scaled.set_alpha(self.alpha)
+        centered_warning = warning_text.get_rect(center = self.pos)
+        centered_image = self.image_scaled.get_rect(center = self.pos)
+        Constants.screen.blit(self.image_scaled,centered_image)
+        Constants.screen.blit(warning_text, centered_warning)
+
+    def spawn(message,surface,scale=1):
+        Graphicgroups.animcenterwarning.append(CenterWarning(message,surface,scale))
+
 class CenterWarning:
-    def __init__(self,message,surface,scale):
-        self.pos = (Constants.WIDTH // 2, Constants.HEIGHT // 2)
+    def __init__(self,message,surface,scale,fade=True,pos=(Constants.WIDTH // 2, Constants.HEIGHT // 2)):
+        self.pos = pos
+        self.fade = fade
         self.alpha = 255
         self.message = message
         self.surf = surface
         self.scale = scale
 
     def update(self):
-        self.alpha -= 100 * Variables.dt
-        if self.alpha <= 0: Graphicgroups.centerwarning.pop(Graphicgroups.centerwarning.index(self))
+        if self.fade:
+            self.alpha -= 100 * Variables.dt
+            if self.alpha <= 0: Graphicgroups.centerwarning.pop(Graphicgroups.centerwarning.index(self))
 
     def draw(self):
         warning_text = Constants.WARNING_font.render(self.message, True, 'white')
@@ -858,6 +898,10 @@ class Enemies:
 
 class Bosses:
     def __init__(self,typeof,health,bossimage,numofbullets,Xvel,Yvel,anglenum,animspeed):
+        self.music = Constants.bosses_array[Variables.level]["music"]
+        Variables.musicvolume = Variables.maxmusicvolume
+        pygame.mixer.music.load(os.path.join('music',str(self.music) + '.wav'))
+        pygame.mixer.music.play(-1)
         self.spritearray = Constants.boss_spritesheet_surfs
         self.bossimage = bossimage
         self.enter_screen = False
@@ -1153,4 +1197,4 @@ class Damagenum:
     def spawn(x,xvel,y,damage):
         Graphicgroups.damagenumbers.append(Damagenum(x,xvel,y,damage))
 
-player = Ship(0,Constants.HEIGHT//2,Constants.spaceship_surfs)
+player = Ship(0,Constants.HEIGHT//2)

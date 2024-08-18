@@ -37,7 +37,6 @@ pygame.display.set_caption('Kana Blaster')
 # Graphics
 off_screen_offset = 64
 min_kana_alpha = 200
-spaceship_surf = pygame.image.load(os.path.join('images', 'ship.png')).convert_alpha()
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
@@ -45,13 +44,14 @@ wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).co
 brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 debris_surf = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
 explosion_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
-spaceship_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','ArpShip.png')).convert_alpha(),64,64,1)
 spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','flames.png')).convert_alpha(),128,64,0.75)
 
-#BigLaser Files
-# biglaser_surf = pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha()
-biglaser_spritesheet_surf = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('images', 'biglaser.png')).convert_alpha(),1024,360,1)
+#SpaceShip Files
+spaceship_files = [f for f in os.listdir(os.getcwd() + '/sprites/PlayerShips')]
+spaceship_surfs = []
+for spaceships in spaceship_files: spaceship_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','PlayerShips',spaceships)).convert_alpha(),64,64,1))
 
+#BigLaser Files
 blfiles = [f for f in os.listdir(os.getcwd() + '/sprites/BigLasers')]
 biglaser_surfs = []
 for bl in blfiles: biglaser_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BigLasers',bl)).convert_alpha(),1024,360,1))
@@ -105,11 +105,10 @@ pew_array = [
 
 #Bosses
 bosses_array = [
-    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16,"animspeed":10},
-    {"imgindx":1,"type":1,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16,"animspeed":10},
-    {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10},
-    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10},
-    # {"imgindx":4,"type":2,"healthmultiplier":10,"numofbullets":40,"Xvel":300,"Yvel":300,"anglenum":28,"animspeed":10},
+    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16,"animspeed":10,"music":"moog"},
+    {"imgindx":1,"type":1,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16,"animspeed":10,"music":"bossfight"},
+    {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"music":"moog"},
     ]
 # Space Junk
 spacejunkfiles = [

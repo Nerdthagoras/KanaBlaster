@@ -18,7 +18,7 @@ if __name__ == "__main__":
     ]
 
     bossstates = [
-        [Game_States.game_state,Game_States.boss_state,'Moog'],
+        [Game_States.game_state,Game_States.boss_state],
         [Game_States.boss_state,Game_States.game_state,'TimeDilation'],
     ]
 

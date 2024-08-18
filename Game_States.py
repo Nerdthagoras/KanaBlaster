@@ -54,6 +54,11 @@ class MenuState:
         self.enemy_timer = time.time()
         self.enemy_randomness = 5
         self.paused = False
+        self.startbuttonsoundplayed = False
+        # from Game_Objects import CenterWarning
+        # Graphicgroups.centerwarning.append(CenterWarning("",Constants.spaceship_surfs[Variables.shiptype].images[0],4,False))
+        from Game_Objects import AnimCenterWarning
+        Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.spaceship_surfs,Variables.shiptype,4,False))
         for _ in range(100): Graphicgroups.starfield_group.add(Game_Objects.Star(0,random.randrange(0,Constants.WIDTH+1000))) # Preload screen full of stars
 
     def manifest(self):
@@ -86,24 +91,26 @@ class MenuState:
     def update(self,screen):
         Variables.STATE = "Menu"
         pygame.mouse.set_visible(True)
+        Variables.maxshiptype = int(len(Constants.spaceship_surfs)*Functions.getmaxship())
 
-        for junk in Graphicgroups.spacejunk: junk.update(Game_Objects.player)                      # RANDOM JUNK
-        Graphicgroups.starfield_group.update(Game_Objects.player)                                  # STARS
-        for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)                          # Kana
-        for warning in Graphicgroups.warnings: warning.update()                       # Warning for BIG LASER
-        for biglaser in Graphicgroups.biglasers: biglaser.update()                    # BIG LASER
-        for enemy in Graphicgroups.enemies: enemy.update();enemy.shoot(Game_Objects.player)        # Enemies
-        for epew in Graphicgroups.enemyprojectiles: epew.update()                     # Enemy Projectiles
-        for wod in Graphicgroups.wallsegments: wod.update()                           # Wall of Death
+        for junk in Graphicgroups.spacejunk: junk.update(Game_Objects.player)                       # RANDOM JUNK
+        Graphicgroups.starfield_group.update(Game_Objects.player)                                   # STARS
+        for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)                           # Kana
+        for warning in Graphicgroups.warnings: warning.update()                                     # Warning for BIG LASER
+        for biglaser in Graphicgroups.biglasers: biglaser.update()                                  # BIG LASER
+        for enemy in Graphicgroups.enemies: enemy.update();enemy.shoot(Game_Objects.player)         # Enemies
+        for epew in Graphicgroups.enemyprojectiles: epew.update()                                   # Enemy Projectiles
+        for wod in Graphicgroups.wallsegments: wod.update()                                         # Wall of Death
+        for centerwarn in Graphicgroups.animcenterwarning: centerwarn.update()                      # Center Warning
 
     def draw(self,screen):
         # Must be in order of Top/Bottom = Background/Foreground
-        screen.fill(('black'))                                          # Refresh screen
+        screen.fill(('black'))                                                                      # Refresh screen
 
-        for junk in Graphicgroups.spacejunk: junk.draw(screen)                        # RANDOM JUNK
-        Graphicgroups.starfield_group.draw(screen)                                    # STARS
-        for kana in Graphicgroups.kanas: kana.draw(screen)                            # Kana
-        #region Bottom KANA LIST                                        # Bottom Kana List
+        for junk in Graphicgroups.spacejunk: junk.draw(screen)                                      # RANDOM JUNK
+        Graphicgroups.starfield_group.draw(screen)                                                  # STARS
+        for kana in Graphicgroups.kanas: kana.draw(screen)                                          # Kana
+        #region Bottom KANA LIST                                                                    # Bottom Kana List
         Graphicgroups.kanalist.clear()
         for kana in range(int(Variables.levels[Variables.level])): Graphicgroups.kanalist.append(Variables.commasep[kana])
         for kana in range(int(Variables.levels[Variables.level])):
@@ -112,16 +119,35 @@ class MenuState:
             kanalistthing = Constants.ui_font.render(Graphicgroups.kanalist[kana][Variables.gamemode], True, (kanakill,255,kanakill))
             screen.blit(kanalistthing,(25+(27*kana),Constants.HEIGHT-30))
         #endregion
-        for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                 # Enemy Projectiles
-        for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)                 # Enemies
-        for warning in Graphicgroups.warnings: warning.draw(screen)                   # Warning for BIG LASER
-        for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                # BIG LASER
-        for wod in Graphicgroups.wallsegments: wod.draw(screen)                       # Wall of Death
+        for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                               # Enemy Projectiles
+        for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)                  # Enemies
+        for warning in Graphicgroups.warnings: warning.draw(screen)                                 # Warning for BIG LASER
+        for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                              # BIG LASER
+        for wod in Graphicgroups.wallsegments: wod.draw(screen)                                     # Wall of Death
+        for centerwarn in Graphicgroups.animcenterwarning: centerwarn.draw()                        # Center Warning
         
         # DEBUG
         if Variables.debugwindow: Debug.draw(Constants.debug_locationx,Constants.debug_locationy)
 
+        #region Game Title
+        TITLE_text = Constants.GAME_OVER_font.render('KANA BLASTER', True, 'white')
+        screen.blit(TITLE_text, (10, Constants.HEIGHT/7))
+        TITLE_shadow_text = Constants.GAME_OVER_font.render('KANA BLASTER', True, 'white')
+        TITLE_shadow_text.set_alpha(100)
+        offset = 8
+        screen.blit(TITLE_shadow_text, (10+offset, Constants.HEIGHT/7+offset))
+        #endregion Game Title
+
         #region BUTTONS                                                 # BUTTONS
+        # Starting Level
+        self.level_number_location = (10, 10, 200, 40)
+        self.level_number = pygame.Rect(self.level_number_location)
+        level_text = Constants.ui_font.render('Level: ', True, 'white')
+        pygame.draw.rect(screen, 'white', self.level_number, 2)
+        screen.blit(level_text, (self.level_number_location[0]+10,self.level_number_location[1]+10))
+        num_text = Constants.ui_font.render(str(Variables.level), True, 'white')
+        screen.blit(num_text,(120, 20))
+
         # Game Mode Button
         self.game_mode_location = (10, 50, 200, 40)
         self.game_mode = pygame.Rect(self.game_mode_location)
@@ -133,30 +159,29 @@ class MenuState:
             sound_state = Constants.ui_font.render('Katakana', True, 'white')
             screen.blit(sound_state, (75, 60))
 
-        # Start Level
-        self.level_number_location = (10, 10, 200, 40)
-        self.level_number = pygame.Rect(self.level_number_location)
-        level_text = Constants.ui_font.render('Level: ', True, 'white')
-        pygame.draw.rect(screen, 'white', self.level_number, 2)
-        screen.blit(level_text, (self.level_number_location[0]+10,self.level_number_location[1]+10))
-        num_text = Constants.ui_font.render(str(Variables.level), True, 'white')
-        screen.blit(num_text,(120, 20))            
+        # Ship Type
+        self.shiptype_number_location = (10, 90, 200, 40)
+        self.shiptype_number = pygame.Rect(self.shiptype_number_location)
+        shiptype_text = Constants.ui_font.render('Ship: ', True, 'white')
+        pygame.draw.rect(screen, 'white', self.shiptype_number, 2)
+        screen.blit(shiptype_text, (self.shiptype_number_location[0]+10,self.shiptype_number_location[1]+10))
+        num_text = Constants.ui_font.render(str(Variables.shiptype), True, 'white')
+        screen.blit(num_text,(120, 100))
 
         # Start Button
-        self.start_button_location = (Constants.WIDTH // 2-75, Constants.HEIGHT //2-80, 150, 70)
+        self.start_button_location = (Constants.WIDTH // 2-75, Constants.HEIGHT //2+150, 150, 70)
         self.start_button = pygame.Rect(self.start_button_location)
-        self.start_text = Constants.question_font.render('START', True, 'white')
+        if self.start_button.collidepoint(pygame.mouse.get_pos()):
+            self.start_text = Constants.question_font.render('START', True, 'Green')
+            if self.startbuttonsoundplayed == False:
+                pygame.mixer.Sound.play(Constants.correct_kana_dying_sound)
+                self.startbuttonsoundplayed = True
+        else:
+            self.start_text = Constants.question_font.render('START', True, 'Red')
+            self.startbuttonsoundplayed = False
         pygame.draw.rect(screen, 'white', self.start_button, 2)
         screen.blit(self.start_text, (self.start_button_location[0]+10, self.start_button_location[1]+10))                      
-
-        # Game Title
-        TITLE_text = Constants.GAME_OVER_font.render('KANA BLASTER', True, 'white')
-        screen.blit(TITLE_text, (10, Constants.HEIGHT/8))
-        TITLE_shadow_text = Constants.GAME_OVER_font.render('KANA BLASTER', True, 'white')
-        TITLE_shadow_text.set_alpha(100)
-        offset = 8
-        screen.blit(TITLE_shadow_text, (10+offset, Constants.HEIGHT/8+offset))
-        #endregion
+        #endregion BUTTONS
 
     def collision(self):
         pass
@@ -189,6 +214,32 @@ class MenuState:
                     else:
                         Variables.level -= 1
                 elif self.level_number.collidepoint(event.pos) and event.button == 2: Variables.level = 0
+
+                # Select Ship
+                if self.shiptype_number.collidepoint(event.pos) and event.button == 1 or self.shiptype_number.collidepoint(event.pos) and event.button == 4:
+                    if Variables.shiptype >= Variables.maxshiptype or Variables.shiptype >= len(Constants.spaceship_surfs)-1:
+                        Variables.shiptype = 0
+                    else:
+                        Variables.shiptype +=1
+                    from Game_Objects import AnimCenterWarning
+                    Graphicgroups.animcenterwarning.clear()
+                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.spaceship_surfs,Variables.shiptype,4,False))
+                elif self.shiptype_number.collidepoint(event.pos) and event.button == 3 or self.shiptype_number.collidepoint(event.pos) and event.button == 5:
+                    if Variables.shiptype <= 0:
+                        if Variables.maxshiptype < len(Constants.spaceship_surfs)-1:
+                            Variables.shiptype = Variables.maxshiptype
+                        else:
+                            Variables.shiptype = len(Constants.spaceship_surfs)-1
+                    else:
+                        Variables.shiptype -= 1
+                    from Game_Objects import AnimCenterWarning
+                    Graphicgroups.animcenterwarning.clear()
+                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.spaceship_surfs,Variables.shiptype,4,False))
+                elif self.shiptype_number.collidepoint(event.pos) and event.button == 2: 
+                    Variables.shiptype = 0
+                    from Game_Objects import AnimCenterWarning
+                    Graphicgroups.animcenterwarning.clear()
+                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.spaceship_surfs,Variables.shiptype,4,False))
 
                 #start
                 if self.start_button.collidepoint(event.pos):
@@ -364,7 +415,7 @@ class GameState:
                 Variables.BOSSSTATE = False
                 Variables.GAMESTATE = True
                 Variables.bossexist = False
-                Variables.musicvolume = Variables.maxmusicvolume
+                # Variables.musicvolume = Variables.maxmusicvolume
             Variables.musicvolume -= 0.05 * Variables.dt
         #endregion Fade out music and transition to Boss
 
@@ -1917,7 +1968,10 @@ class Debug:
             # ["Powerup Timer",int(game_state.powerup_thresh - (time.time() - game_state.powerup_timer))],
             ["GetReady",boss_state.get_ready_timer],
             ["Transition",Variables.TRANSITION],
-            ["BossEnd",boss_state.boss_end_state]
+            ["BossEnd",boss_state.boss_end_state],
+            ["LinearProg",Variables.linearprogress],
+            ["GMSFunc",Functions.getmaxship()],
+            ["TNS",len(Constants.spaceship_surfs)]
         ]
         currentline = y
         for item in debugitems:

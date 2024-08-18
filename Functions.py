@@ -23,12 +23,21 @@ def moanimate(self):
     if self.animindex > len(self.spritearray[self.type].images)-1: self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
     self.image = self.spritearray[self.type].images[int(self.animindex)] # update the current frame
 
+def getmaxship():
+    TotalKanaPoints = 0
+    import Variables, Settings, Constants
+    for sep in Variables.commasep:
+        TotalKanaPoints += int(sep[3])
+    return TotalKanaPoints / (Settings.num_to_shoot_new_kana*len(Variables.commasep))
+
+
 def reset_game(): #Executed when pressing START
     import Variables
     import Graphicgroups
     import time
     import Game_States
     #region Clear Object Arrays
+    Graphicgroups.centerwarning.clear()
     Graphicgroups.bullets.clear()
     Graphicgroups.kanas.clear()
     Graphicgroups.kanalist.clear()
