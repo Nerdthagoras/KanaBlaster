@@ -32,7 +32,7 @@ Before running the game, ensure you have the following installed:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/KanaBlaster.git
+    git clone https://github.com/Nerdthagoras/KanaBlaster.git
     ```
 2. Navigate to the project directory:
     ```bash
@@ -48,7 +48,7 @@ Before running the game, ensure you have the following installed:
 To run the game, execute the main script:
 
 ```bash
-python main.py
+python Kanablaster.py
 ```
 
 The game will start, and the initial state will be the `intro_state`. The game will transition between states based on player progress and game logic.
