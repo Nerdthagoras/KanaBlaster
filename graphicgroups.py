@@ -1,28 +1,28 @@
-import pygame
-
-#arrays
+# Sprite Lists
+animcenterwarning = []
+animatedpowerup = []
+biglasers = []
+bosses = []
+bricks = []
 bullets = []
-kanas = []
-kanalist = []
+centerwarning = []
 correctkanas = []
 cuttoffline = []
+damagenumbers = []
+debris = []
+enemies = []
+enemyprojectiles = []
+kanas = []
+kanalist = []
 powerups = []
-animatedpowerup = []
+shields = []
 spacejunk = []
 warnings = []
-biglasers = []
-enemies = []
-bosses = []
-enemyprojectiles = []
-animcenterwarning = []
-centerwarning = []
 wallsegments = []
-bricks = []
-debris = []
-shields = []
-damagenumbers = []
 
-#spritegroups
+
+# Sprite Groups
+import pygame
 starfield_group = pygame.sprite.Group()
 tip_group = pygame.sprite.Group()
 planet_group = pygame.sprite.Group()

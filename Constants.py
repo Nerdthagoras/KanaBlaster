@@ -2,10 +2,11 @@ import pygame
 import os
 import Spritesheet
 
-# Initialize Pygame
+#region Initialize Pygame
 pygame.init()
 fps = 0
 clock = pygame.time.Clock()
+#endregion
 
 # Screen Size
 WIDTH, HEIGHT = 1440,900
@@ -19,6 +20,7 @@ menustarmessage = [
     "SUBSCRIBE",
     "Also on Twtich",
     "Please Donate!",
+    "This is a long string of text",
 ]
 
 # Define some font sizes
@@ -43,8 +45,13 @@ biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png'))
 wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).convert_alpha()
 brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 debris_surf = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
-explosion_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','explode.png')).convert_alpha(),256,256,1)
-spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','flames.png')).convert_alpha(),128,64,0.75)
+spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Flames','flames.png')).convert_alpha(),128,64,0.75)
+
+#explosion Files
+explosion_files = [f for f in os.listdir(os.getcwd() + '/sprites/Explosions')]
+explosion_surfs = []
+for explosion in explosion_files: explosion_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Explosions',explosion)).convert_alpha(),256,256,1))
+# explosion_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Explosions','explode.png')).convert_alpha(),256,256,1)
 
 #SpaceShip Files
 spaceship_files = [f for f in os.listdir(os.getcwd() + '/sprites/PlayerShips')]
@@ -97,6 +104,7 @@ powerup_array = [
 
 #pews
 pew_array = [
+    {"imgindx":3,"pewsound":2,"laserpower":1,"maxnumpew":1,"pewrate":500,"pewspeed":800,"width":16,"height":16,"persist":False},
     {"imgindx":2,"pewsound":1,"laserpower":1,"maxnumpew":2,"pewrate":200,"pewspeed":3000,"width":256,"height":16,"persist":False},
     {"imgindx":0,"pewsound":1,"laserpower":1,"maxnumpew":4,"pewrate":200,"pewspeed":4000,"width":256,"height":16,"persist":False},
     {"imgindx":1,"pewsound":1,"laserpower":1,"maxnumpew":1000,"pewrate":1,"pewspeed":3000,"width":16,"height":16,"persist":False},

@@ -36,11 +36,6 @@ ship_extra_life_increment = 100
 star_frequency = 0.05
 #endregion
 
-#region Bridge frequency in seconds
-minimum_bridge_frequency = 30
-maximum_bridge_frequency = 35
-#endregion
-
 #region Boss Ships
 bosshealthmultiplier = 10
 boss_bonus_score = 50
