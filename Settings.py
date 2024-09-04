@@ -25,6 +25,9 @@ ship_boosted_acceleration = 6
 ship_boosted_deceleration = 7
 
 ship_screen_boundary = 64
+explode_vel_frac = 20
+maxlives = 5
+ship_fallbackspeed = 100
 # ship_screen_boundary_X = 100
 
 ship_bullet_speed = 3000
@@ -54,6 +57,7 @@ maximum_enemy_frequency = 10
 enemy_health = 10
 enemy_powerup_freq = 3
 damage_num_font_size = 40
+enemiescanshooteachother = True
 #endregion
 
 #region Big Laser
@@ -64,6 +68,7 @@ biglaser_start_level = 3
 #endregion
 
 #region UI
+maxmusicvolume = 0.1
 score_position = (0, 10)
 lives_position = (200, 10)
 level_position = (400, 10)

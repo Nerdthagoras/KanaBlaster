@@ -1,29 +1,22 @@
-import pygame
-import os
+import pygame, os
 import Spritesheet
 
 #region Initialize Pygame
-pygame.init()
-fps = 0
-clock = pygame.time.Clock()
+pygame.init()                                                           # initialize pygame
+fps = 0                                                                 # no framerate cap
+clock = pygame.time.Clock()                                             # Create clock object
+WIDTH, HEIGHT = 1440,900                                                # Screen Size
+WCENTER, HCENTER = WIDTH // 2, HEIGHT // 2                              # Screen Centers
+screen = pygame.display.set_mode((WIDTH, HEIGHT))                       # Create Screen
 #endregion
 
-# Screen Size
-WIDTH, HEIGHT = 1440,900
-
-# Debug Location
-debug_locationx,debug_locationy = WIDTH-300,100
-
-# Menu Starfield Messages
-menustarmessage = [
-    "Music by Nerdthagoras",
-    "SUBSCRIBE",
-    "Also on Twtich",
-    "Please Donate!",
-    "This is a long string of text",
+tips = [
+    "Collect the requested Kana, Shoot all other Kana",
 ]
 
-# Define some font sizes
+debug_locationx,debug_locationy = WIDTH-300,100                         # Debug Location
+
+#region FONTS
 font_name = "MSGothic"
 kana_font = pygame.font.SysFont(font_name, 60)
 question_font = pygame.font.SysFont(font_name, 50)
@@ -31,14 +24,13 @@ ui_font = pygame.font.SysFont(font_name, 30)
 kana_ui_font = pygame.font.SysFont(font_name, 20)
 GAME_OVER_font = pygame.font.SysFont(font_name, 200)
 WARNING_font = pygame.font.SysFont(font_name, 100)
-
-# Create the window and define screen dimensions
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Kana Blaster')
+#endregion FONTS
 
 # Graphics
-off_screen_offset = 64
+off_screen_offset = 64                                                  # distance from vertical window border
 min_kana_alpha = 200
+
+#region Surfaces for static images
 enemy_pew_surf = pygame.image.load(os.path.join('images', 'enemypew.png')).convert_alpha()
 bridge_surf = pygame.image.load(os.path.join('images', 'bridge.png')).convert_alpha()
 biglaser_warning_surf = pygame.image.load(os.path.join('images', 'warning.png')).convert_alpha()
@@ -46,12 +38,13 @@ wallsegment_surf = pygame.image.load(os.path.join('images', 'wallpiece.png')).co
 brick_surf = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 debris_surf = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
 spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Flames','flames.png')).convert_alpha(),128,64,0.75)
+#endregion Surfaces for static images
 
+#region Surfaces for Animated sprites
 #explosion Files
 explosion_files = [f for f in os.listdir(os.getcwd() + '/sprites/Explosions')]
 explosion_surfs = []
 for explosion in explosion_files: explosion_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Explosions',explosion)).convert_alpha(),256,256,1))
-# explosion_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Explosions','explode.png')).convert_alpha(),256,256,1)
 
 #SpaceShip Files
 spaceship_files = [f for f in os.listdir(os.getcwd() + '/sprites/PlayerShips')]
@@ -79,11 +72,6 @@ planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
 planet_surfs = []
 for plfile in planetfiles: planet_surfs.append(pygame.image.load(os.path.join('images','Planets',plfile)).convert_alpha())
 
-#Enemy Files (this is only used for the graphic showing enemies are enabled)
-# enemyfiles = [f for f in os.listdir(os.getcwd() + '/images/Enemies')]
-# enemy_surfs = []
-# for enemyfile in enemyfiles: enemy_surfs.append(pygame.image.load(os.path.join('images','Enemies',enemyfile)).convert_alpha())
-
 #Enemy Spritesheets
 enemyspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/enemies')]
 enemy_spritesheet_surfs = []
@@ -93,7 +81,9 @@ for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(Spritesheet.L
 bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses128')]
 boss_spritesheet_surfs = []
 for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses128',bossfile)).convert_alpha(),128,128,2))
+#endregion Surfaces for Animated sprites
 
+#region Arrays for objects
 #powerups
 powerup_array = [
     {"xvel":100,"surfindx":0,"pueffect":"1up"},
@@ -104,10 +94,10 @@ powerup_array = [
 
 #pews
 pew_array = [
-    {"imgindx":3,"pewsound":2,"laserpower":1,"maxnumpew":1,"pewrate":500,"pewspeed":800,"width":16,"height":16,"persist":False},
+    {"imgindx":3,"pewsound":2,"laserpower":1,"maxnumpew":3,"pewrate":500,"pewspeed":800,"width":16,"height":16,"persist":False},
     {"imgindx":2,"pewsound":1,"laserpower":1,"maxnumpew":2,"pewrate":200,"pewspeed":3000,"width":256,"height":16,"persist":False},
     {"imgindx":0,"pewsound":1,"laserpower":1,"maxnumpew":4,"pewrate":200,"pewspeed":4000,"width":256,"height":16,"persist":False},
-    {"imgindx":1,"pewsound":1,"laserpower":1,"maxnumpew":1000,"pewrate":1,"pewspeed":3000,"width":16,"height":16,"persist":False},
+    {"imgindx":1,"pewsound":1,"laserpower":1,"maxnumpew":1000,"pewrate":50,"pewspeed":3000,"width":16,"height":16,"persist":False},
     {"imgindx":1,"pewsound":0,"laserpower":10,"maxnumpew":1,"pewrate":1000,"pewspeed":6000,"width":512,"height":128,"persist":True},
 ]
 
@@ -118,28 +108,23 @@ bosses_array = [
     {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10,"music":"moog"},
     {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"music":"moog"},
     ]
+
 # Space Junk
 spacejunkfiles = [
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/spaaace.wav'],
     ['/images/SpaceJunk/spaaace.png','/sounds/SpaceJunk/lovebeinginspace.wav'],
     ['/images/SpaceJunk/Kerbal.png','/sounds/SpaceJunk/kerbal.wav'],
-    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
-    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
-    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
-    ['/images/SpaceJunk/asteroid.png','/sounds/SpaceJunk/spaaace.wav'],
+    ['/images/SpaceJunk/asteroid.png'],
 ]
+#endregion Arrays for objects
 
-tips = [
-    "Collect the requested Kana, Shoot all other Kana",
-]
-
-# Sounds
+#region Sounds
 pewsound = pygame.mixer.Sound(os.path.join('sounds','pew.wav'))
 pewsoundfiles = [f for f in os.listdir(os.getcwd() + '/sounds/Pewsounds')]
 pew_sounds = []
 for pew in pewsoundfiles: pew_sounds.append(pygame.mixer.Sound(os.path.join('sounds','Pewsounds',pew)))
 
-enginesound = pygame.mixer.Sound(os.path.join('sounds','engine.wav'))
+# enginesound = pygame.mixer.Sound(os.path.join('sounds','engine.wav'))
 goodhit = pygame.mixer.Sound(os.path.join('sounds','goodhit.wav'))
 badhit = pygame.mixer.Sound(os.path.join('sounds','badhit.wav'))
 bridgewhoosh = pygame.mixer.Sound(os.path.join('sounds','bridgewhoosh.wav'))
@@ -152,3 +137,5 @@ shiplaser_sound = pygame.mixer.Sound(os.path.join('sounds','shiplaser.wav'))
 correct_kana_lost_sound = pygame.mixer.Sound(os.path.join('sounds','kanalost.wav'))
 correct_kana_dying_sound = pygame.mixer.Sound(os.path.join('sounds','kanagonnadie.wav'))
 brickbreak_sound = pygame.mixer.Sound(os.path.join('sounds','brickbreaks.wav'))
+
+#endregion Sounds

@@ -1,11 +1,11 @@
 # from Functions import read_csv
-import Functions
+import Functions, Settings
 import time
 import random
 import os
 
-lt = time.time()
-dt = 0
+previous_time = time.time()
+delta_time = 0
 
 # Kanas CSV
 if os.path.isfile('data/userkana.csv'): commasep = Functions.read_csv('data/userkana.csv')
@@ -21,18 +21,15 @@ for i in range(len(levels)):    # Shuffle Kana and create levels
 STATE = "intro"
 
 #changables
-shiptype = 0
 maxshiptype = 0
 level = 0
 gamemode = 0
-maxlives = 5
-lives = 5
 score = 0
 kananum = 0
-pewtype = 0
 enemy_health_multiplier = 0
 
 #trackables
+PAUSED = False
 BOSSSTATE = False
 GAMESTATE = False
 TRANSSTATE= False
@@ -40,14 +37,9 @@ TRANSITION = False
 bossexist = False
 debugwindow = False
 hitboxshow = False
-shipcollision = True
-maxmusicvolume = 0.2
-musicvolume = maxmusicvolume
-transcooldown = 10
-last_question_num = 0
+musicvolume = Settings.maxmusicvolume
 last_kananum = 0
 last_level = 0
-bridgewipecounter = 0
 generatedcorrectkanacounter = 0
 generatedincorrectkanacounter = 0
 
