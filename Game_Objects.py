@@ -1444,12 +1444,24 @@ class Achievements:
         self.tingtangarray = []
 
     def tingtang(self):
-        wwbb = ['u', 'i', 'u', 'a', 'a']
-        if len(self.tingtangarray) > 5: self.tingtangarray.pop(0)           # If array gets larger than 5, pop off the first element
-        if self.tingtangarray == wwbb:                                      # Compare array with desired array (wwbb)
-            if self.tingtangshow == True:                                   # Check to see if the message is allowed to be displayed
-                TipTicker.spawn("Ting Tang Walla Walla Bing Bang!", 500)    # Spawn Ticker Message
-                self.tingtangshow = False                                   # stop message from being generated each frame after
+        if len(self.tingtangarray) > 5: self.tingtangarray.pop(0)               # If array gets larger than 5, pop off the first element
+        match self.tingtangarray:
+            case ['u', 'i', 'u', 'a', 'a']:
+                if self.tingtangshow == True:                                   # Check to see if the message is allowed to be displayed
+                    TipTicker.spawn("Ting, Tang, Walla Walla Bing Bang!", 500)  # Spawn Ticker Message
+                    self.tingtangshow = False                                   # stop message from being generated each frame after
+            case ['a', 'a', 'a', 'a', 'a']:
+                if self.tingtangshow == True:                                   # Check to see if the message is allowed to be displayed
+                    TipTicker.spawn("AAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHH!", 500)  # Spawn Ticker Message
+                    self.tingtangshow = False                                   # stop message from being generated each frame after
+            case ['o', 'o', 'o', 'o', 'o']:
+                if self.tingtangshow == True:                                   # Check to see if the message is allowed to be displayed
+                    TipTicker.spawn("ooooooooooOOOOOOOOOOOOOoooooooooo!", 500)  # Spawn Ticker Message
+                    self.tingtangshow = False                                   # stop message from being generated each frame after
+            case ['e', 'e', 'e', 'e', 'e']:
+                if self.tingtangshow == True:                                   # Check to see if the message is allowed to be displayed
+                    TipTicker.spawn("ええええええええええええええええええ?", 500)  # Spawn Ticker Message
+                    self.tingtangshow = False                                   # stop message from being generated each frame after
 
 #region Instancing
 player = Ship(0,Constants.HCENTER)              # Instance player to center left of screen

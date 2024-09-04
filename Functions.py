@@ -422,6 +422,16 @@ def collision():
                 Graphicgroups.explosion_group.add(explosion)
     #endregion
 
+def find_sublist_by_character(matrix, character):
+    for index, sublist in enumerate(matrix):
+        if character in sublist:
+            return sublist
+    return None
+
+def is_slice_in_list(s,l):
+    len_s = len(s) #so we don't recompute length of s on every iteration
+    return any(s == l[i:len_s+i] for i in range(len(l) - len_s+1))
+
 def sharedcontrols(event):
     import Constants, Game_Objects, Variables, Graphicgroups, Settings
     import pygame, random, time
@@ -499,12 +509,6 @@ def uitext(screen):
 
     #region Last 5 Kana
     position = [Constants.WIDTH-300,30]
-    def find_sublist_by_character(matrix, character):
-        for index, sublist in enumerate(matrix):
-            if character in sublist:
-                return sublist
-        return None
-    
     if len(Game_Objects.achievements.tingtangarray) > 0:
         output = []
         for element in range(len(Game_Objects.achievements.tingtangarray)):
