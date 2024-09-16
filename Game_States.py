@@ -38,6 +38,7 @@ class MenuState:
         Game_Objects.timer.allkana()                                                                # All Kana Timer
         Game_Objects.timer.biglaser(enemywaittimer=0)                                               # Big Laser Timer
         Game_Objects.timer.enemy(enemywaittimer=0)                                                  # Enemy Timer
+        Game_Objects.timer.scenery(frequency=.5)
 
     def update(self):
         Variables.STATE = "Menu"
@@ -54,6 +55,9 @@ class MenuState:
         for epew in Graphicgroups.enemyprojectiles: epew.update()                                   # Enemy Projectiles
         for wod in Graphicgroups.wallsegments: wod.update()                                         # Wall of Death
         for centerwarn in Graphicgroups.animcenterwarning: centerwarn.update()                      # Center Warning
+        for powerup in Graphicgroups.animatedpowerup: powerup.update()                              # Powerups
+        for segment in Graphicgroups.scenery: segment.update()
+        for turret in Graphicgroups.turrets: turret.update()
 
     def draw(self,screen):
         # Must be in order of Top/Bottom = Background/Foreground
@@ -66,21 +70,24 @@ class MenuState:
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)                  # Enemies
         for warning in Graphicgroups.warnings: warning.draw(screen)                                 # Warning for BIG LASER
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                              # BIG LASER
+        for powerup in Graphicgroups.animatedpowerup: powerup.draw(screen)                          # Powerups
         for wod in Graphicgroups.wallsegments: wod.draw(screen)                                     # Wall of Death
         Graphicgroups.explosion_group.draw(screen)                                                  # EXPLOSION
         for damagenumber in Graphicgroups.damagenumbers: damagenumber.draw(screen)                  # Damage values 
         for centerwarn in Graphicgroups.animcenterwarning: centerwarn.draw()                        # Center Warning
+        for turret in Graphicgroups.turrets: turret.draw(screen)
+        for segment in Graphicgroups.scenery: segment.draw(screen)
         Functions.kanalist(screen,256)
         
         if Variables.debugwindow: Debug.draw(Constants.debug_locationx,Constants.debug_locationy)   # DEBUG
 
         #region Game Title
         TITLE_text = Constants.GAME_OVER_font.render('KANA BLASTER', True, 'white')
-        screen.blit(TITLE_text, (10, Constants.HEIGHT/7))
+        screen.blit(TITLE_text, (10, Constants.PAHEIGHT/7))
         TITLE_shadow_text = Constants.GAME_OVER_font.render('KANA BLASTER', True, 'white')
         TITLE_shadow_text.set_alpha(100)
         offset = 8
-        screen.blit(TITLE_shadow_text, (10+offset, Constants.HEIGHT/7+offset))
+        screen.blit(TITLE_shadow_text, (10+offset, Constants.PAHEIGHT/7+offset))
         #endregion Game Title
 
         #region BUTTONS                                                                             # BUTTONS
@@ -177,7 +184,7 @@ class MenuState:
                         Variables.hitboxshow = True
                         Variables.debugwindow = True
                 if event.key == ord('i'): 
-                    for h in range(int(Constants.HEIGHT/32)):
+                    for h in range(int(Constants.PAHEIGHT/32)):
                         Game_Objects.WallOfDeath.spawn(Constants.WIDTH,h*32)
                 if event.key == ord('f'): pygame.display.toggle_fullscreen()
                 if event.key == ord('e'): Game_Objects.Enemies.spawn()
@@ -185,6 +192,17 @@ class MenuState:
                 if event.key == ord('0'):
                     try: os.remove('data/userkana.csv')
                     except: pass
+                if event.key == ord('g'):
+                    Game_Objects.BorderScenery(Variables.scenerytype).picknext()
+                if event.key == ord('u'):
+                    powerup_type = random.randint(1,2)
+                    Game_Objects.AnimatedPowerUp.spawn(
+                        Constants.powerup_array[powerup_type]["xvel"],
+                        Constants.powerup_array[powerup_type]["surfindx"],
+                        Constants.powerup_array[powerup_type]["pueffect"],
+                        )
+                if event.key == ord('t'):
+                    Graphicgroups.turrets.append(Game_Objects.GroundTurret(Constants.WIDTH+32,Constants.PAHEIGHT-64,0))
 
 class GameState:
     def __init__(self):
@@ -208,6 +226,7 @@ class GameState:
         Game_Objects.timer.junk()                                                           # JUNK Timer
         Game_Objects.timer.powerup()                                                        # POWERUP Timer
         Game_Objects.timer.bridge(frequency=30)                                             # Bridge Timer
+        Game_Objects.timer.scenery(frequency=.5)
 
     def gamefadeouttoboss(self):
         #region Fade out music and transition to Boss
@@ -218,6 +237,9 @@ class GameState:
                 Variables.bossexist = False
                 boss_state.boss_message_displayed = False
                 boss_state.get_ready_timer = Settings.get_ready_timer_max
+
+                # Clear Group Arrays
+                Graphicgroups.cuttoffline.clear()
 
                 # Reset Timers for Boss Phase
                 Game_Objects.timer.WoD_timer = 0
@@ -232,6 +254,9 @@ class GameState:
                 Game_Objects.timer.bonus_timer = 0
                 Game_Objects.timer.boss_timer = 0
                 Game_Objects.timer.boss_message_displayed = False
+
+                # Reset Kananum
+                Variables.kananum = 0
 
             Variables.musicvolume -= 0.05 * Variables.delta_time
         #endregion Fade out music and transition to Boss
@@ -280,11 +305,14 @@ class GameState:
         Graphicgroups.debug_window.update()                                             # Debug Window
         Graphicgroups.explosion_group.update()                                          # EXPLOSION
         for bullet in Graphicgroups.bullets: bullet.update()                            # BULLETS
+        for pew in Graphicgroups.dynamicpew: pew.update()                               # Big Pew
         for biglaser in Graphicgroups.biglasers: biglaser.update()                      # BIG LASER
         for junk in Graphicgroups.spacejunk: junk.update()                              # RANDOM JUNK
         for cutoff in Graphicgroups.cuttoffline: cutoff.update(Game_Objects.player)     # CUTOFF LINE
         for kana in Graphicgroups.correctkanas: kana.update(Game_Objects.player)        # Correct Kanas
         for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)               # Incorrect kanas
+        for kana in Graphicgroups.bossmodecorrectkana: kana.update(Game_Objects.player)
+        for kana in Graphicgroups.bossmodeincorrectkana: kana.update(Game_Objects.player)
         for warning in Graphicgroups.warnings: warning.update()                         # Big Laser Warning
         for epew in Graphicgroups.enemyprojectiles: epew.update()                       # Enemy Projectiles
         for enemy in Graphicgroups.enemies: enemy.update()                              # ENEMIES
@@ -293,6 +321,9 @@ class GameState:
         for bits in Graphicgroups.debris: bits.update()                                 # Debris
         for powerup in Graphicgroups.animatedpowerup: powerup.update()                  # Powerups
         for centerwarn in Graphicgroups.centerwarning: centerwarn.update()              # UI
+        for brew in Graphicgroups.brew: brew.update()
+        for segment in Graphicgroups.scenery: segment.update()
+        for turret in Graphicgroups.turrets: turret.update()
         Game_Objects.player.update()                                                    # Player
 
     def draw(self,screen):
@@ -315,12 +346,16 @@ class GameState:
         Graphicgroups.starfield_group.draw(screen)                                      # STARS
         for warning in Graphicgroups.warnings: warning.draw(screen)                     # WARNING for BIG LASER
         for bullet in Graphicgroups.bullets: bullet.draw(screen)                        # BULLETS
+        for pew in Graphicgroups.dynamicpew: pew.draw(screen)                           # Big Pew
         for cutoff in Graphicgroups.cuttoffline: cutoff.draw(screen)                    # CUTOFF LINE
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for bits in Graphicgroups.debris: bits.draw(screen)                             # Bits debris
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
         for kana in Graphicgroups.kanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.bossmodecorrectkana: kana.draw(screen)
+        for kana in Graphicgroups.bossmodeincorrectkana: kana.draw(screen)
+        for brew in Graphicgroups.brew: brew.draw(screen)
         Game_Objects.player.draw(screen)                                                # PLAYER
         for powerup in Graphicgroups.animatedpowerup: powerup.draw(screen)              # Powerup
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                  # BIG LASER
@@ -334,6 +369,8 @@ class GameState:
         Graphicgroups.bridge_group.draw(screen)                                         # BRIDGE WIPE
         Graphicgroups.tip_group.draw(screen)                                            # Tip Ticker
         for centerwarn in Graphicgroups.centerwarning: centerwarn.draw()                # Center Warning Text
+        for turret in Graphicgroups.turrets: turret.draw(screen)
+        for segment in Graphicgroups.scenery: segment.draw(screen)
         Functions.kanalist(screen,128)
 
         if Variables.debugwindow: Debug.draw(Constants.debug_locationx,Constants.debug_locationy)   # DEBUG
@@ -365,12 +402,16 @@ class BossFight:
         self.get_ready_timer = Settings.get_ready_timer_max
 
     def manifest(self):
+        kanakill = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])*(255/Settings.num_to_shoot_new_kana)
+
         Game_Objects.timer.bossmessage(delay=0)                                 # Boss Message Timer
         Game_Objects.timer.boss(delay=3)                                        # Boss Timer
         Game_Objects.timer.stars(frequency=0.04,velocity=600)                   # Stars Timer
         Game_Objects.timer.biglaser(enemywaittimer=self.enemy_wait_timer)       # Big Laser Timer
         Game_Objects.timer.planet()                                             # PLANET Timer
         Game_Objects.timer.junk()                                               # JUNK Timer
+        Game_Objects.timer.bosskana(frequency=10)
+        # Game_Objects.timer.scenery(frequency=.5)
         # Game_Objects.timer.wallofdeath()                                        # Wall of Death Timer
 
     def decreasebonus(self):
@@ -422,6 +463,10 @@ class BossFight:
                 Game_Objects.timer.powerup_timer = 0
                 Game_Objects.timer.bridge_timer = 0
 
+                # Clear Graphic Groups
+                Graphicgroups.bossmodecorrectkana.clear()
+                Graphicgroups.bossmodeincorrectkana.clear()
+
             else: self.get_ready_timer -= Variables.delta_time
         #endregion Rest period before re-entering game
 
@@ -463,6 +508,7 @@ class BossFight:
         if self.enemy_wait_timer >= 0: self.enemy_wait_timer -= 1 * Variables.delta_time        # Stop enemies from showing up right at the start
 
         for bullet in Graphicgroups.bullets: bullet.update()                            # BULLETS
+        for pew in Graphicgroups.dynamicpew: pew.update()                               # Big Pew
         for biglaser in Graphicgroups.biglasers: biglaser.update()                      # BIG LASER
         Graphicgroups.planet_group.update(Game_Objects.player)                          # PLANETS
         for junk in Graphicgroups.spacejunk: junk.update()                              # RANDOM JUNK
@@ -470,6 +516,8 @@ class BossFight:
         for cutoff in Graphicgroups.cuttoffline: cutoff.update(Game_Objects.player)     # CUTOFF LINE
         for kana in Graphicgroups.correctkanas: kana.update(Game_Objects.player)        # Correct Kanas
         for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)               # Incorrect kanas
+        for kana in Graphicgroups.bossmodecorrectkana: kana.update(Game_Objects.player)
+        for kana in Graphicgroups.bossmodeincorrectkana: kana.update(Game_Objects.player)
         for warning in Graphicgroups.warnings: warning.update()                         # Big Laser Warning
         for epew in Graphicgroups.enemyprojectiles: epew.update()                       # Enemy Projectiles
         for enemy in Graphicgroups.enemies: enemy.update()                              # ENEMIES
@@ -482,7 +530,10 @@ class BossFight:
         for powerup in Graphicgroups.animatedpowerup: powerup.update()                  # Powerups
         for centerwarn in Graphicgroups.centerwarning: centerwarn.update()              # UI
         Graphicgroups.bridge_group.update(Game_Objects.player)                          # BRIDGE WIPE
+        for brew in Graphicgroups.brew: brew.update()
         Graphicgroups.tip_group.update()                                                # Tip Ticker
+        for segment in Graphicgroups.scenery: segment.update()
+        for turret in Graphicgroups.turrets: turret.update()
 
     def draw(self,screen):
         pygame.mouse.set_visible(False)
@@ -504,7 +555,7 @@ class BossFight:
         for f in range(int(Variables.levels[Variables.level])):
             if Variables.gamemode == 0: kanalistthing = Constants.ui_font.render(Graphicgroups.kanalist[f][0], True, (20,20,20))
             else: kanalistthing = Constants.ui_font.render(Graphicgroups.kanalist[f][1], True, (20,20,20))
-            screen.blit(kanalistthing,(25+(27*f),Constants.HEIGHT-30))
+            screen.blit(kanalistthing,(25+(27*f),Constants.PAHEIGHT-30))
         #endregion
 
         Graphicgroups.planet_group.draw(screen)                                         # PLANETS
@@ -512,12 +563,16 @@ class BossFight:
         Graphicgroups.starfield_group.draw(screen)                                      # STARS
         for warning in Graphicgroups.warnings: warning.draw(screen)                     # WARNING for BIG LASER
         for bullet in Graphicgroups.bullets: bullet.draw(screen)                        # BULLETS
+        for pew in Graphicgroups.dynamicpew: pew.draw(screen)                           # Big Pew
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for bits in Graphicgroups.debris: bits.draw(screen)                             # Bits debris
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
         for boss in Graphicgroups.bosses: boss.draw(screen,Game_Objects.player)         # BOSS
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
         for kana in Graphicgroups.kanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.bossmodecorrectkana: kana.draw(screen)
+        for kana in Graphicgroups.bossmodeincorrectkana: kana.draw(screen)
+        for brew in Graphicgroups.brew: brew.draw(screen)
         Game_Objects.player.draw(screen)                                                # PLAYER
         for powerup in Graphicgroups.animatedpowerup: powerup.draw(screen)              # Powerup
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                  # BIG LASER
@@ -530,6 +585,8 @@ class BossFight:
         Functions.uitext(screen)                                                        # UI TEXT
         Graphicgroups.bridge_group.draw(screen)                                         # BRIDGE WIPE
         for centerwarn in Graphicgroups.centerwarning: centerwarn.draw()                # Center Warning
+        for turret in Graphicgroups.turrets: turret.draw(screen)
+        for segment in Graphicgroups.scenery: segment.draw(screen)
         
         if Variables.debugwindow: Debug.draw(Constants.debug_locationx,Constants.debug_locationy)   # DEBUG
 
@@ -579,6 +636,8 @@ class GameOverState:
         for centerwarn in Graphicgroups.centerwarning: centerwarn.update()              # UI
         Graphicgroups.bridge_group.update(Game_Objects.player)                          # BRIDGE WIPE
         for powerup in Graphicgroups.animatedpowerup: powerup.update()                  # Powerups
+        for segment in Graphicgroups.scenery: segment.update()
+        for turret in Graphicgroups.turrets: turret.update()
 
     def draw(self,screen):
         screen.fill(('black'))
@@ -634,6 +693,8 @@ class GameOverState:
             centerwarn.draw()
         #endregion
         Graphicgroups.bridge_group.draw(screen)                                         # BRIDGE WIPE
+        for turret in Graphicgroups.turrets: turret.draw(screen)
+        for segment in Graphicgroups.scenery: segment.draw(screen)
 
         #region DEBUG                                                                   # DEBUG
         if Variables.debugwindow: Debug.draw(Constants.debug_locationx,Constants.debug_locationy)
@@ -642,15 +703,15 @@ class GameOverState:
 
         # Game Over 
         GAME_OVER_text = Constants.GAME_OVER_font.render('GAME OVER', True, 'white')
-        screen.blit(GAME_OVER_text, (10, Constants.HEIGHT/2))
+        screen.blit(GAME_OVER_text, (10, Constants.PAHEIGHT/2))
 
         GAME_OVER_Shadow_text = Constants.GAME_OVER_font.render('GAME OVER', True, 'white')
         GAME_OVER_Shadow_text.set_alpha(100)
-        screen.blit(GAME_OVER_Shadow_text, (15, Constants.HEIGHT/2+5))
+        screen.blit(GAME_OVER_Shadow_text, (15, Constants.PAHEIGHT/2+5))
 
         # Score
         Score_text = Constants.question_font.render('Score: ' + str(Variables.score), True, 'white')
-        screen.blit(Score_text, (400, Constants.HEIGHT/8))
+        screen.blit(Score_text, (400, Constants.PAHEIGHT/8))
 
     def handle_events(self, events):
         for event in events:
@@ -687,15 +748,23 @@ class Debug:
     def draw(x,y):
         debugitems = [
             ["Game State",Variables.STATE],
-            ["Menu Kana Timer",round(Game_Objects.timer.kana_frequency - Game_Objects.timer.kana_timer,1)],
-            ["Star Timer",round(Game_Objects.timer.star_frequency - Game_Objects.timer.star_timer,1)],
-            ["BigLaser Timer",round(Game_Objects.timer.biglaser_randomness - Game_Objects.timer.biglaser_timer)],
-            ["Enemy Timer",round(Game_Objects.timer.enemy_randomness - Game_Objects.timer.enemy_timer)],
-            ["Boss Timer",round(Game_Objects.timer.boss_delay - Game_Objects.timer.boss_timer)],
-            ["IK Timer",round(Game_Objects.timer.incorrectkana_thresh - Game_Objects.timer.incorrectkana_timer)],
-            ["CK Timer",round(Game_Objects.timer.correctkana_thresh - Game_Objects.timer.correctkana_timer)],
-            ["Bridge Timer",round(Game_Objects.timer.bridge_thresh - Game_Objects.timer.bridge_timer)],
-            ["Planet Timer",round(Game_Objects.timer.planet_thresh - Game_Objects.timer.planet_timer)],
+            ["Transition",Variables.TRANSITION],
+            ["Boss Shield",(Constants.bosses_array[Variables.level]["shield"]+1)],
+            ["Bullets",len(Graphicgroups.bullets)],
+            ["Persis?",Constants.pew_array[Game_Objects.player.pewtype]["persist"]],
+            ["DefaultPersis?",Game_Objects.player.defaultpersist],
+            ["LaserSize",round(Game_Objects.player.laserbuild,1)],
+            ["Brew AnimIndex",Variables.brewanimindex],
+            # ["Scenery Array",len(Graphicgroups.scenery)],
+            # ["Menu Kana Timer",round(Game_Objects.timer.kana_frequency - Game_Objects.timer.kana_timer,1)],
+            # ["Star Timer",round(Game_Objects.timer.star_frequency - Game_Objects.timer.star_timer,1)],
+            # ["BigLaser Timer",round(Game_Objects.timer.biglaser_randomness - Game_Objects.timer.biglaser_timer)],
+            # ["Enemy Timer",round(Game_Objects.timer.enemy_randomness - Game_Objects.timer.enemy_timer)],
+            # ["Boss Timer",round(Game_Objects.timer.boss_delay - Game_Objects.timer.boss_timer)],
+            # ["IK Timer",round(Game_Objects.timer.incorrectkana_thresh - Game_Objects.timer.incorrectkana_timer)],
+            # ["CK Timer",round(Game_Objects.timer.correctkana_thresh - Game_Objects.timer.correctkana_timer)],
+            # ["Bridge Timer",round(Game_Objects.timer.bridge_thresh - Game_Objects.timer.bridge_timer)],
+            # ["Planet Timer",round(Game_Objects.timer.planet_thresh - Game_Objects.timer.planet_timer)],
         ]
         currentline = y
         for item in debugitems:

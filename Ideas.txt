@@ -1,0 +1,1 @@
+Grapple hook powerup for Correct Kana, that cannot go through Wrong Kana

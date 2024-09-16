@@ -41,7 +41,7 @@ if __name__ == "__main__":
         current_state.handle_events(pygame.event.get())                                         # Check for events such as key presses
 
         # Handle state changes when state is done
-        if current_state.done:
+        if current_state.done:          
             for state in allstates:
                 if current_state == state[0]:
                     current_state = state[1]

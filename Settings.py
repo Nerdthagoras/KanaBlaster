@@ -31,7 +31,7 @@ ship_fallbackspeed = 100
 # ship_screen_boundary_X = 100
 
 ship_bullet_speed = 3000
-
+max_bridge_wipes_per_level = 10
 ship_extra_life_increment = 100
 #endregion
 
@@ -68,10 +68,13 @@ biglaser_start_level = 3
 #endregion
 
 #region UI
-maxmusicvolume = 0.1
-score_position = (0, 10)
-lives_position = (200, 10)
-level_position = (400, 10)
-bonus_position = (Constants.WIDTH/2-60, 60)
-question_position = (Constants.WIDTH/2+60, 20)
+uitop = 30
+maxmusicvolume = 0.2
+score_position = (0, Constants.HEIGHT-uitop)
+lives_position = (200, Constants.HEIGHT-uitop)
+level_position = (400, Constants.HEIGHT-uitop)
+bonus_position = (Constants.WCENTER-60, 80)
+question_position = (Constants.WCENTER+60, 20)
+shieldtext_position = (Constants.WCENTER-80,120)
+boss_shield_bar = 150
 #endregion

@@ -37,11 +37,15 @@ TRANSITION = False
 bossexist = False
 debugwindow = False
 hitboxshow = False
+player_cannot_die = False
 musicvolume = Settings.maxmusicvolume
 last_kananum = 0
 last_level = 0
 generatedcorrectkanacounter = 0
 generatedincorrectkanacounter = 0
+brewanimindex = 0
+scenerytype = 0
+sceneryheight = 1
 
 RGB = [0,0,0]
 theta = 0

@@ -6,7 +6,8 @@ pygame.init()                                                           # initia
 fps = 0                                                                 # no framerate cap
 clock = pygame.time.Clock()                                             # Create clock object
 WIDTH, HEIGHT = 1440,900                                                # Screen Size
-WCENTER, HCENTER = WIDTH // 2, HEIGHT // 2                              # Screen Centers
+PAHEIGHT = HEIGHT-30
+WCENTER, HCENTER = WIDTH // 2, PAHEIGHT // 2                              # Screen Centers
 screen = pygame.display.set_mode((WIDTH, HEIGHT))                       # Create Screen
 #endregion
 
@@ -19,6 +20,7 @@ debug_locationx,debug_locationy = WIDTH-300,100                         # Debug 
 #region FONTS
 font_name = "MSGothic"
 kana_font = pygame.font.SysFont(font_name, 60)
+# kana_font = pygame.font.Font('fonts/Nikumaru.otf', 60)
 question_font = pygame.font.SysFont(font_name, 50)
 ui_font = pygame.font.SysFont(font_name, 30)
 kana_ui_font = pygame.font.SysFont(font_name, 20)
@@ -41,6 +43,24 @@ spaceship_flame_surfs = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.jo
 #endregion Surfaces for static images
 
 #region Surfaces for Animated sprites
+# Brew Animation
+brewing_surf = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','electricball.png')).convert_alpha(),128,128,1)
+
+# Dynamic pew files
+dpew_surf = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('images','Pews','Bluelaser.png')).convert_alpha(),16,16,1)
+
+# Scenery Files
+ss = '-r'
+open1h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','1h-Open'+ss+'.png')).convert_alpha(),64,64,1)
+# open1h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','1h-Open-hrg.png')).convert_alpha(),64,64,1)
+mid1h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','1h-Mid'+ss+'.png')).convert_alpha(),64,64,1)
+# mid1h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','1h-Mid-hrg.png')).convert_alpha(),64,64,1)
+close1h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','1h-Close'+ss+'.png')).convert_alpha(),64,64,1)
+
+open2h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','2h-Open'+ss+'.png')).convert_alpha(),64,128,1)
+mid2h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','2h-Mid'+ss+'.png')).convert_alpha(),64,128,1)
+close2h = Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','BorderScenery','2h-Close'+ss+'.png')).convert_alpha(),64,128,1)
+
 #explosion Files
 explosion_files = [f for f in os.listdir(os.getcwd() + '/sprites/Explosions')]
 explosion_surfs = []
@@ -81,15 +101,20 @@ for enemyfile in enemyspritesheets: enemy_spritesheet_surfs.append(Spritesheet.L
 bossspritesheets = [f for f in os.listdir(os.getcwd() + '/sprites/bosses128')]
 boss_spritesheet_surfs = []
 for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','bosses128',bossfile)).convert_alpha(),128,128,2))
+
+#Turret Spritesheets
+turret_files = [f for f in os.listdir(os.getcwd() + '/sprites/Turrets')]
+turret_surfs = []
+for turret in turret_files: turret_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Turrets',turret)).convert_alpha(),32,32,1))
 #endregion Surfaces for Animated sprites
 
 #region Arrays for objects
 #powerups
 powerup_array = [
-    {"xvel":100,"surfindx":0,"pueffect":"1up"},
-    {"xvel":100,"surfindx":1,"pueffect":"laser"},
-    {"xvel":100,"surfindx":2,"pueffect":"speed"},
-    {"xvel":100,"surfindx":3,"pueffect":"powerup"},
+    {"xvel":120,"surfindx":0,"pueffect":"1up"},
+    {"xvel":120,"surfindx":1,"pueffect":"laser"},
+    {"xvel":120,"surfindx":2,"pueffect":"speed"},
+    {"xvel":240,"surfindx":3,"pueffect":"powerup"},
 ]
 
 #pews
@@ -103,10 +128,16 @@ pew_array = [
 
 #Bosses
 bosses_array = [
-    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16,"animspeed":10,"music":"moog"},
-    {"imgindx":1,"type":1,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16,"animspeed":10,"music":"bossfight"},
-    {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10,"music":"moog"},
-    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"music":"moog"},
+    {"imgindx":0,"type":1,"healthmultiplier":10,"numofbullets":10,"Xvel":50,"Yvel":50,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":1,"type":1,"healthmultiplier":10,"numofbullets":20,"Xvel":100,"Yvel":100,"anglenum":16,"animspeed":10,"shield":100,"music":"bossfight"},
+    {"imgindx":2,"type":0,"healthmultiplier":10,"numofbullets":25,"Xvel":200,"Yvel":200,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
+    {"imgindx":3,"type":0,"healthmultiplier":10,"numofbullets":30,"Xvel":300,"Yvel":300,"anglenum":16,"animspeed":10,"shield":100,"music":"moog"},
     ]
 
 # Space Junk
@@ -137,5 +168,9 @@ shiplaser_sound = pygame.mixer.Sound(os.path.join('sounds','shiplaser.wav'))
 correct_kana_lost_sound = pygame.mixer.Sound(os.path.join('sounds','kanalost.wav'))
 correct_kana_dying_sound = pygame.mixer.Sound(os.path.join('sounds','kanagonnadie.wav'))
 brickbreak_sound = pygame.mixer.Sound(os.path.join('sounds','brickbreaks.wav'))
+bigpewbuildup = pygame.mixer.Sound(os.path.join('sounds','BigPewBuildup.wav'))
+bigpewready = pygame.mixer.Sound(os.path.join('sounds','BigPewReady.wav'))
+bigpewhold = pygame.mixer.Sound(os.path.join('sounds','BigPewHold.wav'))
+turretfire = pygame.mixer.Sound(os.path.join('sounds','turretfire.wav'))
 
 #endregion Sounds

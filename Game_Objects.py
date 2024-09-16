@@ -30,6 +30,11 @@ class Ship:
         self.shieldradius = 64
         self.laserpower = int(Variables.score) * Constants.pew_array[self.pewtype]["laserpower"] + 1
         self.power_grapic = Constants.ui_font.render(str(self.laserpower), True, 'green')
+        self.laserbuild = 1
+        self.buildupsoundplayed = False
+        self.bigpewreadyplayed = False
+        self.hasfired = True
+        self.defaultpersist = Constants.pew_array[self.pewtype]["persist"]
 
         # Flames
         self.xflamedir, self.yflamedir = 0, 0
@@ -70,7 +75,7 @@ class Ship:
 
     def animate(self):
         import Functions
-        Functions.moanimate(self)
+        Functions.moanimate(self,loopstart=0,loopend=999)
 
     def movement(self):
         keys = pygame.key.get_pressed()
@@ -127,18 +132,28 @@ class Ship:
                     self.Yvelocity -= self.temp_dec
         #endregion
 
-        # Pew #TODO Add functionality to allow for longer presses of K_SPACE
-        if keys[pygame.K_SPACE]:
-            Pew.spawn(self)    
+        #region Pew
+        import Functions
+        Functions.longpew(
+            keys=keys,
+            buildupsound=Constants.bigpewbuildup,
+            bigpewready=Constants.bigpewready,
+            brewsprite=Constants.brewing_surf,
+            pewsprite=Constants.dpew_surf
+        )
+        #endregion Pew
 
     def move(self):
-        self.location[0] -= (self.Xvelocity + Settings.ship_fallbackspeed) * Variables.delta_time       # Movement in the X direction
+        if Variables.STATE == "Boss":
+            self.location[0] -= self.Xvelocity * Variables.delta_time
+        else:
+            self.location[0] -= (self.Xvelocity + Settings.ship_fallbackspeed) * Variables.delta_time       # Movement in the X direction
         self.location[1] -= self.Yvelocity * Variables.delta_time                                       # Movement in the Y direction
         if self.location[1] < self.shipborder:                                                          # Do not move too far Up out of the screen
             self.location[1] = self.shipborder                                                          # Reset position to Up screen border
             self.Yvelocity = 0                                                                          # Reset Velocity to 0
-        elif self.location[1] > Constants.HEIGHT-self.shipborder:                                       # Do not move too far Down out of the screen
-            self.location[1] = Constants.HEIGHT-self.shipborder                                         # Reset position to Down screen border
+        elif self.location[1] > Constants.PAHEIGHT-self.shipborder:                                       # Do not move too far Down out of the screen
+            self.location[1] = Constants.PAHEIGHT-self.shipborder                                         # Reset position to Down screen border
             self.Yvelocity = 0                                                                          # Reset Velocity to 0
         elif self.location[0] <= 48:                                                                    # Do not move too far Left out of the screen
             self.location[0] = 48                                                                       # Reset position to Left screen border
@@ -234,9 +249,11 @@ class Ship:
         if self.lasersight: screen.blit(self.laser,self.spaceship_rect.midright)
 
         # Draw hitbox
+        import Functions
+        self.hitbox = Functions.shrink_hitbox(self.spaceship_rect,8)
         if Variables.hitboxshow:
             screen.blit(self.power_grapic, self.spaceship_rect.topleft)
-            pygame.draw.rect(screen, (255,0,0),self.spaceship_rect, 2)
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
 
     def collide(self,rect):
         if Variables.shipforcefield:
@@ -303,11 +320,72 @@ class Pew:
                 pygame.mixer.Channel(8).play(Constants.pew_sounds[Constants.pew_array[player.pewtype]["pewsound"]])
                 player.last_pewtimer = pygame.time.get_ticks()
 
+class HomingMissile:
+    pass
+
+class DynamicPew:
+    def __init__(self,x,y,spritearray,startframe,sizex,sizey,parent=False,loopstart=0,loopend=999,velocity=10):
+        self.x, self.y = x, y
+        self.parent = parent
+        self.sizex, self.sizey = sizex, sizey
+        self.type = 0
+        self.spritearray = spritearray
+        self.animindex, self.animspeed, self.loopstart, self.loopend = startframe, 20, loopstart, loopend
+        self.image = pygame.transform.scale(self.spritearray.images[int(self.animindex)],(16*self.sizex,16*self.sizey))
+        self.rect = self.image.get_rect(center = (self.x, self.y))
+        self.velocity = 500 * velocity
+        self.hitbox = [0,0,0,0]
+
+    def animate(self):
+        self.animindex += self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
+        if self.animindex > len(self.spritearray.images)-1 or self.animindex > self.loopend: self.animindex = self.loopstart # reset the frame to 0 if we try to go beyond the array
+        self.image = pygame.transform.scale(self.spritearray.images[int(self.animindex)],(8*self.sizex,8*self.sizey)) # update the current frame
+
+    def update(self):
+        self.animate()
+        self.hitbox = self.rect
+        if self.parent == False:
+            self.rect = self.image.get_rect(midleft = (self.x, self.y))
+            self.x += self.velocity * Variables.delta_time
+            if self.x > Constants.WIDTH+500: Graphicgroups.dynamicpew.pop(Graphicgroups.dynamicpew.index(self))
+        else:
+            self.rect = self.image.get_rect(center = (self.x, self.y))
+            self.x = player.location[0]+32
+            self.y = player.location[1]
+
+    def draw(self,screen):
+        import Functions
+        self.hitbox = self.rect
+        self.hitbox = Functions.shrink_hitbox(self.hitbox,10)
+        screen.blit(self.image, self.rect)
+        if Variables.hitboxshow: pygame.draw.rect(screen, (0,255,0),self.hitbox, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+    def spawn(player,sizex,sizey,pewsprite,velocity):
+        if len(Graphicgroups.dynamicpew) < 1:
+            if pygame.time.get_ticks() - player.last_pewtimer >= 200:
+                Graphicgroups.dynamicpew.append(DynamicPew(
+                    x=player.spaceship_rect.center[0],
+                    y=player.spaceship_rect.center[1],
+                    spritearray=pewsprite,
+                    startframe=0,
+                    sizex=sizex,
+                    sizey=sizey,
+                    velocity=velocity
+                ))
+                pygame.mixer.Channel(8).play(Constants.pew_sounds[1])
+                player.last_pewtimer = pygame.time.get_ticks()
+
 # ENVIRONMENT
 class Planet(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.x, self.y = Constants.WIDTH+500, random.randrange(0,Constants.HEIGHT)
+        self.x, self.y = Constants.WIDTH+500, random.randrange(0,Constants.PAHEIGHT)
         self.scale = random.randint(5,15)/10
         self.num = random.randint(0,len(Constants.planet_surfs)-1)
         self.image = Constants.planet_surfs[self.num]
@@ -333,7 +411,7 @@ class Star(pygame.sprite.Sprite):
             "Please Donate!",
             "This is a long string of text",
         ]
-        self.x, self.y = x, random.randrange(50,Constants.HEIGHT-50)
+        self.x, self.y = x, random.randrange(50,Constants.PAHEIGHT-50)
         self.kana = random.randint(0,45)
         self.menustar = random.randint(0,len(self.menustarmessage)*20)
         fontsize = 15
@@ -376,7 +454,7 @@ class Bridge(pygame.sprite.Sprite):
             self.sound = False
         if self.x < Settings.question_position[0]-40 and self.x > Settings.question_position[0]-80 and self.drawn == False:
             Variables.kananum += 1
-            if Variables.kananum >= len(Variables.gamekana[Variables.level]):
+            if Variables.kananum >= len(Variables.gamekana[Variables.level]) or Variables.kananum > Settings.max_bridge_wipes_per_level:
                 Variables.kananum = 0
                 if Variables.level < 9:
                     Variables.TRANSITION = True
@@ -449,7 +527,7 @@ class SpaceJunk:
     def __init__(self,num,rotate,scale):
         self.image = pygame.image.load(os.getcwd() + Constants.spacejunkfiles[num][0]).convert_alpha()
         self.image = pygame.transform.scale(self.image,(self.image.get_width()*scale,self.image.get_height()*scale))
-        self.x, self.y = Constants.WIDTH+50, random.randrange(128,Constants.HEIGHT-128)
+        self.x, self.y = Constants.WIDTH+50, random.randrange(128,Constants.PAHEIGHT-128)
         self.velocity = 600
         self.rotate = 0
         self.rotate_rate = rotate / 100
@@ -492,19 +570,19 @@ class CutOffLine:
         self.nkt_rect = self.next_kana_text.get_rect()
         self.velocity = Settings.kanax_velocity
         self.kanaoffset = 40
-        self.box = pygame.Rect(self.x,0,2,Constants.HEIGHT)
+        self.box = pygame.Rect(self.x,0,2,Constants.PAHEIGHT)
 
     def update(self,player):
         self.x -= self.velocity * Variables.delta_time
-        self.box = pygame.Rect(self.x,0,2,Constants.HEIGHT)
+        self.box = pygame.Rect(self.x,0,2,Constants.PAHEIGHT)
         if self.x < -50: Graphicgroups.cuttoffline.pop(Graphicgroups.cuttoffline.index(self))
 
     def draw(self,screen):
         pygame.draw.rect(screen, (128,0,0), self.box, 2)
-        screen.blit(self.last_kana_text, (self.x-self.kanaoffset-(self.lkt_rect.centerx), Constants.HEIGHT-64))
-        screen.blit(self.next_kana_text, (self.x+self.kanaoffset-(self.nkt_rect.centerx), Constants.HEIGHT-64))
-        screen.blit(self.last_kana_text, (self.x-self.kanaoffset-(self.lkt_rect.centerx), 64))
-        screen.blit(self.next_kana_text, (self.x+self.kanaoffset-(self.nkt_rect.centerx), 64))
+        screen.blit(self.last_kana_text, (self.x-self.kanaoffset-(self.lkt_rect.centerx), Constants.PAHEIGHT-128))
+        screen.blit(self.next_kana_text, (self.x+self.kanaoffset-(self.nkt_rect.centerx), Constants.PAHEIGHT-128))
+        screen.blit(self.last_kana_text, (self.x-self.kanaoffset-(self.lkt_rect.centerx), 8))
+        screen.blit(self.next_kana_text, (self.x+self.kanaoffset-(self.nkt_rect.centerx), 8))
 
     def spawn():
         Graphicgroups.cuttoffline.append(CutOffLine(Constants.WIDTH+Constants.off_screen_offset,0,Variables.gamekana[Variables.level][Variables.kananum][2],Variables.gamekana[Variables.last_level][Variables.last_kananum][2]))
@@ -525,7 +603,7 @@ class BigLaser:
 
     def animate(self):
         import Functions
-        Functions.moanimate(self)
+        Functions.moanimate(self,loopstart=0,loopend=999)
 
     def update(self):
         self.x -= self.velocity * Variables.delta_time
@@ -600,7 +678,7 @@ class AnimCenterWarning:
 
     def animate(self):
         import Functions
-        Functions.moanimate(self)
+        Functions.moanimate(self,loopstart=0,loopend=999)
         
     def update(self):
         self.animate()
@@ -648,10 +726,102 @@ class CenterWarning:
     def spawn(message,surface,scale=1):
         Graphicgroups.centerwarning.append(CenterWarning(message,surface,scale))
 
+class BorderScenery:
+    def __init__(self,image,y=192):
+        self.image = image
+        self.x, self.y = Constants.WIDTH+64, Constants.PAHEIGHT-y
+        self.velocity = 120
+        self.type = Variables.scenerytype           # 0 = Nothing, 1 = Opening, 2 = Middle, 3 = End
+        self.height = Variables.sceneryheight         # 1 = Short, 2 = Medium, 3 = High
+        self.hitbox = [0,0,0,0]
+
+    def picknext(self):
+        match self.type:
+            case 0:
+                Variables.scenerytype = random.randint(0,1)
+                Variables.sceneryheight = random.randint(1,1)
+            case 1:
+                match self.height:
+                    case 1:
+                        max = len(Constants.open1h.images)-1
+                        Graphicgroups.scenery.append(BorderScenery(
+                            Constants.open1h.images[random.randint(0,max)],
+                            64
+                        ))
+                        Variables.scenerytype = random.randint(2,2)
+                    case 2:
+                        max = len(Constants.open2h.images)-1
+                        Graphicgroups.scenery.append(BorderScenery(
+                            Constants.open2h.images[random.randint(0,max)],
+                            128
+                        ))
+                        Variables.scenerytype = random.randint(2,3)
+                    case 3:
+                        Variables.scenerytype = random.randint(2,3)
+            case 2:
+                match self.height:
+                    case 1:
+                        max = len(Constants.mid1h.images)-1
+                        Graphicgroups.scenery.append(BorderScenery(
+                            Constants.mid1h.images[random.randint(0,max)],
+                            64
+                        ))
+                        Variables.scenerytype = random.randint(2,3)
+                    case 2:
+                        max = len(Constants.mid2h.images)-1
+                        Graphicgroups.scenery.append(BorderScenery(
+                            Constants.mid2h.images[random.randint(0,max)],
+                            128
+                        ))
+                        Variables.scenerytype = random.randint(2,3)
+                    case 3:
+                        Variables.scenerytype = random.randint(2,3)
+            case 3:
+                chance = random.randint(0,8)
+                match self.height:
+                    case 1:
+                        if chance == 0: Graphicgroups.turrets.append(GroundTurret(Constants.WIDTH+64,Constants.PAHEIGHT-64,0))
+                        max = len(Constants.close1h.images)-1
+                        Graphicgroups.scenery.append(BorderScenery(
+                            Constants.close1h.images[random.randint(0,max)],
+                            64
+                        ))
+                        Variables.scenerytype = random.randint(0,1)
+                        Variables.sceneryheight = random.randint(0,2)
+                    case 2:
+                        if chance == 0: Graphicgroups.turrets.append(GroundTurret(Constants.WIDTH+64,Constants.PAHEIGHT-128,0))
+                        max = len(Constants.close2h.images)-1
+                        Graphicgroups.scenery.append(BorderScenery(
+                            Constants.close2h.images[random.randint(0,max)],
+                            128
+                        ))
+                        Variables.scenerytype = random.randint(1,1)
+                    case 3:
+                        Variables.scenerytype = random.randint(0,1)
+                Variables.sceneryheight = random.randint(1,2)
+
+    def update(self):
+        self.scenery_rect = self.image.get_rect(topleft = (self.x, self.y))
+        self.hitbox = self.scenery_rect
+        self.x -= self.velocity * Variables.delta_time
+        if self.x < -64: Graphicgroups.scenery.pop(Graphicgroups.scenery.index(self))
+
+    def draw(self,screen):
+        screen.blit(self.image, self.scenery_rect)
+        if Variables.hitboxshow:
+            pygame.draw.rect(screen, (255,0,0),self.scenery_rect, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
 # INTERACTABLES
 class Kana:
+
     def __init__(self,x,y,kana,group,fade,rotate,newmessage="",color='white',new=False):
-        self.kananum, self.last_kananum = 0, 0
+        # self.kananum, self.last_kananum = 0, 0
         self.x, self.y = x, y
         self.newmessage = newmessage
         self.kanakill = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])*(255/Settings.num_to_shoot_new_kana)
@@ -685,7 +855,7 @@ class Kana:
         self.kanatext = Constants.kana_font.render(Variables.gamekana[self.level][self.kana][Variables.gamemode], True, self.color)
         self.kana_graphic = Constants.ui_font.render(Variables.gamekana[self.level][self.kana][0] + Variables.gamekana[self.level][self.kana][1] + Variables.gamekana[self.level][self.kana][2],True,'yellow')
         self.x -= self.xvelocity * Variables.delta_time
-        if self.y > Settings.ship_screen_boundary and self.y < Constants.HEIGHT - Settings.ship_screen_boundary:
+        if self.y > Settings.ship_screen_boundary and self.y < Constants.PAHEIGHT - Settings.ship_screen_boundary:
             self.y += self.yvelocity * Variables.delta_time
         if self.x < -64: self.grapicgroup.pop(self.grapicgroup.index(self))
 
@@ -734,6 +904,84 @@ class Kana:
             screen.blit(shoot_here_surf, shoot_here_pos)
 
         # Draw hitbox
+        import Functions
+        self.hitbox = self.centered_image
+        self.hitbox = Functions.shrink_hitbox(self.hitbox,8)
+        if Variables.hitboxshow:
+            screen.blit(self.kana_graphic,self.centered_image.bottomleft)
+            pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
+
+class BossModeKana:
+    def __init__(self,x,y,kana,group,fade,rotate):
+        self.x, self.y = x, y
+        self.kanakill = int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3])*(255/Settings.num_to_shoot_new_kana)
+        self.color = 'white'
+        self.xvelocity, self.yvelocity = Settings.kanax_velocity, Settings.kanay_velocity
+        self.shrink = 5
+        self.kana = kana
+        self.level = Variables.level
+        self.fade = fade
+        self.rotate = 0
+        self.rotate_rate = (rotate * Variables.level) / 2
+        self.kanasound = Variables.gamekana[self.level][self.kana][2]
+        self.kanatext = Constants.kana_font.render(Variables.gamekana[self.level][self.kana][Variables.gamemode], True, self.color)
+        self.kana_graphic = Constants.ui_font.render(Variables.gamekana[self.level][self.kana][0] + Variables.gamekana[self.level][self.kana][1] + Variables.gamekana[self.level][self.kana][2],True,'yellow')
+        self.kanascale = 1
+        self.orig_rect = self.kanatext.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
+        self.rot_rect = self.orig_rect.copy()
+        self.rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
+        self.scale_image = pygame.transform.scale(self.rotated_image,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
+        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
+        self.hitbox = [0,0,0,0]
+        self.grapicgroup = group
+        self.kana_blip = 0
+        self.correct_kana_lost_sound_play = True
+
+    def update(self,player):
+        self.kanatext = Constants.kana_font.render(Variables.gamekana[self.level][self.kana][Variables.gamemode], True, self.color)
+        self.kana_graphic = Constants.ui_font.render(Variables.gamekana[self.level][self.kana][0] + Variables.gamekana[self.level][self.kana][1] + Variables.gamekana[self.level][self.kana][2],True,'yellow')
+        self.y += self.xvelocity * Variables.delta_time
+        if self.y > Settings.ship_screen_boundary and self.y < Constants.PAHEIGHT - Settings.ship_screen_boundary:
+            self.y += self.yvelocity * Variables.delta_time
+        if self.x < -64: self.grapicgroup.pop(self.grapicgroup.index(self))
+
+        if self.grapicgroup == Graphicgroups.bossmodecorrectkana:
+            # Grow Kana at 3/5th of the screen height
+            if self.y > 3 * (Constants.PAHEIGHT // 5) and self.y < Constants.PAHEIGHT+32:
+                self.kanascale += Variables.delta_time/5
+                if self.kana_blip >= self.x/500:
+                    pygame.mixer.Sound.play(Constants.correct_kana_dying_sound)
+                    self.kana_blip = 0
+                self.kana_blip += 1 * Variables.delta_time
+            elif self.y > Constants.PAHEIGHT:
+                if self.correct_kana_lost_sound_play:
+                    pygame.mixer.Sound.play(Constants.correct_kana_lost_sound)
+                    explosion = Explosion(x=self.x, y=self.y,spritearray=Constants.explosion_surfs,scale=1,repeat=False,explosiontype=1)
+                    Graphicgroups.explosion_group.add(explosion)
+                    # Variables.score -= 10
+                    self.correct_kana_lost_sound_play = False
+
+    def draw(self,screen):
+        self.orig_rect = self.kanatext.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.kanatext,self.rotate)
+        self.rot_rect = self.orig_rect.copy()
+        self.rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(self.rot_rect).copy()
+        self.scale_image = pygame.transform.scale(self.rotated_image,(self.kanatext.get_rect().width*self.kanascale,self.kanatext.get_rect().height*self.kanascale))
+        self.centered_image = self.scale_image.get_rect(center = (self.x,self.y))
+        screen.blit(self.scale_image, self.centered_image)
+        self.rotate += self.rotate_rate * Variables.delta_time
+
+        # Draw hitbox
         self.hitbox = self.centered_image
         if Variables.hitboxshow:
             screen.blit(self.kana_graphic,self.centered_image.bottomleft)
@@ -747,7 +995,7 @@ class Kana:
         return False
 
 class AnimatedPowerUp:
-    def __init__(self,x,y,xvelocity,yvelocity,typeof,pueffect):
+    def __init__(self,x,y,xvelocity,typeof,pueffect):
         self.type = typeof #Sprite Animation
         self.spritearray = Constants.powerup_surfs #Sprite Animation
         self.animindex = 0  #Sprite Animation
@@ -755,14 +1003,14 @@ class AnimatedPowerUp:
         self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
         self.x, self.y = x, y
         self.powerup_rect = self.image.get_rect(center = (self.x, self.y))
-        self.xvelocity, self.yvelocity = xvelocity, yvelocity
-        self.hitbox = [0,0,0,0]
+        self.xvelocity = xvelocity # Check Constants.powerup_array
+        self.hitbox = []
         self.shieldradius = 32
         self.pueffect = pueffect
 
     def animate(self):
         import Functions
-        Functions.moanimate(self)
+        Functions.moanimate(self,loopstart=0,loopend=999)
 
     def effect(self,pueffect,player):
         if pueffect == "laser":
@@ -798,9 +1046,12 @@ class AnimatedPowerUp:
                 else: player.pewtype = 0
 
     def update(self):
+        amplitude = .2
+        frequency = 200
+        phase = random.randint(0,120)
         self.effect(self.pueffect,player)
-        self.x -= (self.xvelocity) * Variables.delta_time
-        self.y += self.yvelocity * Variables.delta_time * math.sin(self.x/100)
+        self.x -= self.xvelocity * Variables.delta_time
+        self.y += amplitude * math.sin((self.x-phase)/frequency)                    # Sine wave for the y axis
         self.powerup_rect = self.image.get_rect(center = (self.x, self.y))
         if self.x < -128: Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
         self.animate()
@@ -828,19 +1079,75 @@ class AnimatedPowerUp:
 
     def spawn(xvel,typeof,pueffect):
         x = Constants.WIDTH+64
-        y = random.randrange(128,Constants.HEIGHT-128)
+        y = random.randrange(96,Constants.PAHEIGHT-220)
         xvelocity = xvel
-        yvelocity = random.randrange(100,200)
-        Graphicgroups.animatedpowerup.append(AnimatedPowerUp(x, y,xvelocity,yvelocity,typeof,pueffect))
+        Graphicgroups.animatedpowerup.append(AnimatedPowerUp(x, y,xvelocity,typeof,pueffect))
+
+class GroundTurret:
+    def __init__(self,x,y,typeof):
+        self.type = typeof #Sprite Animation
+        self.spritearray = Constants.turret_surfs #Sprite Animation
+        self.animindex = 0  #Sprite Animation
+        self.animspeed = 20 #Sprite Animation
+        self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
+        self.x, self.y = x, y-16
+        self.xvelocity = 120
+        self.last_turret_pew = 0
+        self.hitbox = [0,0,0,0]
+        self.turretfiring = False
+
+    def animate(self):
+        if self.turretfiring == True:
+            self.animindex += self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
+            if self.animindex > len(self.spritearray[self.type].images)-1:
+                self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
+                self.turretfiring = False
+        self.image = self.spritearray[self.type].images[int(self.animindex)] # update the current frame
+
+    def findobjectangle(self,player):
+        # Find angle of player
+        dx = self.x - player.spaceship_rect.center[0]
+        dy = self.y - player.spaceship_rect.center[1]
+        self.theta = math.atan2(-dy,dx)
+        return self.theta
+
+    def shoot(self,player):
+        angle = self.findobjectangle(player)
+        if pygame.time.get_ticks() - self.last_turret_pew >= random.randint(2000,10000):
+            self.turretfiring = True
+            pygame.mixer.Sound.play(Constants.turretfire)
+            Graphicgroups.enemyprojectiles.append(EnemyProjectiles(self.x, self.y-10,angle,Graphicgroups.turrets.index(self)))
+            self.last_turret_pew = pygame.time.get_ticks()
+
+    def update(self):
+        self.animate()
+        if self.x < -64: Graphicgroups.turrets.pop(Graphicgroups.turrets.index(self))
+        self.x -= self.xvelocity * Variables.delta_time
+        self.shoot(player)
+
+    def draw(self,screen):
+        self.hitbox = self.image.get_rect(center = (self.x, self.y))
+        screen.blit(self.image, self.hitbox)
+
+        # Draw hitbox
+        if Variables.hitboxshow:
+            pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+
+    def collide(self,rect):
+        if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
+            if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
+                return True
+        return False
 
 class Enemies:
-    def __init__(self,typeof):
+    def __init__(self,typeof,loopstart=0,loopend=999):
         self.type = typeof
+        self.loopstart, self.loopend = loopstart, loopend
         self.spritearray = Constants.enemy_spritesheet_surfs #Sprite Animation
         self.animindex = 0  #Sprite Animation
         self.animspeed = random.randint(10,20) #Sprite Animation
         self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
-        self.x, self.y = Constants.WIDTH, random.randrange(128,Constants.HEIGHT-128)
+        self.x, self.y = Constants.WIDTH, random.randrange(128,Constants.PAHEIGHT-128)
         self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
         self.velocity = random.randint(50,200)
         self.Yvelocity = random.randint(-50,50)
@@ -867,7 +1174,7 @@ class Enemies:
 
     def animate(self):
         import Functions
-        Functions.moanimate(self)
+        Functions.moanimate(self,loopstart=0,loopend=999)
 
     def shoot(self,player):
         angle = self.findobjectangle(player)
@@ -899,7 +1206,7 @@ class Enemies:
         if self.knockbackx > 0: self.knockbackx -= Settings.enemy_knockback_recoveryx * Variables.delta_time
         if self.knockbacky > 0: self.knockbacky -= Settings.enemy_knockback_recoveryy * Variables.delta_time
         if self.knockbacky < 0: self.knockbacky += Settings.enemy_knockback_recoveryy * Variables.delta_time
-        if self.x < -128 or self.y > Constants.HEIGHT + 128 or self.y < -128: Graphicgroups.enemies.pop(Graphicgroups.enemies.index(self))
+        if self.x < -128 or self.y > Constants.PAHEIGHT + 128 or self.y < -128: Graphicgroups.enemies.pop(Graphicgroups.enemies.index(self))
         self.shoot(player)
     
     def findobjectangle(self,player):
@@ -948,11 +1255,11 @@ class Bosses:
         self.numberofbullets = numofbullets
         self.bulletfrequency = 1
         self.anglenum = anglenum
-        self.x, self.y = Constants.WIDTH, random.randrange(128,Constants.HEIGHT-128)
+        self.x, self.y = Constants.WIDTH, random.randrange(128,Constants.PAHEIGHT-128)
         self.type = typeof
         self.image = self.spritearray[self.bossimage].images[self.animindex]
         self.boss_rect = self.image.get_rect(midleft = (self.x, self.y))
-        self.velocity = random.randint(Xvel/10,Xvel)
+        self.velocity = random.randint(Xvel/2,Xvel)
         self.Yvelocity = random.randint(-Yvel,Yvel)
         self.last_enemy_pew = 0
         self.maxhealth = health+1
@@ -960,8 +1267,12 @@ class Bosses:
         self.maxhealth_grapic = Constants.ui_font.render(str(self.maxhealth), True, 'green')
         self.curhealth_grapic = Constants.ui_font.render(str(self.health), True, 'yellow')
         self.healthbar_height = 5
-        self.healthbar = pygame.Surface((self.boss_rect.width,5))
+        self.healthbar = pygame.Surface((self.boss_rect.width,self.healthbar_height))
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
+        self.shieldbar_height = 5
+        self.shieldbar = pygame.Surface((500,self.shieldbar_height))
+        self.shieldbar_Color = 'cyan'
 
     def calculate_angles(self,number_of_angles):
         if number_of_angles < 1:
@@ -1013,12 +1324,10 @@ class Bosses:
         elif self.type%3 == 2: self.boss_rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.delta_time
         self.y += self.Yvelocity * Variables.delta_time
-        if self.y <= 50 or self.y >= Constants.HEIGHT-50: self.Yvelocity *= -1
-        if self.x <= 3*Constants.WIDTH/5:
-            self.enter_screen = True
-            self.velocity *= -1
-        if self.x > Constants.WIDTH and self.enter_screen == True:
-            self.velocity *= -1
+        if self.y <= 256 or self.y >= Constants.PAHEIGHT-50: self.Yvelocity *= -1
+        if self.x < Constants.WIDTH-256: self.enter_screen = True
+        if self.x <= 3*Constants.WIDTH/5: self.velocity *= -1
+        if self.x > Constants.WIDTH-256 and self.enter_screen == True: self.velocity *= -1
         self.shoot(player)
 
     def findobjectangle(self,player):
@@ -1031,9 +1340,29 @@ class Bosses:
     def draw(self,screen,player):
         screen.blit(self.image, self.boss_rect)
         
-        screen.blit(self.healthbar, (self.boss_rect.left,self.boss_rect.top-20,self.boss_rect.width,10))
+        # Health Bar
+        screen.blit(self.healthbar, (
+            self.boss_rect.left,        # X
+            self.boss_rect.top-20,      # Y
+            self.boss_rect.width,       # Width
+            10                          # Height
+            )
+        )
         self.healthbar.fill('black')
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        except: pass
+
+        # Shield
+        x = Settings.boss_shield_bar
+        barwidth = 500
+        screen.blit(self.shieldbar, (
+            Constants.WCENTER-(barwidth//2),
+            x,
+            barwidth,
+            10
+        ))
+        self.shieldbar.fill('black')
+        try: pygame.draw.rect(self.shieldbar,'cyan',(0,0,barwidth/100 * (Constants.bosses_array[Variables.level]["shield"]),self.healthbar_height))
         except: pass
 
         self.hitbox = self.boss_rect
@@ -1092,7 +1421,7 @@ class EnemyProjectiles:
     def update(self):
         self.x, self.y = self.objectdirection(self.direction)
         self.enemy_pew_rect = self.image.get_rect(center = (self.x, self.y))
-        if self.x < 0 or self.y < 0 or self.y > Constants.HEIGHT:
+        if self.x < 0 or self.y < 0 or self.y > Constants.PAHEIGHT:
             Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(self))
 
     def draw(self,screen):
@@ -1147,7 +1476,7 @@ class WallOfDeath:
 
     def spawn(x,y):
         for w in range(random.randint(1,2)):
-            for h in range(int(Constants.HEIGHT/32)):
+            for h in range(int(Constants.PAHEIGHT/32)):
                 Graphicgroups.wallsegments.append(WallOfDeath(x+w*32,y+h*32))
 
 class Debris:
@@ -1177,7 +1506,7 @@ class Debris:
     def update(self):
         # self.x -= self.velocity * Variables.dt
         self.x, self.y = self.objectdirection(self.direction)
-        if self.x < -32 or self.x > Constants.WIDTH or self.y < -10 or self.y > Constants.HEIGHT: Graphicgroups.debris.pop(Graphicgroups.debris.index(self))
+        if self.x < -32 or self.x > Constants.WIDTH or self.y < -10 or self.y > Constants.PAHEIGHT: Graphicgroups.debris.pop(Graphicgroups.debris.index(self))
         self.debris_rect = self.image.get_rect(center = (self.x, self.y))
 
     def draw(self, screen):
@@ -1251,6 +1580,8 @@ class Timers:
         self.powerup_timer, self.powerup_thresh = 0, random.randint(30,40)
         self.bridge_timer, self.bridge_thresh = 0, 30
         self.WoD_timer, self.WoD_thresh = 0, random.randint(30,60)
+        self.bosskana_timer, self.bosskana_frequency = 0, 5
+        self.scenery_timer, self.scenery_thresh = 0, 0
 
     def stars(self, frequency, velocity):
         # Stars Timer
@@ -1266,7 +1597,7 @@ class Timers:
             selection = random.randint(0,Variables.levels[Variables.level]-1)
             Graphicgroups.kanas.append(Kana(
                 x = Constants.WIDTH+Constants.off_screen_offset, 
-                y = random.randrange(300,Constants.HEIGHT-128,),
+                y = random.randrange(300,Constants.PAHEIGHT-128,),
                 kana = selection,
                 group = Graphicgroups.kanas,
                 fade = random.randint(Constants.min_kana_alpha,256),
@@ -1307,6 +1638,7 @@ class Timers:
             if Variables.bossexist == False:
                 Bosses.spawn()
                 Variables.bossexist = True
+
         self.boss_timer += 1 * Variables.delta_time
 
     def incorrectkana(self, kanakill):
@@ -1315,9 +1647,15 @@ class Timers:
             selection = random.randint(0,Variables.levels[Variables.level]-1)
             if selection != Variables.kananum:
                 if int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3]) < Settings.num_to_shoot_new_kana+1:
-                    Graphicgroups.kanas.append(Kana(Constants.WIDTH+Constants.off_screen_offset, random.randrange(128,Constants.HEIGHT-200,),selection,Graphicgroups.kanas,random.randint(Constants.min_kana_alpha,256),random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate),"Shoot",(255,kanakill,kanakill),True))
+                    Graphicgroups.kanas.append(Kana(Constants.WIDTH+Constants.off_screen_offset, random.randrange(128,Constants.PAHEIGHT-200,),selection,Graphicgroups.kanas,random.randint(Constants.min_kana_alpha,256),random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate),"Shoot",(255,kanakill,kanakill),True))
                 else:
-                    Graphicgroups.kanas.append(Kana(Constants.WIDTH+Constants.off_screen_offset, random.randrange(128,Constants.HEIGHT-200,),selection,Graphicgroups.kanas,random.randint(Constants.min_kana_alpha,256),random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate)))
+                    Graphicgroups.kanas.append(Kana(
+                        x=Constants.WIDTH+Constants.off_screen_offset, 
+                        y=random.randrange(128,Constants.PAHEIGHT-200,),
+                        kana=selection,
+                        group=Graphicgroups.kanas,
+                        fade=random.randint(Constants.min_kana_alpha,256),
+                        rotate=random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate)))
                 self.incorrectkana_timer = 0
                 self.incorrectkana_thresh = random.randint(Settings.minimum_incorrect_kana_frequency,Settings.maximum_incorrect_kana_frequency)/10
         self.incorrectkana_timer += 1 * Variables.delta_time
@@ -1329,7 +1667,7 @@ class Timers:
             if int(Variables.commasep[Variables.commasep.index(Variables.gamekana[Variables.level][Variables.kananum])][3]) < Settings.num_to_shoot_new_kana+1:
                 Graphicgroups.correctkanas.append(Kana(
                     x=Constants.WIDTH+Constants.off_screen_offset, 
-                    y=random.randrange(128,Constants.HEIGHT-200,),
+                    y=random.randrange(128,Constants.PAHEIGHT-200,),
                     kana=Variables.kananum,
                     group=Graphicgroups.correctkanas,
                     fade=random.randint(Constants.min_kana_alpha,256),
@@ -1340,7 +1678,7 @@ class Timers:
             else:
                 Graphicgroups.correctkanas.append(Kana(
                     x=Constants.WIDTH+Constants.off_screen_offset, 
-                    y=random.randrange(128,Constants.HEIGHT-200,),
+                    y=random.randrange(128,Constants.PAHEIGHT-200,),
                     kana=Variables.kananum,
                     group=Graphicgroups.correctkanas,
                     fade=random.randint(Constants.min_kana_alpha,256),
@@ -1349,6 +1687,40 @@ class Timers:
             self.correctkana_thresh = random.randint(Settings.minimum_correct_kana_frequency,Settings.maximum_correct_kana_frequency)/10
             self.correct_kana_lost_sound_play = True
         self.correctkana_timer += 1 * Variables.delta_time
+
+    def bosskana(self, frequency):
+        # BossMode Kana Timer
+        if self.bosskana_timer > self.bosskana_frequency:
+            #region Spawn boss mode kana drop
+            segment = 15                                                                                # Divide whole screen into sections
+            columns = [1,2,3,4,5,6,7,8]                                                                 # Create an array of indexes for those sections
+            random.shuffle(columns)                                                                     # Shuffle those indexes around randomly
+            Graphicgroups.bossmodecorrectkana.append(
+                BossModeKana(
+                    x=100 + (columns[0] * (Constants.WIDTH/segment)),                                  # Spawn Correct Kana at the first index of the shuffled array
+                    y=-20,                                                                             # Spawn Correct kana off screen
+                    kana=Variables.kananum,
+                    group=Graphicgroups.bossmodecorrectkana,
+                    fade=random.randint(Constants.min_kana_alpha,256),
+                    rotate=random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate))
+            )
+            columns.pop(0)                                                                              # Remove first indes from shuffled array so not to re-use it
+            for f in columns:
+                selection = random.randint(0,Variables.levels[Variables.level]-1)
+                if selection != Variables.kananum:
+                    Graphicgroups.bossmodeincorrectkana.append(
+                        BossModeKana(
+                            x=100 + (f * Constants.WIDTH/segment), 
+                            y=-20,
+                            kana=selection,
+                            group=Graphicgroups.bossmodeincorrectkana,
+                            fade=random.randint(Constants.min_kana_alpha,256),
+                            rotate=random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate))
+                    )
+            #endregion Spawn boss mode kana drop
+            self.bosskana_timer = 0
+            self.bosskana_frequency = frequency
+        self.bosskana_timer += 1 * Variables.delta_time
 
     def planet(self):
         if self.planet_timer > self.planet_thresh:
@@ -1390,13 +1762,20 @@ class Timers:
             self.WoD_thresh = random.randint(30,60)
         self.WoD_timer += 1 * Variables.delta_time
 
+    def scenery(self,frequency):
+        if self.scenery_timer > frequency:
+            BorderScenery(Variables.scenerytype).picknext()
+            self.scenery_timer = 0
+            self.scenery_thresh = frequency
+        self.scenery_timer += 1 * Variables.delta_time
+
 class Buttons:
     def __init__(self):
         self.startbuttonsoundplayed = False
 
     def start(self,screen):
         button_width = 150
-        self.start_button_location = (Constants.WCENTER-(button_width/2), Constants.HEIGHT //2+150, button_width, 70)
+        self.start_button_location = (Constants.WCENTER-(button_width/2), Constants.PAHEIGHT //2+150, button_width, 70)
         self.start_button = pygame.Rect(self.start_button_location)
         if self.start_button.collidepoint(pygame.mouse.get_pos()):
             self.start_text = Constants.question_font.render('START', True, 'Green')
