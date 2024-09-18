@@ -48,7 +48,7 @@ class MenuState:
         for junk in Graphicgroups.spacejunk: junk.update(Game_Objects.player)                       # RANDOM JUNK
         Graphicgroups.starfield_group.update(Game_Objects.player)                                   # STARS
         Graphicgroups.explosion_group.update()                                                      # EXPLOSION
-        for kana in Graphicgroups.kanas:  kana.update(Game_Objects.player)                          # Kana
+        for kana in Graphicgroups.incorrectkanas:  kana.update(Game_Objects.player)                          # Kana
         for warning in Graphicgroups.warnings: warning.update()                                     # Warning for BIG LASER
         for biglaser in Graphicgroups.biglasers: biglaser.update()                                  # BIG LASER
         for enemy in Graphicgroups.enemies: enemy.update();enemy.shoot(Game_Objects.player)         # Enemies
@@ -65,7 +65,7 @@ class MenuState:
 
         for junk in Graphicgroups.spacejunk: junk.draw(screen)                                      # RANDOM JUNK
         Graphicgroups.starfield_group.draw(screen)                                                  # STARS
-        for kana in Graphicgroups.kanas: kana.draw(screen)                                          # Kana
+        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                                          # Kana
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                               # Enemy Projectiles
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)                  # Enemies
         for warning in Graphicgroups.warnings: warning.draw(screen)                                 # Warning for BIG LASER
@@ -305,12 +305,13 @@ class GameState:
         Graphicgroups.debug_window.update()                                             # Debug Window
         Graphicgroups.explosion_group.update()                                          # EXPLOSION
         for bullet in Graphicgroups.bullets: bullet.update()                            # BULLETS
+        for bullet in Graphicgroups.missiles: bullet.update()                           # Missiles
         for pew in Graphicgroups.dynamicpew: pew.update()                               # Big Pew
         for biglaser in Graphicgroups.biglasers: biglaser.update()                      # BIG LASER
         for junk in Graphicgroups.spacejunk: junk.update()                              # RANDOM JUNK
         for cutoff in Graphicgroups.cuttoffline: cutoff.update(Game_Objects.player)     # CUTOFF LINE
         for kana in Graphicgroups.correctkanas: kana.update(Game_Objects.player)        # Correct Kanas
-        for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)               # Incorrect kanas
+        for kana in Graphicgroups.incorrectkanas: kana.update(Game_Objects.player)               # Incorrect kanas
         for kana in Graphicgroups.bossmodecorrectkana: kana.update(Game_Objects.player)
         for kana in Graphicgroups.bossmodeincorrectkana: kana.update(Game_Objects.player)
         for warning in Graphicgroups.warnings: warning.update()                         # Big Laser Warning
@@ -346,13 +347,14 @@ class GameState:
         Graphicgroups.starfield_group.draw(screen)                                      # STARS
         for warning in Graphicgroups.warnings: warning.draw(screen)                     # WARNING for BIG LASER
         for bullet in Graphicgroups.bullets: bullet.draw(screen)                        # BULLETS
+        for bullet in Graphicgroups.missiles: bullet.draw(screen)                       # Missiles
         for pew in Graphicgroups.dynamicpew: pew.draw(screen)                           # Big Pew
         for cutoff in Graphicgroups.cuttoffline: cutoff.draw(screen)                    # CUTOFF LINE
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for bits in Graphicgroups.debris: bits.draw(screen)                             # Bits debris
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
-        for kana in Graphicgroups.kanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                              # WRONG KANA
         for kana in Graphicgroups.bossmodecorrectkana: kana.draw(screen)
         for kana in Graphicgroups.bossmodeincorrectkana: kana.draw(screen)
         for brew in Graphicgroups.brew: brew.draw(screen)
@@ -508,6 +510,7 @@ class BossFight:
         if self.enemy_wait_timer >= 0: self.enemy_wait_timer -= 1 * Variables.delta_time        # Stop enemies from showing up right at the start
 
         for bullet in Graphicgroups.bullets: bullet.update()                            # BULLETS
+        for bullet in Graphicgroups.missiles: bullet.update()                           # Missiles
         for pew in Graphicgroups.dynamicpew: pew.update()                               # Big Pew
         for biglaser in Graphicgroups.biglasers: biglaser.update()                      # BIG LASER
         Graphicgroups.planet_group.update(Game_Objects.player)                          # PLANETS
@@ -515,7 +518,7 @@ class BossFight:
         Graphicgroups.starfield_group.update(Game_Objects.player)                       # STARS
         for cutoff in Graphicgroups.cuttoffline: cutoff.update(Game_Objects.player)     # CUTOFF LINE
         for kana in Graphicgroups.correctkanas: kana.update(Game_Objects.player)        # Correct Kanas
-        for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)               # Incorrect kanas
+        for kana in Graphicgroups.incorrectkanas: kana.update(Game_Objects.player)               # Incorrect kanas
         for kana in Graphicgroups.bossmodecorrectkana: kana.update(Game_Objects.player)
         for kana in Graphicgroups.bossmodeincorrectkana: kana.update(Game_Objects.player)
         for warning in Graphicgroups.warnings: warning.update()                         # Big Laser Warning
@@ -563,13 +566,14 @@ class BossFight:
         Graphicgroups.starfield_group.draw(screen)                                      # STARS
         for warning in Graphicgroups.warnings: warning.draw(screen)                     # WARNING for BIG LASER
         for bullet in Graphicgroups.bullets: bullet.draw(screen)                        # BULLETS
+        for bullet in Graphicgroups.missiles: bullet.draw(screen)                       # Missiles
         for pew in Graphicgroups.dynamicpew: pew.draw(screen)                           # Big Pew
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for bits in Graphicgroups.debris: bits.draw(screen)                             # Bits debris
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
         for boss in Graphicgroups.bosses: boss.draw(screen,Game_Objects.player)         # BOSS
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
-        for kana in Graphicgroups.kanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                              # WRONG KANA
         for kana in Graphicgroups.bossmodecorrectkana: kana.draw(screen)
         for kana in Graphicgroups.bossmodeincorrectkana: kana.draw(screen)
         for brew in Graphicgroups.brew: brew.draw(screen)
@@ -627,7 +631,7 @@ class GameOverState:
         Graphicgroups.starfield_group.update(Game_Objects.player)                       # STARS
         for cutoff in Graphicgroups.cuttoffline: cutoff.update(Game_Objects.player)     # CUTOFF LINE
         for kana in Graphicgroups.correctkanas: kana.update(Game_Objects.player)        # Correct Kanas
-        for kana in Graphicgroups.kanas: kana.update(Game_Objects.player)               # Incorrect kanas
+        for kana in Graphicgroups.incorrectkanas: kana.update(Game_Objects.player)               # Incorrect kanas
         for warning in Graphicgroups.warnings: warning.update()                         # Big Laser Warning
         for epew in Graphicgroups.enemyprojectiles: epew.update()                       # Enemy Projectiles
         for enemy in Graphicgroups.enemies: enemy.update()                              # ENEMIES
@@ -651,7 +655,7 @@ class GameOverState:
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
-        for kana in Graphicgroups.kanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                              # WRONG KANA
         for powerup in Graphicgroups.animatedpowerup: powerup.draw(screen)              # Powerup
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                  # BIG LASER
         for wod in Graphicgroups.wallsegments: wod.draw(screen)                         # Wall of Death
@@ -754,7 +758,8 @@ class Debug:
             ["Persis?",Constants.pew_array[Game_Objects.player.pewtype]["persist"]],
             ["DefaultPersis?",Game_Objects.player.defaultpersist],
             ["LaserSize",round(Game_Objects.player.laserbuild,1)],
-            ["Brew AnimIndex",Variables.brewanimindex],
+            ["Missiles",len(Graphicgroups.missiles)],
+            ["Missile timer",pygame.time.get_ticks() - Game_Objects.player.last_missiletimer]
             # ["Scenery Array",len(Graphicgroups.scenery)],
             # ["Menu Kana Timer",round(Game_Objects.timer.kana_frequency - Game_Objects.timer.kana_timer,1)],
             # ["Star Timer",round(Game_Objects.timer.star_frequency - Game_Objects.timer.star_timer,1)],

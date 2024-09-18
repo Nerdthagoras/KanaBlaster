@@ -12,7 +12,7 @@ if __name__ == "__main__":
         [Game_States.game_state,Game_States.gameover_state,'ColinTheme'],
         [Game_States.boss_state,Game_States.gameover_state,'ColinTheme'],
         [Game_States.gameover_state,Game_States.menu_state,'GameIntro'],
-    ]
+    ] 
  
     bossstates = [
         # Current_State, Next_State, Music for Next_State

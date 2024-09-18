@@ -87,6 +87,12 @@ pewfiles = [f for f in os.listdir(os.getcwd() + '/images/Pews')]
 pew_surfs = []
 for pew in pewfiles: pew_surfs.append(pygame.image.load(os.path.join('images','Pews',pew)).convert_alpha())
 
+#Missile Files
+# missile_surf = pygame.image.load(os.path.join('sprites','Missiles','missile1.png')).convert_alpha()
+missilefiles = [f for f in os.listdir(os.getcwd() + '/sprites/Missiles')]
+missile_surfs = []
+for missile in missilefiles: missile_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Missiles',missile)).convert_alpha(),64,64,1))
+
 #Planet Files
 planetfiles = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
 planet_surfs = []
@@ -105,7 +111,7 @@ for bossfile in bossspritesheets: boss_spritesheet_surfs.append(Spritesheet.Load
 #Turret Spritesheets
 turret_files = [f for f in os.listdir(os.getcwd() + '/sprites/Turrets')]
 turret_surfs = []
-for turret in turret_files: turret_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Turrets',turret)).convert_alpha(),32,32,1))
+for turret in turret_files: turret_surfs.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Turrets',turret)).convert_alpha(),64,64,1))
 #endregion Surfaces for Animated sprites
 
 #region Arrays for objects
@@ -172,5 +178,6 @@ bigpewbuildup = pygame.mixer.Sound(os.path.join('sounds','BigPewBuildup.wav'))
 bigpewready = pygame.mixer.Sound(os.path.join('sounds','BigPewReady.wav'))
 bigpewhold = pygame.mixer.Sound(os.path.join('sounds','BigPewHold.wav'))
 turretfire = pygame.mixer.Sound(os.path.join('sounds','turretfire.wav'))
+missilelaunch = pygame.mixer.Sound(os.path.join('sounds','missilelaunch.wav'))
 
 #endregion Sounds
