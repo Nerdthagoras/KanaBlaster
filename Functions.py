@@ -1,5 +1,5 @@
 import csv
-
+#region SHRINK HITBOX
 def shrink_hitbox(rect,pixels):
     rect = [
         rect[0]+pixels,
@@ -9,6 +9,10 @@ def shrink_hitbox(rect,pixels):
     ]
     return rect
 
+
+
+
+#region COLLISIONS
 def collision():
     import Graphicgroups, Constants, Game_Objects, Variables, Settings
     import pygame, random, math, os
@@ -16,31 +20,40 @@ def collision():
     # if it is not a projectile then the ship is considered the projectile
     # Space Junk will be treated like a projectile because it persists after collision
     
-    maxexplode = random.randint(0,len(Constants.explosion_surfs)-1) # pick random explosion type
+    maxexplode = random.randint(0,len(Constants.SURF_EXPLOSION)-1) # pick random explosion type
     
     #region Player Projectiles
     for bullet in Graphicgroups.bullets:
 
         #if player's bullet hits Wall of Death
         for wod in Graphicgroups.wallsegments:
-            if wod.collide(bullet.rect):
+            if wod.collide(bullet.hitbox):
                 Graphicgroups.wallsegments.pop(Graphicgroups.wallsegments.index(wod))
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
-                Game_Objects.Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),Constants.brick_surf,0)
-                pygame.mixer.Sound.play(Constants.brickbreak_sound)
-                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.explosion_surfs,0.5,False)
+                Game_Objects.Debris.spawn(
+                    x=wod.x,
+                    y=wod.y,
+                    mindir=-10,
+                    maxdir=10,
+                    minvel=100,
+                    maxvel=300,
+                    image=Constants.SURF_BRICK,
+                    origin=Constants.SCREEN
+                )
+                pygame.mixer.Sound.play(Constants.SOUND_BRICK_BREAK)
+                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Variables.score += 1
 
         # if player's bullet hits CORRECT Kana
         for ckana in Graphicgroups.correctkanas:    
-            if ckana.collide(bullet.rect):
+            if ckana.collide(bullet.hitbox):
                 Variables.RGB[0] = 128
-                pygame.mixer.Sound.play(Constants.badhit)
+                pygame.mixer.Sound.play(Constants.SOUND_BADHIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
                 if ckana.x >= 2*Constants.WIDTH // 3:
@@ -49,10 +62,10 @@ def collision():
                     Variables.score -= 2
                 else:
                     Variables.score -= 1
-                explosion = Game_Objects.Explosion(ckana.x, ckana.y,Constants.explosion_surfs,0.5,False,explosiontype=maxexplode,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                explosion = Game_Objects.Explosion(ckana.x, ckana.y,Constants.SURF_EXPLOSION,0.5,False,explosiontype=maxexplode,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
@@ -60,9 +73,9 @@ def collision():
 
         # if player's bullet hits CORRECT boss Kana
         for ckana in Graphicgroups.bossmodecorrectkana:    
-            if ckana.collide(bullet.rect):
+            if ckana.collide(bullet.hitbox):
                 Variables.RGB[0] = 128
-                pygame.mixer.Sound.play(Constants.badhit)
+                pygame.mixer.Sound.play(Constants.SOUND_BADHIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
                 if ckana.x >= 2*Constants.WIDTH // 3:
@@ -71,10 +84,10 @@ def collision():
                     Variables.score -= 2
                 else:
                     Variables.score -= 1
-                explosion = Game_Objects.Explosion(ckana.x, ckana.y,Constants.explosion_surfs,0.5,False,explosiontype=maxexplode,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                explosion = Game_Objects.Explosion(ckana.x, ckana.y,Constants.SURF_EXPLOSION,0.5,False,explosiontype=maxexplode,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
@@ -82,12 +95,12 @@ def collision():
 
         # if player's bullet hits WRONG kana
         for kana in Graphicgroups.incorrectkanas:
-            if kana.collide(bullet.rect):
+            if kana.collide(bullet.hitbox):
                 Variables.RGB[1] = 64
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
@@ -98,9 +111,9 @@ def collision():
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
                 elif kana.x > Constants.WIDTH // 3 and kana.x < 2*Constants.WIDTH // 3:
                     Variables.score += 2
@@ -109,11 +122,11 @@ def collision():
                 explosion = Game_Objects.Explosion(
                     x=kana.x,
                     y=kana.y,
-                    spritearray=Constants.explosion_surfs,
+                    spritearray=Constants.SURF_EXPLOSION,
                     scale=0.5,
                     repeat=False,
                     explosiontype=maxexplode,
-                    xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1
+                    xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1
                 )
                 Graphicgroups.explosion_group.add(explosion)
                 Game_Objects.achievements.tingtangarray.append(kana.kanasound)
@@ -121,12 +134,12 @@ def collision():
 
         # if player's bullet hits WRONG boss kana
         for kana in Graphicgroups.bossmodeincorrectkana:
-            if kana.collide(bullet.rect):
+            if kana.collide(bullet.hitbox):
                 Variables.RGB[1] = 64
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.bossmodeincorrectkana.pop(Graphicgroups.bossmodeincorrectkana.index(kana))
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
@@ -137,86 +150,110 @@ def collision():
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
                 elif kana.x > Constants.WIDTH // 3 and kana.x < 2*Constants.WIDTH // 3:
                     Variables.score += 2
                 else:
                     Variables.score += 1
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False,explosiontype=maxexplode,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False,explosiontype=maxexplode,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 Game_Objects.achievements.tingtangarray.append(kana.kanasound)
                 Game_Objects.achievements.tingtangshow = True
 
         # if player's bullet hits Enemy
         for enemy in Graphicgroups.enemies:
-            if enemy.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if enemy.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 damage = 1 + random.randint(int(Game_Objects.player.laserpower/5),Game_Objects.player.laserpower)
                 enemy.health -= damage
-                Game_Objects.Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),Constants.debris_surf,Graphicgroups.enemies.index(enemy))
+                Game_Objects.Debris.spawn(
+                    x=enemy.enemy_rect.centerx,
+                    y=enemy.y,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Graphicgroups.enemies.index(enemy)
+                )
                 Game_Objects.Damagenum.spawn(enemy.enemy_rect.centerx,0,enemy.y,damage)
                 enemy.knockbackx = Settings.enemy_max_knockbackx
-                enemy.knockbacky = enemy.collide(bullet.rect)
+                enemy.knockbacky = enemy.collide(bullet.hitbox)
                 if enemy.health <= 0:
                     Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
-                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
+                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
                     Graphicgroups.explosion_group.add(explosion)
                     Variables.score += 1
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
 
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
 
         # if player's bullet hits Boss
         for boss in Graphicgroups.bosses:
-            if boss.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if boss.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 # damage = random.randint(
                 #     int(Game_Objects.player.laserpower / 10),           # Minimum
                 #     int(Game_Objects.player.laserpower)                 # Maximum
                 # )
-                damage = int(Game_Objects.player.laserpower / (Constants.bosses_array[Variables.level]["shield"]+1))
+                damage = int(Game_Objects.player.laserpower / (Constants.ARRAY_BOSSES[Variables.level]["shield"]+1))
                 boss.health -= damage
-                Constants.bosses_array[Variables.level]["shield"] -= 1
-                if Constants.bosses_array[Variables.level]["shield"] < 0: Constants.bosses_array[Variables.level]["shield"] = 0
+                # boss.bossalpha = 50
+                boss.flash = 255
+                Constants.ARRAY_BOSSES[Variables.level]["shield"] -= 1
+                if Constants.ARRAY_BOSSES[Variables.level]["shield"] < 0: Constants.ARRAY_BOSSES[Variables.level]["shield"] = 0
                 Game_Objects.Debris.spawn(
                     x=boss.boss_rect.centerx,
                     y=boss.y,
-                    direction=math.radians(random.randint(80,280)),
-                    velocity=random.randint(50,200),
-                    image=Constants.debris_surf,
-                    origin=Graphicgroups.bosses.index(boss)
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Constants.SCREEN
                 )
                 Game_Objects.Damagenum.spawn(boss.boss_rect.centerx,boss.velocity,boss.y,damage)
                 if boss.health <= 0:
+                    Game_Objects.Debris.spawn(
+                        x=boss.boss_rect.centerx,
+                        y=boss.y,
+                        mindir=0,
+                        maxdir=359,
+                        minvel=50,
+                        maxvel=200,
+                        image=Constants.SURF_DEBRIS,
+                        origin=Constants.SCREEN,
+                        numdebris=100
+                    )
                     Graphicgroups.bosses.pop(Graphicgroups.bosses.index(boss))
-                    explosion = Game_Objects.Explosion(boss.x, boss.y,Constants.explosion_surfs,8,False,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                    explosion = Game_Objects.Explosion(boss.x, boss.y,Constants.SURF_EXPLOSION,8,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                     Graphicgroups.explosion_group.add(explosion)
                     Variables.score += 99
-                    Variables.TRANSITION = False
+                    Variables.transition = False
                 try: Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
 
         # if player's bullet hits powerup
         for powerup in Graphicgroups.animatedpowerup:
-            if powerup.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.badhit)
-                explosion = Game_Objects.Explosion(powerup.x, powerup.y,Constants.explosion_surfs,0.5,False,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+            if powerup.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_BADHIT)
+                explosion = Game_Objects.Explosion(powerup.x, powerup.y,Constants.SURF_EXPLOSION,0.5,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
@@ -224,12 +261,12 @@ def collision():
 
         # if player's bullet hits ship debirs
         for shipdeb in Graphicgroups.debris:
-            if shipdeb.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
-                explosion = Game_Objects.Explosion(shipdeb.x, shipdeb.y,Constants.explosion_surfs,0.2,False,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+            if shipdeb.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
+                explosion = Game_Objects.Explosion(shipdeb.x, shipdeb.y,Constants.SURF_EXPLOSION,0.2,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
@@ -237,20 +274,20 @@ def collision():
 
         # if player's bullet hits scenery
         for scenery in Graphicgroups.scenery:
-            if scenery.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if scenery.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
-                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.explosion_surfs,0.5,False,xvel=120)
+                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.SURF_EXPLOSION,0.5,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
 
         #if player's bullet hits turret
         for turret in Graphicgroups.turrets:
-            if turret.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if turret.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.bullets.pop(Graphicgroups.bullets.index(bullet))
                 except: pass
-                explosion = Game_Objects.Explosion(turret.x, turret.y,Constants.explosion_surfs,0.5,False,xvel=120)
+                explosion = Game_Objects.Explosion(turret.x, turret.y,Constants.SURF_EXPLOSION,0.5,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.turrets.pop(Graphicgroups.turrets.index(turret))
 
@@ -261,24 +298,33 @@ def collision():
 
         #if player's bullet hits Wall of Death
         for wod in Graphicgroups.wallsegments:
-            if wod.collide(bullet.rect):
+            if wod.collide(bullet.hitbox):
                 Graphicgroups.wallsegments.pop(Graphicgroups.wallsegments.index(wod))
                 try:
                     persist = True
                     if not persist:
                         Graphicgroups.dynamicpew.pop(Graphicgroups.dynamicpew.index(bullet))
                 except: pass
-                Game_Objects.Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),Constants.brick_surf,0)
-                pygame.mixer.Sound.play(Constants.brickbreak_sound)
-                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.explosion_surfs,0.5,False)
+                Game_Objects.Debris.spawn(
+                    x=wod.x,
+                    y=wod.y,
+                    mindir=-10,
+                    maxdir=10,
+                    minvel=100,
+                    maxvel=300,
+                    image=Constants.SURF_BRICK,
+                    origin=Constants.SCREEN
+                )
+                pygame.mixer.Sound.play(Constants.SOUND_BRICK_BREAK)
+                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Variables.score += 1
 
         # if player's bullet hits CORRECT Kana
         for ckana in Graphicgroups.correctkanas:
-            if ckana.collide(bullet.rect):
+            if ckana.collide(bullet.hitbox):
                 Variables.RGB[0] = 128
-                pygame.mixer.Sound.play(Constants.badhit)
+                pygame.mixer.Sound.play(Constants.SOUND_BADHIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
                 if ckana.x >= 2*Constants.WIDTH // 3:
@@ -290,7 +336,7 @@ def collision():
                 explosion = Game_Objects.Explosion(
                     x=ckana.x,
                     y=ckana.y,
-                    spritearray=Constants.explosion_surfs,
+                    spritearray=Constants.SURF_EXPLOSION,
                     scale=0.5,
                     repeat=False,
                     explosiontype=maxexplode,
@@ -305,9 +351,9 @@ def collision():
 
         # if player's bullet hits CORRECT boss Kana
         for ckana in Graphicgroups.bossmodecorrectkana:
-            if ckana.collide(bullet.rect):
+            if ckana.collide(bullet.hitbox):
                 Variables.RGB[0] = 128
-                pygame.mixer.Sound.play(Constants.badhit)
+                pygame.mixer.Sound.play(Constants.SOUND_BADHIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', ckana.kanasound + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
                 if ckana.x >= 2*Constants.WIDTH // 3:
@@ -316,7 +362,7 @@ def collision():
                     Variables.score -= 2
                 else:
                     Variables.score -= 1
-                explosion = Game_Objects.Explosion(ckana.x, ckana.y,Constants.explosion_surfs,0.5,False,explosiontype=maxexplode,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                explosion = Game_Objects.Explosion(ckana.x, ckana.y,Constants.SURF_EXPLOSION,0.5,False,explosiontype=maxexplode,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
                     persist = True
@@ -327,9 +373,9 @@ def collision():
 
         # if player's bullet hits WRONG kana
         for kana in Graphicgroups.incorrectkanas:
-            if kana.collide(bullet.rect):
+            if kana.collide(bullet.hitbox):
                 Variables.RGB[1] = 64
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
                 try:
                     persist = True
@@ -343,9 +389,9 @@ def collision():
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
                 elif kana.x > Constants.WIDTH // 3 and kana.x < 2*Constants.WIDTH // 3:
                     Variables.score += 2
@@ -354,7 +400,7 @@ def collision():
                 explosion = Game_Objects.Explosion(
                     x=kana.x,
                     y=kana.y,
-                    spritearray=Constants.explosion_surfs,
+                    spritearray=Constants.SURF_EXPLOSION,
                     scale=0.5,
                     repeat=False,
                     explosiontype=maxexplode,
@@ -365,9 +411,9 @@ def collision():
 
         # if player's bullet hits WRONG boss kana
         for kana in Graphicgroups.bossmodeincorrectkana:
-            if kana.collide(bullet.rect):
+            if kana.collide(bullet.hitbox):
                 Variables.RGB[1] = 64
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.bossmodeincorrectkana.pop(Graphicgroups.bossmodeincorrectkana.index(kana))
                 try:
                     persist = True
@@ -381,40 +427,49 @@ def collision():
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
                 elif kana.x > Constants.WIDTH // 3 and kana.x < 2*Constants.WIDTH // 3:
                     Variables.score += 2
                 else:
                     Variables.score += 1
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False,explosiontype=maxexplode,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False,explosiontype=maxexplode,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 Game_Objects.achievements.tingtangarray.append(kana.kanasound)
                 Game_Objects.achievements.tingtangshow = True
 
         # if player's bullet hits Enemy
         for enemy in Graphicgroups.enemies:
-            if enemy.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if enemy.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 damage = 1 + random.randint(int(Game_Objects.player.laserpower/5),Game_Objects.player.laserpower)
                 enemy.health -= damage
-                Game_Objects.Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),Constants.debris_surf,Graphicgroups.enemies.index(enemy))
+                Game_Objects.Debris.spawn(
+                    x=enemy.enemy_rect.centerx,
+                    y=enemy.y,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Graphicgroups.enemies.index(enemy)
+                )
                 Game_Objects.Damagenum.spawn(enemy.enemy_rect.centerx,0,enemy.y,damage)
                 enemy.knockbackx = Settings.enemy_max_knockbackx
-                enemy.knockbacky = enemy.collide(bullet.rect)
+                enemy.knockbacky = enemy.collide(bullet.hitbox)
                 if enemy.health <= 0:
                     Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
-                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
+                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
                     Graphicgroups.explosion_group.add(explosion)
                     Variables.score += 1
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
 
                 try:
@@ -425,39 +480,53 @@ def collision():
 
         # if player's bullet hits Boss
         for boss in Graphicgroups.bosses:
-            if boss.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if boss.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 # damage = random.randint(
                 #     int(Game_Objects.player.laserpower / 10),           # Minimum
                 #     int(Game_Objects.player.laserpower)                 # Maximum
                 # )
-                damage = int(Game_Objects.player.laserpower / (Constants.bosses_array[Variables.level]["shield"]+1))
+                damage = int(Game_Objects.player.laserpower / (Constants.ARRAY_BOSSES[Variables.level]["shield"]+1))
                 boss.health -= damage
-                Constants.bosses_array[Variables.level]["shield"] -= 1
-                if Constants.bosses_array[Variables.level]["shield"] < 0: Constants.bosses_array[Variables.level]["shield"] = 0
+                boss.flash = 255
+                Constants.ARRAY_BOSSES[Variables.level]["shield"] -= 1
+                if Constants.ARRAY_BOSSES[Variables.level]["shield"] < 0: Constants.ARRAY_BOSSES[Variables.level]["shield"] = 0
                 Game_Objects.Debris.spawn(
                     x=boss.boss_rect.centerx,
                     y=boss.y,
-                    direction=math.radians(random.randint(80,280)),
-                    velocity=random.randint(50,200),
-                    image=Constants.debris_surf,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
                     origin=Graphicgroups.bosses.index(boss)
                 )
                 Game_Objects.Damagenum.spawn(boss.boss_rect.centerx,boss.velocity,boss.y,damage)
                 if boss.health <= 0:
+                    Game_Objects.Debris.spawn(
+                        x=boss.boss_rect.centerx,
+                        y=boss.y,
+                        mindir=0,
+                        maxdir=359,
+                        minvel=50,
+                        maxvel=200,
+                        image=Constants.SURF_DEBRIS,
+                        origin=Constants.SCREEN,
+                        numdebris=100
+                    )
                     Graphicgroups.bosses.pop(Graphicgroups.bosses.index(boss))
-                    explosion = Game_Objects.Explosion(boss.x, boss.y,Constants.explosion_surfs,8,False,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                    explosion = Game_Objects.Explosion(boss.x, boss.y,Constants.SURF_EXPLOSION,8,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                     Graphicgroups.explosion_group.add(explosion)
                     Variables.score += 99
-                    Variables.TRANSITION = False
+                    Variables.transition = False
                 try: Graphicgroups.dynamicpew.pop(Graphicgroups.dynamicpew.index(bullet))
                 except: pass
 
         # if player's bullet hits powerup
         for powerup in Graphicgroups.animatedpowerup:
-            if powerup.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.badhit)
-                explosion = Game_Objects.Explosion(powerup.x, powerup.y,Constants.explosion_surfs,0.5,False,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+            if powerup.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_BADHIT)
+                explosion = Game_Objects.Explosion(powerup.x, powerup.y,Constants.SURF_EXPLOSION,0.5,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
                     persist = True
@@ -468,9 +537,9 @@ def collision():
 
         # if player's bullet hits ship debirs
         for shipdeb in Graphicgroups.debris:
-            if shipdeb.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
-                explosion = Game_Objects.Explosion(shipdeb.x, shipdeb.y,Constants.explosion_surfs,0.2,False,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+            if shipdeb.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
+                explosion = Game_Objects.Explosion(shipdeb.x, shipdeb.y,Constants.SURF_EXPLOSION,0.2,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 try:
                     persist = True
@@ -481,22 +550,22 @@ def collision():
 
         # if player's bullet hits scenery
         for scenery in Graphicgroups.scenery:
-            if scenery.collide(bullet.rect):
+            if scenery.collide(bullet.hitbox):
                 # channel = pygame.mixer.Channel(8)
                 # channel.play(Constants.goodhit)
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.dynamicpew.pop(Graphicgroups.dynamicpew.index(bullet))
                 except: pass
-                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.explosion_surfs,0.25,False,xvel=120)
+                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.SURF_EXPLOSION,0.25,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
 
         #if player's bullet hits turret
         for turret in Graphicgroups.turrets:
-            if turret.collide(bullet.rect):
-                pygame.mixer.Sound.play(Constants.goodhit)
+            if turret.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 # try: Graphicgroups.dynamicpew.pop(Graphicgroups.dynamicpew.index(bullet))
                 # except: pass
-                explosion = Game_Objects.Explosion(turret.x, turret.y,Constants.explosion_surfs,0.5,False,xvel=120)
+                explosion = Game_Objects.Explosion(turret.x, turret.y,Constants.SURF_EXPLOSION,0.5,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.turrets.pop(Graphicgroups.turrets.index(turret))
 
@@ -509,11 +578,11 @@ def collision():
         for kana in Graphicgroups.incorrectkanas:
             if kana.collide(bullet.hitbox):
                 Variables.RGB[1] = 64
-                pygame.mixer.Sound.play(Constants.goodhit)
-                pygame.mixer.Sound.stop(Constants.missilelaunch)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
+                pygame.mixer.Sound.stop(Constants.SOUND_MISSILE_LAUNCHED)
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
                 try:
-                    persist = Constants.pew_array[Game_Objects.player.pewtype]["persist"]
+                    persist = Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["persist"]
                     if not persist:
                         Graphicgroups.missiles.pop(Graphicgroups.missiles.index(bullet))
                 except: pass
@@ -524,9 +593,9 @@ def collision():
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
                 elif kana.x > Constants.WIDTH // 3 and kana.x < 2*Constants.WIDTH // 3:
                     Variables.score += 2
@@ -535,11 +604,11 @@ def collision():
                 explosion = Game_Objects.Explosion(
                     x=kana.x,
                     y=kana.y,
-                    spritearray=Constants.explosion_surfs,
+                    spritearray=Constants.SURF_EXPLOSION,
                     scale=0.5,
                     repeat=False,
                     explosiontype=maxexplode,
-                    xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1
+                    xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1
                 )
                 Graphicgroups.explosion_group.add(explosion)
                 Game_Objects.achievements.tingtangarray.append(kana.kanasound)
@@ -549,7 +618,7 @@ def collision():
         for kana in Graphicgroups.bossmodeincorrectkana:
             if kana.collide(bullet.hitbox):
                 Variables.RGB[1] = 64
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.bossmodeincorrectkana.pop(Graphicgroups.bossmodeincorrectkana.index(kana))
                 try: Graphicgroups.missiles.pop(Graphicgroups.missiles.index(bullet))
                 except: pass
@@ -560,17 +629,17 @@ def collision():
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
                 elif kana.x > Constants.WIDTH // 3 and kana.x < 2*Constants.WIDTH // 3:
                     Variables.score += 2
                 else:
                     Variables.score += 1
-                Constants.bosses_array[Variables.level]["shield"] -= 2
-                if Constants.bosses_array[Variables.level]["shield"] < 0: Constants.bosses_array[Variables.level]["shield"] = 0
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False,explosiontype=maxexplode,xvel=(Constants.pew_array[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                Constants.ARRAY_BOSSES[Variables.level]["shield"] -= 2
+                if Constants.ARRAY_BOSSES[Variables.level]["shield"] < 0: Constants.ARRAY_BOSSES[Variables.level]["shield"] = 0
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False,explosiontype=maxexplode,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
                 Graphicgroups.explosion_group.add(explosion)
                 Game_Objects.achievements.tingtangarray.append(kana.kanasound)
                 Game_Objects.achievements.tingtangshow = True
@@ -578,37 +647,91 @@ def collision():
         #if player's missile hits turret
         for turret in Graphicgroups.turrets:
             if turret.collide(bullet.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
-                pygame.mixer.Sound.stop(Constants.missilelaunch)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
+                pygame.mixer.Sound.stop(Constants.SOUND_MISSILE_LAUNCHED)
                 try: Graphicgroups.missiles.pop(Graphicgroups.missiles.index(bullet))
                 except: pass
-                explosion = Game_Objects.Explosion(turret.x, turret.y,Constants.explosion_surfs,0.5,False,xvel=120)
+                explosion = Game_Objects.Explosion(turret.x, turret.y,Constants.SURF_EXPLOSION,0.5,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.turrets.pop(Graphicgroups.turrets.index(turret))
 
         # if player's missile hits Enemy
         for enemy in Graphicgroups.enemies:
             if enemy.collide(bullet.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
-                pygame.mixer.Sound.stop(Constants.missilelaunch)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
+                pygame.mixer.Sound.stop(Constants.SOUND_MISSILE_LAUNCHED)
                 damage = 1 + random.randint(int(Game_Objects.player.laserpower/5),Game_Objects.player.laserpower)
                 enemy.health -= damage
-                Game_Objects.Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),Constants.debris_surf,Graphicgroups.enemies.index(enemy))
+                Game_Objects.Debris.spawn(
+                    x=enemy.enemy_rect.centerx,
+                    y=enemy.y,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Graphicgroups.enemies.index(enemy)
+                )
                 Game_Objects.Damagenum.spawn(enemy.enemy_rect.centerx,0,enemy.y,damage)
                 enemy.knockbackx = Settings.enemy_max_knockbackx
                 enemy.knockbacky = enemy.collide(bullet.hitbox)
                 if enemy.health <= 0:
                     Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
-                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
+                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
                     Graphicgroups.explosion_group.add(explosion)
                     Variables.score += 1
                     powerup_chance = random.randint(0,Settings.enemy_powerup_freq)
                     if powerup_chance == 0:
                         Game_Objects.AnimatedPowerUp.spawn(
-                            Constants.powerup_array[3]["xvel"],
-                            Constants.powerup_array[3]["surfindx"],
-                            Constants.powerup_array[3]["pueffect"],
+                            Constants.ARRAY_POWERUP[3]["xvel"],
+                            Constants.ARRAY_POWERUP[3]["surfindx"],
+                            Constants.ARRAY_POWERUP[3]["pueffect"],
                         )
+                try: Graphicgroups.missiles.pop(Graphicgroups.missiles.index(bullet))
+                except: pass
+
+        # if player's missile hits Boss
+        for boss in Graphicgroups.bosses:
+            if boss.collide(bullet.hitbox):
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
+                # damage = random.randint(
+                #     int(Game_Objects.player.laserpower / 10),           # Minimum
+                #     int(Game_Objects.player.laserpower)                 # Maximum
+                # )
+                damage = int(Game_Objects.player.laserpower / (Constants.ARRAY_BOSSES[Variables.level]["shield"]+1))
+                boss.health -= damage
+                # boss.bossalpha = 50
+                boss.flash = 255
+                Constants.ARRAY_BOSSES[Variables.level]["shield"] -= 1
+                if Constants.ARRAY_BOSSES[Variables.level]["shield"] < 0: Constants.ARRAY_BOSSES[Variables.level]["shield"] = 0
+                Game_Objects.Debris.spawn(
+                    x=boss.boss_rect.centerx,
+                    y=boss.y,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Graphicgroups.bosses.index(boss)
+                )
+                Game_Objects.Damagenum.spawn(boss.boss_rect.centerx,boss.velocity,boss.y,damage)
+                if boss.health <= 0:
+                    Game_Objects.Debris.spawn(
+                        x=boss.boss_rect.centerx,
+                        y=boss.y,
+                        mindir=0,
+                        maxdir=359,
+                        minvel=50,
+                        maxvel=200,
+                        image=Constants.SURF_DEBRIS,
+                        origin=Constants.SCREEN,
+                        numdebris=100
+                    )
+                    Graphicgroups.bosses.pop(Graphicgroups.bosses.index(boss))
+                    explosion = Game_Objects.Explosion(boss.x, boss.y,Constants.SURF_EXPLOSION,8,False,xvel=(Constants.ARRAY_PLAYER_PEW[Game_Objects.player.pewtype]["pewspeed"])/Settings.explode_vel_frac*-1)
+                    Graphicgroups.explosion_group.add(explosion)
+                    Variables.score += 99
+                    Variables.transition = False
                 try: Graphicgroups.missiles.pop(Graphicgroups.missiles.index(bullet))
                 except: pass
 
@@ -617,10 +740,10 @@ def collision():
             if scenery.collide(bullet.hitbox):
                 # channel = pygame.mixer.Channel(8)
                 # channel.play(Constants.goodhit)
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.missiles.pop(Graphicgroups.missiles.index(bullet))
                 except: pass
-                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.explosion_surfs,0.25,False,xvel=120)
+                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.SURF_EXPLOSION,0.25,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
 
     #endregion Player Missiles
@@ -631,24 +754,33 @@ def collision():
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if epew.collide(Game_Objects.player.hitbox):
                 Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(epew))
-                explosion = Game_Objects.Explosion(epew.x, epew.y,Constants.explosion_surfs,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                explosion = Game_Objects.Explosion(epew.x, epew.y,Constants.SURF_EXPLOSION,0.5,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
 
         # if hit other enemy
         for enemy in Graphicgroups.enemies:
             if Settings.enemiescanshooteachother and enemy.collide(epew.hitbox) and epew.origin != Graphicgroups.enemies.index(enemy):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 damage = 1 + int(Variables.enemy_health_multiplier * Settings.enemy_health * 0.2)
                 enemy.health -= damage
-                Game_Objects.Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),Constants.debris_surf,Graphicgroups.enemies.index(enemy))
+                Game_Objects.Debris.spawn(
+                    x=enemy.enemy_rect.centerx,
+                    y=enemy.y,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Graphicgroups.enemies.index(enemy)
+                )
                 Game_Objects.Damagenum.spawn(enemy.enemy_rect.centerx,enemy.velocity,enemy.y,damage)
                 if enemy.health == 0:
                     Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
-                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
+                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
                     Graphicgroups.explosion_group.add(explosion)
                 try: Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(epew))
                 except: pass
@@ -659,9 +791,9 @@ def collision():
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
                 try: Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(epew))
                 except: pass
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
 
         # if CORRECT kana
         for kana in Graphicgroups.correctkanas:
@@ -669,53 +801,53 @@ def collision():
                 Graphicgroups.correctkanas.pop(Graphicgroups.correctkanas.index(kana))
                 try: Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(epew))
                 except: pass
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
 
         for scenery in Graphicgroups.scenery:
             if scenery.collide(epew.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(epew))
                 except: pass
-                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.explosion_surfs,0.5,False,xvel=120)
+                explosion = Game_Objects.Explosion(scenery.x, scenery.y,Constants.SURF_EXPLOSION,0.5,False,xvel=120)
                 Graphicgroups.explosion_group.add(explosion)
     #endregion
 
-    #region BIG LASER
+    #region Big Laser
     # if BIG LASER hits player
     for biglaser in Graphicgroups.biglasers:
         if Game_Objects.player.shipcollision == True:
             if biglaser.collide(Game_Objects.player.hitbox):
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
 
         # correctKana hit by BIG LASER
         for kana in Graphicgroups.correctkanas:
             if kana.collide(biglaser.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.correctkanas.pop(Graphicgroups.correctkanas.index(kana))
                 except: pass
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False,xvel=biglaser.velocity/12)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False,xvel=biglaser.velocity/12)
                 Graphicgroups.explosion_group.add(explosion)
 
         # Wrong Kana hit by BIG LASER
         for kana in Graphicgroups.incorrectkanas:
             if kana.collide(biglaser.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
                 except: pass
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False,xvel=biglaser.velocity/12)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False,xvel=biglaser.velocity/12)
                 Graphicgroups.explosion_group.add(explosion)
 
         # if enemy hit by BIG LASER
         for enemy in Graphicgroups.enemies:
             if enemy.collide(biglaser.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Variables.score += 1
-                explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False,xvel=biglaser.velocity/12)
+                explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False,xvel=biglaser.velocity/12)
                 Graphicgroups.explosion_group.add(explosion)
                 try: Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
                 except: pass
@@ -723,8 +855,8 @@ def collision():
         # if powerup hit by BIG LASER
         for powerup in Graphicgroups.powerups:
             if powerup.collide(biglaser.hitbox):
-                explosion = Game_Objects.Explosion(powerup.x, powerup.y,Constants.explosion_surfs,0.5,False,xvel=biglaser.velocity/12)
-                pygame.mixer.Sound.play(Constants.goodhit)
+                explosion = Game_Objects.Explosion(powerup.x, powerup.y,Constants.SURF_EXPLOSION,0.5,False,xvel=biglaser.velocity/12)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.explosion_group.add(explosion)
                 try: Graphicgroups.powerups.pop(Graphicgroups.powerups.index(powerup))
                 except: pass
@@ -733,9 +865,18 @@ def collision():
         for wod in Graphicgroups.wallsegments:
             if wod.collide(biglaser.hitbox):
                 Graphicgroups.wallsegments.pop(Graphicgroups.wallsegments.index(wod))
-                Game_Objects.Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),Constants.brick_surf,0)
-                pygame.mixer.Channel(0).play(Constants.brickbreak_sound)
-                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.explosion_surfs,0.5,False,xvel=biglaser.velocity/12)
+                Game_Objects.Debris.spawn(
+                    x=wod.x,
+                    y=wod.y,
+                    mindir=-10,
+                    maxdir=10,
+                    minvel=100,
+                    maxvel=300,
+                    image=Constants.SURF_BRICK,
+                    origin=Constants.SCREEN
+                )
+                pygame.mixer.Channel(0).play(Constants.SOUND_BRICK_BREAK)
+                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.SURF_EXPLOSION,0.5,False,xvel=biglaser.velocity/12)
                 Graphicgroups.explosion_group.add(explosion)
 
     #endregion
@@ -745,26 +886,35 @@ def collision():
         # correctKana hit by junk
         for kana in Graphicgroups.correctkanas:
             if kana.collide(junk.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.correctkanas.pop(Graphicgroups.correctkanas.index(kana))
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
 
         # Wrong Kana hit by junk
         for kana in Graphicgroups.incorrectkanas:
             if kana.collide(junk.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
 
         # Wall segments hit by junk
         for wod in Graphicgroups.wallsegments:
             if wod.collide(junk.hitbox):
                 Graphicgroups.wallsegments.pop(Graphicgroups.wallsegments.index(wod))
-                Game_Objects.Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),Constants.brick_surf,0)
-                pygame.mixer.Sound.play(Constants.brickbreak_sound)
-                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.explosion_surfs,0.5,False)
+                Game_Objects.Debris.spawn(
+                    x=wod.x,
+                    y=wod.y,
+                    mindir=-10,
+                    maxdir=10,
+                    minvel=100,
+                    maxvel=300,
+                    image=Constants.SURF_BRICK,
+                    origin=Constants.SCREEN
+                )
+                pygame.mixer.Sound.play(Constants.SOUND_BRICK_BREAK)
+                explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
 
     #endregion
@@ -773,25 +923,35 @@ def collision():
     for enemy in Graphicgroups.enemies:
         for scenery in Graphicgroups.scenery:
             if scenery.collide(enemy.hitbox):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 try: Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
                 except: pass
-                explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
-                Graphicgroups.explosion_group.add(explosion)                
+                explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
+                Graphicgroups.explosion_group.add(explosion)
+    #endregion Enemy Ship
 
     #region Enemy Debris
     for edebs in Graphicgroups.debris:
         # if enemy debris hits Enemy
         for enemy in Graphicgroups.enemies:
             if enemy.collide(edebs.hitbox) and edebs.origin != Graphicgroups.enemies.index(enemy):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 damage = 1 + int(Variables.enemy_health_multiplier * Settings.enemy_health * 0.2)
                 enemy.health -= damage
-                Game_Objects.Debris.spawn(enemy.enemy_rect.centerx,enemy.y,math.radians(random.randint(80,280)),random.randint(50,200),Constants.debris_surf,Graphicgroups.enemies.index(enemy))
+                Game_Objects.Debris.spawn(
+                    x=enemy.enemy_rect.centerx,
+                    y=enemy.y,
+                    mindir=80,
+                    maxdir=280,
+                    minvel=50,
+                    maxvel=200,
+                    image=Constants.SURF_DEBRIS,
+                    origin=Graphicgroups.enemies.index(enemy)
+                )
                 Game_Objects.Damagenum.spawn(enemy.enemy_rect.centerx,enemy.velocity,enemy.y,damage)
                 if enemy.health == 0:
                     Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
-                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
+                    explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
                     Graphicgroups.explosion_group.add(explosion)
                 try: Graphicgroups.debris.pop(Graphicgroups.debris.index(edebs))
                 except: pass
@@ -835,12 +995,12 @@ def collision():
                 Graphicgroups.bossmodecorrectkana.pop(Graphicgroups.bossmodecorrectkana.index(kana))
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
-                pygame.mixer.Sound.play(Constants.shiphit)
-                Constants.bosses_array[Variables.level]["shield"] -= 10
-                if Constants.bosses_array[Variables.level]["shield"] < 0: Constants.bosses_array[Variables.level]["shield"] = 0
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
+                Constants.ARRAY_BOSSES[Variables.level]["shield"] -= 10
+                if Constants.ARRAY_BOSSES[Variables.level]["shield"] < 0: Constants.ARRAY_BOSSES[Variables.level]["shield"] = 0
                 Variables.kananum = random.randint(0,len(Variables.gamekana[Variables.level])-1)
                 for boss in Graphicgroups.bosses:
-                    explosion = Game_Objects.Explosion(boss.x+random.randint(0,256), boss.y+random.randint(-128,128),Constants.explosion_surfs,1,False)
+                    explosion = Game_Objects.Explosion(boss.x+random.randint(0,256), boss.y+random.randint(-128,128),Constants.SURF_EXPLOSION,1,False)
                     Graphicgroups.explosion_group.add(explosion)
 
     # if player's ship hits wrong kana
@@ -848,11 +1008,11 @@ def collision():
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if kana.collide(Game_Objects.player.hitbox):
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
                 Game_Objects.player.respawn()
@@ -862,11 +1022,11 @@ def collision():
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if kana.collide(Game_Objects.player.hitbox):
                 Graphicgroups.bossmodeincorrectkana.pop(Graphicgroups.bossmodeincorrectkana.index(kana))
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
                 Game_Objects.player.respawn()
@@ -876,11 +1036,11 @@ def collision():
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if enemy.collide(Game_Objects.player.hitbox):
                 Graphicgroups.enemies.pop(Graphicgroups.enemies.index(enemy))
-                explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.SURF_EXPLOSION,0.5,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
 
     # if player hits Boss
@@ -889,10 +1049,10 @@ def collision():
             if enemy.collide(Game_Objects.player.hitbox):
                 # Graphicgroups.bosses.pop(Graphicgroups.bosses.index(enemy))
                 # explosion = Game_Objects.Explosion(enemy.x, enemy.y,Constants.explosion_surfs,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 # Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
 
     # if player hits enemy debris
@@ -900,29 +1060,29 @@ def collision():
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if bits.collide(Game_Objects.player.hitbox):
                 Graphicgroups.debris.pop(Graphicgroups.debris.index(bits))
-                explosion = Game_Objects.Explosion(bits.x, bits.y,Constants.explosion_surfs,0.25,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                explosion = Game_Objects.Explosion(bits.x, bits.y,Constants.SURF_EXPLOSION,0.25,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(explosion)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
 
     # if player hits Wall of Death
     for wod in Graphicgroups.wallsegments:
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if wod.collide(Game_Objects.player.hitbox):
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
 
     # if player hits scenery
     for scenery in Graphicgroups.scenery:
         if Game_Objects.player.shipcollision == True and Variables.player_cannot_die == False:
             if scenery.collide(Game_Objects.player.hitbox):
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.explosion_surfs,1,False,xvel=120)
+                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],Constants.SURF_EXPLOSION,1,False,xvel=120)
                 Graphicgroups.explosion_group.add(ship_explosion)
-                pygame.mixer.Sound.play(Constants.shiphit)
+                pygame.mixer.Sound.play(Constants.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.respawn()
     #endregion
 
@@ -930,33 +1090,52 @@ def collision():
     for kana in Graphicgroups.incorrectkanas:
         for ckana in Graphicgroups.correctkanas:
             if kana.collide(ckana.centered_image):
-                pygame.mixer.Sound.play(Constants.goodhit)
+                pygame.mixer.Sound.play(Constants.SOUND_GOODHIT)
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
-                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.explosion_surfs,0.5,False)
+                explosion = Game_Objects.Explosion(kana.x, kana.y,Constants.SURF_EXPLOSION,0.5,False)
                 Graphicgroups.explosion_group.add(explosion)
     #endregion
 
-    #region Correct Kana
-    # for kana in Graphicgroups.correctkanas:
-    #     for wod in Graphicgroups.wallsegments:
-    #         if wod.collide(kana.hitbox):
-    #             Graphicgroups.wallsegments.pop(Graphicgroups.wallsegments.index(wod))
-    #             Game_Objects.Debris.spawn(wod.x,wod.y,math.radians(random.randint(-10,10)),random.randint(100,300),Constants.brick_surf,0)
-    #             pygame.mixer.Sound.play(Constants.brickbreak_sound)
-    #             explosion = Game_Objects.Explosion(wod.x, wod.y,Constants.explosion_surfs,0.5,False)
-    #             Graphicgroups.explosion_group.add(explosion)
+    #region Kana
+    # If Correct kana hits scenery
+    for kana in Graphicgroups.correctkanas:
+        for scenery in Graphicgroups.scenery:
+            if scenery.collide(kana.hitbox):
+                if kana.bounced == False:
+                    kana.yvelocity *= -1
+                    kana.bounced = True
+
+    # If Incorrect kana hits scenery
+    for kana in Graphicgroups.incorrectkanas:
+        for scenery in Graphicgroups.scenery:
+            if scenery.collide(kana.hitbox):
+                if kana.bounced == False:
+                    kana.yvelocity *= -1
+                    kana.bounced = True
     #endregion
 
+
+
+
+#region FIND SUBLIST BY CHARACTER
 def find_sublist_by_character(matrix, character):
     for index, sublist in enumerate(matrix):
         if character in sublist:
             return sublist
     return None
 
+
+
+
+#region IS SLICE IN LIST
 def is_slice_in_list(slice,list):
     len_s = len(slice) #so we don't recompute length of s on every iteration
     return any(slice == list[i:len_s+i] for i in range(len(list) - len_s+1))
 
+
+
+
+#region SHARED CONTROLS
 def sharedcontrols(event):
     import Constants, Game_Objects, Variables, Graphicgroups, Settings
     import pygame, random
@@ -964,11 +1143,11 @@ def sharedcontrols(event):
     if event.key == ord('l'):
         if Game_Objects.player.lasersight == True:
             Game_Objects.player.lasersight = False
-            pygame.mixer.Sound.stop(Constants.shiplaser_sound)
+            pygame.mixer.Sound.stop(Constants.SOUND_SHIP_LASER)
             Game_Objects.player.laserlength = 0
         else:
             Game_Objects.player.lasersight = True
-            pygame.mixer.Sound.play(Constants.shiplaser_sound)
+            pygame.mixer.Sound.play(Constants.SOUND_SHIP_LASER)
             Game_Objects.player.lasersightcounter = Game_Objects.player.poweruptimelength
     if event.key == ord('h'):
         if Variables.hitboxshow == True:
@@ -979,11 +1158,11 @@ def sharedcontrols(event):
             Variables.debugwindow = True
     if event.key == ord('k'): Game_Objects.player.kanaswitch = True
     if event.key == ord('p'): 
-        if Variables.PAUSED == False:
-            Variables.PAUSED = True
+        if Variables.paused == False:
+            Variables.paused = True
             pygame.mixer.music.pause()
         else:
-            Variables.PAUSED = False
+            Variables.paused = False
             pygame.mixer.music.unpause()
     if event.key == ord('j'): Game_Objects.SpaceJunk.spawn()
     if event.key == ord('i'): Game_Objects.WallOfDeath.spawn(Constants.WIDTH,0)
@@ -1014,28 +1193,28 @@ def sharedcontrols(event):
                         rotate=random.randint(-Settings.kana_rotate_rate,Settings.kana_rotate_rate))
                 )
     if event.key == ord('q'): Game_Objects.achievements.tingtangarray = ['u', 'i', 'u', 'a', 'a']
-    if event.key == ord('n'): Variables.TRANSITION = True
+    if event.key == ord('n'): Variables.transition = True
     if event.key == ord('u'):
         powerup_type = random.randint(1,2)
         Game_Objects.AnimatedPowerUp.spawn(
-            Constants.powerup_array[powerup_type]["xvel"],
-            Constants.powerup_array[powerup_type]["surfindx"],
-            Constants.powerup_array[powerup_type]["pueffect"],
+            Constants.ARRAY_POWERUP[powerup_type]["xvel"],
+            Constants.ARRAY_POWERUP[powerup_type]["surfindx"],
+            Constants.ARRAY_POWERUP[powerup_type]["pueffect"],
             )
     if event.key == ord('e'): Game_Objects.Enemies.spawn()
     if event.key == ord('r'): Game_Objects.BigLaserWarning.spawn(Game_Objects.player)
     if event.key == ord('.'): 
-        if Game_Objects.player.pewtype < len(Constants.pew_array)-1: Game_Objects.player.pewtype += 1
+        if Game_Objects.player.pewtype < len(Constants.ARRAY_PLAYER_PEW)-1: Game_Objects.player.pewtype += 1
     if event.key == ord(','): 
         if Game_Objects.player.pewtype > 0: Game_Objects.player.pewtype -= 1
     if event.key == ord('='): Variables.score += 10
     if event.key == ord('-'): Variables.score -= 10
     if event.key == ord('9'): Variables.musicvolume -=0.01
     if event.key == ord('0'): Variables.musicvolume +=0.01
-    if event.key == ord('8'): Game_Objects.TipTicker.spawn(Constants.tips[0],200)
+    if event.key == ord('8'): Game_Objects.TipTicker.spawn(Constants.TIPS[0],200)
     if event.key == ord('1'):
-        if Constants.bosses_array[Variables.level]["shield"] >= 1:
-            Constants.bosses_array[Variables.level]["shield"] -= 10
+        if Constants.ARRAY_BOSSES[Variables.level]["shield"] >= 1:
+            Constants.ARRAY_BOSSES[Variables.level]["shield"] -= 10
     if event.key == ord('t'):
         Graphicgroups.turrets.append(Game_Objects.GroundTurret(Constants.WIDTH+32,Constants.PAHEIGHT-64,0))
     if event.key == ord('m'): 
@@ -1043,34 +1222,58 @@ def sharedcontrols(event):
             Variables.missiles_enabled = False
         else:
             Variables.missiles_enabled = True
+    if event.key == ord('5'):
+        Game_Objects.Debris.spawn(
+            x=Constants.WCENTER,
+            y=Constants.HCENTER,
+            mindir=0,
+            maxdir=359,
+            minvel=50,
+            maxvel=200,
+            image=Constants.SURF_DEBRIS,
+            origin=Constants.SCREEN,
+            numdebris=100
+        )
 
+
+
+
+#region READ FROM CSV
 def read_csv(file_name):
     with open(file_name, newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
         all_questions = [[row[0], row[1], row[2], row[3]] for row in reader]
     return all_questions
 
+
+
+
+#region WRITE TO CSV
 def write_csv(file_name,csv_object):
     with open(file_name, 'w', newline='', encoding='utf-8') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerows(csv_object)
 
+
+
+
+#region UI TEXT
 def uitext(screen):
     import Variables, Constants, Settings, Game_States, Game_Objects
 
-    #region SCORE
+    #region Score
     if Variables.score <=0: Variables.score = 0
-    scoretext = Constants.ui_font.render("Score: " + str(Variables.score), True, 'white')
+    scoretext = Constants.UI_FONT.render("Score: " + str(Variables.score), True, 'white')
     screen.blit(scoretext, Settings.score_position)
-    #endregion SCORE
+    #endregion Score
 
-    #region LIVES
-    livestext = Constants.ui_font.render("Lives: " + str(Game_Objects.player.lives), True, 'white')
+    #region Lives
+    livestext = Constants.UI_FONT.render("Lives: " + str(Game_Objects.player.lives), True, 'white')
     screen.blit(livestext, Settings.lives_position)
     #endregion
 
-    #region LEVEL
-    leveltext = Constants.ui_font.render("Level: " + str(Variables.level), True, 'white')
+    #region Level
+    leveltext = Constants.UI_FONT.render("Level: " + str(Variables.level+1), True, 'white')
     screen.blit(leveltext, Settings.level_position)
     #endregion
 
@@ -1082,23 +1285,27 @@ def uitext(screen):
             output.append(find_sublist_by_character(Variables.commasep, Game_Objects.achievements.tingtangarray[element]))
     else: output = "None"
 
-    titletext = Constants.ui_font.render("Previous Kana:",True,'white')
+    titletext = Constants.UI_FONT.render("Previous Kana:",True,'white')
     screen.blit(titletext, (position[0]-210,position[1]))
     for n in range(len(output)):
-        uikanatext = Constants.ui_font.render(str(output[n][0]),True, 'white').convert_alpha()
+        uikanatext = Constants.UI_FONT.render(str(output[n][0]),True, 'white').convert_alpha()
         uikanatext.set_alpha(100+(n*50))
         screen.blit(uikanatext, position)
         position[0] += 25
     #endregion
 
     #region Boss
-    if Variables.STATE == "Boss":
-        bonustext = Constants.ui_font.render("Bonus: " + str(Game_States.boss_state.bonus_score), True, 'white')
+    if Variables.current_game_state == "Boss":
+        bonustext = Constants.UI_FONT.render("Bonus: " + str(Game_States.boss_state.bonus_score), True, 'white')
         screen.blit(bonustext, Settings.bonus_position)
-        shieldtext = Constants.ui_font.render("BOSS SHIELD", True, 'white')
+        shieldtext = Constants.UI_FONT.render("BOSS SHIELD", True, 'white')
         screen.blit(shieldtext, Settings.shieldtext_position)
     #endregion
 
+
+
+
+#region SCALE SURFACE FROM CENTER
 def scale_surface_from_center(surface, scale_factor):
     import pygame
     original_rect = surface.get_rect()
@@ -1108,6 +1315,10 @@ def scale_surface_from_center(surface, scale_factor):
     scaled_rect = scaled_surface.get_rect(center=original_rect.center)
     return scaled_surface, scaled_rect
 
+
+
+
+#region QUESTION TEXT
 def question_text(screen):
     import Graphicgroups, Constants, Variables, math, Settings
     # if Variables.STATE == "Boss":
@@ -1115,26 +1326,38 @@ def question_text(screen):
     #     screen.blit(shoot_text, (Settings.question_position[0]-120,Settings.question_position[1]+13))
     # else:
     if len(Graphicgroups.cuttoffline) < 1:
-        shoot_text = Constants.ui_font.render('Collect', True, 'white')
-        romajitext = Constants.question_font.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
+        shoot_text = Constants.UI_FONT.render('Collect', True, 'white')
+        romajitext = Constants.QUESTION_FONT.render(Variables.gamekana[Variables.level][Variables.kananum][2], True, 'white')
         Variables.theta += 5 * Variables.delta_time
         theta_scale = math.sin(Variables.theta)
         romaji_scaled, romaji_rect = scale_surface_from_center(romajitext, 1.5 + (theta_scale*.5))
         screen.blit(shoot_text, (Settings.question_position[0]-120,Settings.question_position[1]+13))
         screen.blit(romaji_scaled, (romaji_rect[0]+Settings.question_position[0],romaji_rect[1]+Settings.question_position[1]))
 
+
+
+
+#region SINGLE OBJECT ANIMATE
 def soanimate(self,loopstart=0,loopend=9999):
     import Variables
     self.animindex += self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
     if self.animindex > len(self.spritearray.images)-1 or self.animindex > loopend: self.animindex = loopstart # reset the frame to 0 if we try to go beyond the array
     self.image = self.spritearray.images[int(self.animindex)] # update the current frame
 
+
+
+
+#region MULTI OBJECT ANIMATE
 def moanimate(self,loopstart=0,loopend=9999):
     import Variables
     self.animindex += self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
     if self.animindex > len(self.spritearray[self.type].images)-1 or self.animindex > loopend: self.animindex = loopstart # reset the frame to 0 if we try to go beyond the array
     self.image = self.spritearray[self.type].images[int(self.animindex)] # update the current frame
 
+
+
+
+#region GET MAX SHIP?
 def getmaxship():
     TotalKanaPoints = 0
     import Variables, Settings
@@ -1142,6 +1365,10 @@ def getmaxship():
         TotalKanaPoints += int(sep[3])
     return TotalKanaPoints / ((Settings.num_to_shoot_new_kana+1)*len(Variables.commasep))
 
+
+
+
+#region PLAYSOUND (defunct)
 def playsound(sound,channel,maxchannel=2,bleed=True):
     import pygame
     soundchannel = pygame.mixer.Channel(channel)
@@ -1155,19 +1382,39 @@ def playsound(sound,channel,maxchannel=2,bleed=True):
                 channel += 1
         soundchannel.play(sound)
 
+
+
+
+#region KANALIST (bottom of screen)
 def kanalist(screen,alpha):
     import Graphicgroups, Variables, Settings, Constants
-    #region Bottom KANA LIST                                                                    # Bottom Kana List
-    Graphicgroups.kanalist.clear()
-    for kana in range(int(Variables.levels[Variables.level])): Graphicgroups.kanalist.append(Variables.commasep[kana])
-    for kana in range(int(Variables.levels[Variables.level])):
-        kanakill = int(Variables.commasep[kana][3])*(255/Settings.num_to_shoot_new_kana)
-        if kanakill >= 255: kanakill = 255
-        kanalistthing = Constants.ui_font.render(Graphicgroups.kanalist[kana][Variables.gamemode], True, (kanakill,255,kanakill))
-        kanalistthing.set_alpha(alpha)
-        screen.blit(kanalistthing,(25+(27*kana),Constants.PAHEIGHT-30))
-    #endregion
 
+    Graphicgroups.kanalist.clear()
+    upperbound = Variables.level
+    lowerbound = upperbound - 2
+    if lowerbound < 0:
+        for kana in range(int(Variables.levels[upperbound])): Graphicgroups.kanalist.append(Variables.commasep[kana])
+        for kana in range(int(Variables.levels[upperbound])):
+            kanakill = int(Variables.commasep[kana][3])*(255/Settings.num_to_shoot_new_kana)
+            if kanakill >= 255: kanakill = 255
+            kanalistthing = Constants.UI_FONT.render(Graphicgroups.kanalist[kana][Variables.gamemode], True, (kanakill,255,kanakill))
+            kanalistthing.set_alpha(alpha)
+            screen.blit(kanalistthing,(25+(27*kana),Constants.PAHEIGHT-30))
+    else:
+        for kana in range(int(Variables.levels[upperbound])): Graphicgroups.kanalist.append(Variables.commasep[kana])
+        char = 0
+        for kana in range(int(Variables.levels[lowerbound]),int(Variables.levels[upperbound])):
+            kanakill = int(Variables.commasep[kana][3])*(255/Settings.num_to_shoot_new_kana)
+            if kanakill >= 255: kanakill = 255
+            kanalistthing = Constants.UI_FONT.render(Graphicgroups.kanalist[kana][Variables.gamemode], True, (kanakill,255,kanakill))
+            kanalistthing.set_alpha(alpha)
+            screen.blit(kanalistthing,(25+(27*char),Constants.PAHEIGHT-30))
+            char += 1
+
+
+
+
+#region LONG PEW
 def longpew(keys,buildupsound,bigpewready,brewsprite,pewsprite):
     import Graphicgroups, Variables, Game_Objects
     import pygame
@@ -1217,6 +1464,10 @@ def longpew(keys,buildupsound,bigpewready,brewsprite,pewsprite):
             Game_Objects.player.hasfired = True
         Game_Objects.player.laserbuild = 1                                                                  # Reset the size
 
+
+
+
+#region MISSILE PEW
 def missilepew(keys,target):
     import Graphicgroups, Constants, Game_Objects
     import pygame, random
@@ -1228,20 +1479,24 @@ def missilepew(keys,target):
                     rndobject = random.randint(0,maxnum-1)
                     if Game_Objects.player.location[1] > target[rndobject].y: ypos = -2
                     if Game_Objects.player.location[1] < target[rndobject].y: ypos = 2
-                    pygame.mixer.Sound.play(Constants.missilelaunch)
+                    pygame.mixer.Sound.play(Constants.SOUND_MISSILE_LAUNCHED)
                     Graphicgroups.missiles.append(Game_Objects.HomingMissile(
                         x=Game_Objects.player.location[0],
                         y=Game_Objects.player.location[1],
                         target=target[rndobject],
                         targetgroup = target,
                         ypos=ypos,
-                        image=Constants.missile_surfs[0]
+                        image=Constants.SURF_MISSILE[0]
                     ))
                     Game_Objects.player.last_missiletimer = pygame.time.get_ticks()
                 except: pass
 
+
+
+
+#region RESET GAME VARs
 def reset_game(): #Executed when pressing START
-    import Variables, Graphicgroups, Game_Objects, Settings
+    import Variables, Graphicgroups, Game_Objects, Settings, Game_States
 
     #region Clear Object Arrays
     Graphicgroups.animatedpowerup.clear()
@@ -1270,14 +1525,18 @@ def reset_game(): #Executed when pressing START
     #endregion Clear Object Arrays
 
     #region Reset Flags
-    Variables.BOSSSTATE = False
-    Variables.GAMESTATE = False
-    Variables.TRANSITION = False
+    Variables.bossstate = False
+    Variables.gamestate = False
+    Variables.transition = False
     Variables.bossexist = False
     Game_Objects.player.shipcollision = True
+    Game_States.game_state.done = False
+    Game_States.boss_state.done = False
+    Game_States.gameover_state.done = False
     #endregion Reset Flags
 
     #region Reset Values
+    Game_States.game_state.enemy_wait_timer = 10
     Variables.kananum = 0
     Game_Objects.player.pewtype = 0
     Variables.laserpower = 1

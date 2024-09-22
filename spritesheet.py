@@ -1,6 +1,6 @@
 import pygame
 
-# SPRITE STUFF
+#region SPRITE STUFF
 class LoadSpritesheet:
     def __init__(self, image, spritesizex,spritesizey,scale):
         self.sheet = image

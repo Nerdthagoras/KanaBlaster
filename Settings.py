@@ -1,6 +1,6 @@
 import Constants
 
-#region Kana
+#region KANA
 num_to_shoot_new_kana = 10
 kanax_velocity = 100
 kanay_velocity = 15
@@ -14,7 +14,10 @@ minimum_correct_kana_frequency = 10
 maximum_correct_kana_frequency = 60
 #endregion
 
-#region Ship
+
+
+
+#region SHIP
 ship_normal_top_speed = 800
 ship_boosted_top_speed = 1000
 
@@ -35,17 +38,26 @@ max_bridge_wipes_per_level = 10
 ship_extra_life_increment = 100
 #endregion
 
-#region Stars
+
+
+
+#region STARS
 star_frequency = 0.05
 #endregion
 
-#region Boss Ships
+
+
+
+#region BOSS SHIP
 bosshealthmultiplier = 10
 boss_bonus_score = 50
 get_ready_timer_max = 3
 #endregion Boss Ships
 
-#region Enemy Ships
+
+
+
+#region ENEMY SHIP
 enemy_max_knockbackx = 300
 enemy_knockbackx = 0
 enemy_knockbacky = 0
@@ -60,14 +72,17 @@ damage_num_font_size = 40
 enemiescanshooteachother = True
 #endregion
 
-#region Big Laser
+
+
+
+#region BIG LASER
 biglaser_start_level = 3
 #endregion
 
-#region Junk
-#endregion
 
-#region UI
+
+
+#region USER INTERFACE
 uitop = 30
 maxmusicvolume = 0.2
 score_position = (0, Constants.HEIGHT-uitop)
