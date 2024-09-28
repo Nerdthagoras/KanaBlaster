@@ -1,4 +1,5 @@
 #region SPRITE LISTS
+player = []
 animcenterwarning = []
 animatedpowerup = []
 biglasers = []
@@ -26,7 +27,10 @@ internalbackground = []
 brew = []
 turrets = []
 missiles = []
+enemymissiles = []
 scenery = []
+crosshair = []
+starwarsscroll = []
 #endregion SPRITE LISTS
 
 

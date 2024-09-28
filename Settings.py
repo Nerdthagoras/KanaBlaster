@@ -22,10 +22,10 @@ ship_normal_top_speed = 800
 ship_boosted_top_speed = 1000
 
 ship_normal_acceleration = 4
-ship_normal_deceleration = 3
+ship_normal_deceleration = 5
 
-ship_boosted_acceleration = 6
-ship_boosted_deceleration = 7
+ship_boosted_acceleration = 10
+ship_boosted_deceleration = 10
 
 ship_screen_boundary = 64
 explode_vel_frac = 20

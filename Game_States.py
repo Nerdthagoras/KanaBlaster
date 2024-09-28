@@ -6,24 +6,75 @@ import os, random, time, pygame
 #region INTRO STATE
 class IntroState:
     def __init__(self):
+        pygame.mixer.music.load(os.path.join('music','DefendingTheirWorld.wav'))
+        pygame.mixer.music.play(0)
         self.introlength = 0
         self.done = False
         self.boss = False
-        self.timer = 0
-        self.lt = time.time()
+
+        # Star Wars Scroll Test
+        Surf_Width, Surf_Height = 800, 3200
+        SWOrange = (255,200,0)
+        Text_delay_offset = 100
+        self.SWSurface = pygame.Surface((Surf_Width, Surf_Height)).convert_alpha()
+        self.SWSurface.fill((0,0,0,0))
+        TITLE_text = Constants.STARWARS_TITLE_FONT.render('KANA BLASTER', True, SWOrange)
+        TITLE_shadow_text = Constants.STARWARS_TITLE_FONT.render('KANA BLASTER', True, SWOrange)
+        TITLE_shadow_text.set_alpha(128)
+        Title_rect = TITLE_text.get_rect(center = (0, 0))
+        self.SWSurface.blit(TITLE_shadow_text, ((Title_rect[0]+Surf_Width//2, Text_delay_offset+10)))
+        self.SWSurface.blit(TITLE_text, (Title_rect[0]+Surf_Width//2, Text_delay_offset))
+        text = "According to all known laws of aviation, there is no way that a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway because bees don't care what humans think is impossible.\n\n\nCut to Barry's room, where he's picking out what to wear.\n\n\nYellow, black. Yellow, black. Yellow, black. Yellow, black. Ooh, black and yellow! Yeah, let's shake it up a little.\n\nBarry uses honey from a dispenser to style his hair, rinse his mouth, and then applies it to his armpits."
+        Functions.display_text(
+            surface=self.SWSurface,
+            text=text,
+            pos=(0,Text_delay_offset+250),
+            linespacing=15,
+            font=Constants.STARWARS_FONT,
+            color=SWOrange
+        )
+
+
+        for i in range(200):
+            x = 0
+            height = 4
+            width = 2
+            Graphicgroups.starwarsscroll.append(Game_Objects.StarWarsScroll(
+                image=self.SWSurface,
+                x=x+(i*10//(width*2)),
+                y=Constants.HEIGHT-(i*height),
+                width=Constants.WIDTH-(i*10//width),
+                height=height,
+                speed=20,
+                ix=0,
+                iy=height,
+                offset=i,
+                fade=1.4
+            ))
 
     def manifest(self):
-        pass
+        Game_Objects.timer.stars(frequency=Settings.star_frequency,velocity=0)                      # Stars Timer
 
     def update(self):
-        Variables.current_game_state = "Intro"
-        if time.time() - self.lt >= self.introlength: self.done = True # End intro after 'introlength' seconds
+        Graphicgroups.starfield_group.update(Game_Objects.player)                                   # STARS
+        for segment in Graphicgroups.starwarsscroll: segment.update()                               # STARWARS
 
     def draw(self,screen):
-        pass
+        screen.fill(('black'))                                                                      # Refresh screen
+        Graphicgroups.starfield_group.draw(screen)                                                  # STARS
+        for segment in Graphicgroups.starwarsscroll: segment.draw(screen)                           # STARWARS
 
     def handle_events(self, events):
-        pass
+        if not pygame.mixer.music.get_busy(): self.done = True
+        for event in events:
+            #Click the X to close window
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+                
+            # KEYDOWN
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN: self.done = True
 
 
 
@@ -43,7 +94,7 @@ class MenuState:
         Game_Objects.timer.allkana()                                                                # All Kana Timer
         Game_Objects.timer.biglaser(enemywaittimer=0)                                               # Big Laser Timer
         Game_Objects.timer.enemy(enemywaittimer=0)                                                  # Enemy Timer
-        Game_Objects.timer.scenery(frequency=.5)
+        Game_Objects.timer.scenery()
 
     def update(self):
         Variables.current_game_state = "Menu"
@@ -54,6 +105,7 @@ class MenuState:
         Graphicgroups.starfield_group.update(Game_Objects.player)                                   # STARS
         Graphicgroups.explosion_group.update()                                                      # EXPLOSION
         for kana in Graphicgroups.incorrectkanas:  kana.update(Game_Objects.player)                          # Kana
+        for bullet in Graphicgroups.enemymissiles: bullet.update()                                  # Enemy Missiles
         for warning in Graphicgroups.warnings: warning.update()                                     # Warning for BIG LASER
         for biglaser in Graphicgroups.biglasers: biglaser.update()                                  # BIG LASER
         for enemy in Graphicgroups.enemies: enemy.update();enemy.shoot(Game_Objects.player)         # Enemies
@@ -73,6 +125,7 @@ class MenuState:
         for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                                          # Kana
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                               # Enemy Projectiles
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)                  # Enemies
+        for bullet in Graphicgroups.enemymissiles: bullet.draw(screen)                              # Enemy Missiles
         for warning in Graphicgroups.warnings: warning.draw(screen)                                 # Warning for BIG LASER
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                              # BIG LASER
         for powerup in Graphicgroups.animatedpowerup: powerup.draw(screen)                          # Powerups
@@ -109,9 +162,9 @@ class MenuState:
 
         #region Buttons
         # Starting Level
-        Game_Objects.menu_buttons.startinglevel(screen)                                             # Starting Level
+        Game_Objects.menu_buttons.startinglevel(screen,x=-500,y=0)                                            # Starting Level
         Game_Objects.menu_buttons.gamemode(screen,x=400,y=0)                                                  # Game Mode Button
-        Game_Objects.menu_buttons.start(screen)                                                     # Start Button
+        Game_Objects.menu_buttons.start(screen,x=0,y=200)                                                     # Start Button
         #endregion BUTTONS
 
     def handle_events(self, events):
@@ -249,8 +302,9 @@ class GameState:
         Game_Objects.timer.planet()                                                         # PLANET Timer
         Game_Objects.timer.junk()                                                           # JUNK Timer
         Game_Objects.timer.powerup()                                                        # POWERUP Timer
+        Game_Objects.timer.weaponupgrade()                                                  # Weapon Upgrade Timer
         Game_Objects.timer.bridge(frequency=30)                                             # Bridge Timer
-        Game_Objects.timer.scenery(frequency=.5)                                            # Scenery
+        Game_Objects.timer.scenery(frequency=Variables.scenerywaittime)                     # Scenery
 
     def gamefadeouttoboss(self):
         #region Fade out music and transition to Boss
@@ -330,6 +384,7 @@ class GameState:
         Graphicgroups.explosion_group.update()                                          # EXPLOSION
         for bullet in Graphicgroups.bullets: bullet.update()                            # BULLETS
         for bullet in Graphicgroups.missiles: bullet.update()                           # Missiles
+        for bullet in Graphicgroups.enemymissiles: bullet.update()
         for pew in Graphicgroups.dynamicpew: pew.update()                               # Big Pew
         for biglaser in Graphicgroups.biglasers: biglaser.update()                      # BIG LASER
         for junk in Graphicgroups.spacejunk: junk.update()                              # RANDOM JUNK
@@ -346,6 +401,7 @@ class GameState:
         for bits in Graphicgroups.debris: bits.update()                                 # Debris
         for powerup in Graphicgroups.animatedpowerup: powerup.update()                  # Powerups
         for centerwarn in Graphicgroups.centerwarning: centerwarn.update()              # UI
+        for crosshair in Graphicgroups.crosshair: crosshair.update()                    # Crosshair
         for brew in Graphicgroups.brew: brew.update()
         for segment in Graphicgroups.scenery: segment.update()
         for turret in Graphicgroups.turrets: turret.update()
@@ -372,13 +428,14 @@ class GameState:
         for warning in Graphicgroups.warnings: warning.draw(screen)                     # WARNING for BIG LASER
         for bullet in Graphicgroups.bullets: bullet.draw(screen)                        # BULLETS
         for bullet in Graphicgroups.missiles: bullet.draw(screen)                       # Missiles
+        for bullet in Graphicgroups.enemymissiles: bullet.draw(screen)                  # Enemy Missiles
         for pew in Graphicgroups.dynamicpew: pew.draw(screen)                           # Big Pew
         for cutoff in Graphicgroups.cuttoffline: cutoff.draw(screen)                    # CUTOFF LINE
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for bits in Graphicgroups.debris: bits.draw(screen)                             # Bits debris
         for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
-        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                     # WRONG KANA
         for kana in Graphicgroups.bossmodecorrectkana: kana.draw(screen)
         for kana in Graphicgroups.bossmodeincorrectkana: kana.draw(screen)
         for brew in Graphicgroups.brew: brew.draw(screen)
@@ -390,6 +447,7 @@ class GameState:
         for shield in Graphicgroups.shields: shield.draw(screen)                        # Shields
         for damagenumber in Graphicgroups.damagenumbers: damagenumber.draw(screen)      # Damage values 
         Graphicgroups.explosion_group.draw(screen)                                      # EXPLOSION
+        for crosshair in Graphicgroups.crosshair: crosshair.draw(screen)                # Crosshair
         Functions.question_text(screen)                                                 # QUESTION TEXT
         Functions.uitext(screen)                                                        # UI TEXT
         Graphicgroups.bridge_group.draw(screen)                                         # BRIDGE WIPE
@@ -481,7 +539,7 @@ class BossFight:
                 Variables.bossstate = True
                 Variables.level += 1                                                # Increase Level
                 Variables.musicvolume = Settings.maxmusicvolume                    # Set Music Volume Back to Default
-                Variables.kanamum = 0
+                Variables.kananum = 0
                 self.bonus_score = Settings.boss_bonus_score
                 self.get_ready_timer = Settings.get_ready_timer_max
 
@@ -796,6 +854,7 @@ class Debug:
             ["Boss Kana Timer",Game_Objects.timer.bosskana_timer - Game_Objects.timer.bosskana_frequency],
             ["Kana Num",Variables.kananum],
             ["#Missiles",len(Graphicgroups.missiles)],
+            ["HEALTH",Game_Objects.player.health]
             # ["Game State",Variables.STATE],
             # ["Transition",Variables.TRANSITION],
             # ["Boss Shield",(Constants.bosses_array[Variables.level]["shield"]+1)],

@@ -25,6 +25,8 @@ GAME_OVER_FONT = pygame.font.SysFont(DEFAULT_FONT_NAME, 200)
 # GAME_OVER_FONT = pygame.font.Font('fonts/Nikumaru.otf', 160)
 STARTING_LEVEL_FONT = pygame.font.SysFont(DEFAULT_FONT_NAME, 150)
 WARNING_FONT = pygame.font.SysFont(DEFAULT_FONT_NAME, 100)
+STARWARS_FONT = pygame.font.SysFont('News Gothic Extra Cond.', 70)
+STARWARS_TITLE_FONT = pygame.font.Font('fonts/StarWars.ttf', 80)
 #endregion FONTS
 
 
@@ -49,6 +51,8 @@ SURF_WALLSEGMENT = pygame.image.load(os.path.join('images', 'wallpiece.png')).co
 SURF_BRICK = pygame.image.load(os.path.join('images', 'brick.png')).convert_alpha()
 SURF_DEBRIS = pygame.image.load(os.path.join('images', 'debris.png')).convert_alpha()
 SURF_STARTING_LEVEL = pygame.image.load(os.path.join('images', 'Starting_Level.png')).convert_alpha()
+SURF_CORSSHAIR = pygame.image.load(os.path.join('images', 'crosshair.png')).convert_alpha()
+SURF_STARWARSTEST = pygame.image.load(os.path.join('images', 'StarWarsTest.png')).convert_alpha()
 
 #region Start Button
 START_BUTTON_FILES = [f for f in os.listdir(os.getcwd() + '/images/StartButton')]
@@ -126,6 +130,11 @@ MISSILE_FILES = [f for f in os.listdir(os.getcwd() + '/sprites/Missiles')]
 SURF_MISSILE = []
 for missile in MISSILE_FILES: SURF_MISSILE.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','Missiles',missile)).convert_alpha(),64,64,1))
 
+# Enemy Missile Files
+ENEMY_MISSILE_FILES = [f for f in os.listdir(os.getcwd() + '/sprites/EnemyMissiles')]
+SURF_ENEMY_MISSILE = []
+for missile in ENEMY_MISSILE_FILES: SURF_ENEMY_MISSILE.append(Spritesheet.LoadSpritesheet(pygame.image.load(os.path.join('sprites','EnemyMissiles',missile)).convert_alpha(),64,64,1))
+
 #Planet Files
 PLANET_FILES = [f for f in os.listdir(os.getcwd() + '/images/Planets')]
 SURF_PLANET = []
@@ -167,11 +176,12 @@ ARRAY_POWERUP = [
 
 #pews
 ARRAY_PLAYER_PEW = [
-    {"imgindx":3,"pewsound":2,"laserpower":1,"maxnumpew":3,"pewrate":500,"pewspeed":800,"width":16,"height":16,"persist":False},
-    {"imgindx":2,"pewsound":1,"laserpower":1,"maxnumpew":2,"pewrate":200,"pewspeed":3000,"width":256,"height":16,"persist":False},
-    {"imgindx":0,"pewsound":1,"laserpower":1,"maxnumpew":4,"pewrate":200,"pewspeed":4000,"width":256,"height":16,"persist":False},
-    {"imgindx":1,"pewsound":1,"laserpower":1,"maxnumpew":1000,"pewrate":50,"pewspeed":3000,"width":16,"height":16,"persist":False},
-    {"imgindx":1,"pewsound":0,"laserpower":10,"maxnumpew":1,"pewrate":1000,"pewspeed":6000,"width":512,"height":128,"persist":True},
+    {"imgindx":3,"pewsound":2,"laserpower":1,"maxnumpew":3,"pewrate":500,"pewspeed":800,"width":16,"height":16,"persist":False,"missiles":False},
+    {"imgindx":2,"pewsound":1,"laserpower":1,"maxnumpew":2,"pewrate":200,"pewspeed":3000,"width":256,"height":16,"persist":False,"missiles":False},
+    {"imgindx":0,"pewsound":1,"laserpower":1,"maxnumpew":4,"pewrate":200,"pewspeed":4000,"width":256,"height":16,"persist":False,"missiles":False},
+    {"imgindx":0,"pewsound":1,"laserpower":1,"maxnumpew":4,"pewrate":200,"pewspeed":4000,"width":256,"height":16,"persist":False,"missiles":True},
+    {"imgindx":1,"pewsound":1,"laserpower":1,"maxnumpew":1000,"pewrate":50,"pewspeed":3000,"width":16,"height":16,"persist":False,"missiles":True},
+    # {"imgindx":1,"pewsound":0,"laserpower":10,"maxnumpew":1,"pewrate":1000,"pewspeed":6000,"width":512,"height":128,"persist":True,"missiles":False},
 ]
 
 #Bosses

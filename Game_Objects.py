@@ -18,6 +18,7 @@ class Ship:
         self.animspeed = 10
         self.image = self.spritearray[self.type].images[self.animindex]
         self.location = pygame.math.Vector2(x,y)
+        self.x, self.y = self.location[0], self.location[1]
         self.spaceship_rect = self.image.get_rect(center = self.location)
         self.deadzone = 20
         self.Xvelocity, self.Yvelocity = 0, 0
@@ -52,6 +53,13 @@ class Ship:
         self.yflameimage = pygame.transform.rotate(self.flamearray.images[self.yflameindex],90)
         self.yflame_rect = self.yflameimage.get_rect(center = self.location)
 
+        # Healthbar stuff
+        self.maxhealth = 9
+        self.health = self.maxhealth
+        self.healthbar_height = 2
+        self.healthbar = pygame.Surface((self.spaceship_rect.width,self.healthbar_height)).convert_alpha()
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
         #region Powerups
         self.poweruptimelength = 1000
         self.speedboost = False
@@ -60,7 +68,7 @@ class Ship:
         self.lasersight = False
         self.lasersightcounter = self.poweruptimelength
         self.laserlength = 0
-        self.laser = pygame.Surface((self.laserlength,2))
+        self.laser = pygame.Surface((self.laserlength,2)).convert_alpha()
 
         self.kanaswitch = False
         self.kanaswitchcounter = self.poweruptimelength
@@ -148,8 +156,8 @@ class Ship:
             brewsprite=Constants.SURF_BREWING,
             pewsprite=Constants.SURF_DYNAMIC_PEW
         )
-        if Variables.current_game_state == 'Boss': rnd = random.randint(4,5)
-        if Variables.current_game_state == 'Game': rnd = random.randint(1,3)
+        if Variables.current_game_state == 'Boss': rnd = random.randint(4,6)
+        if Variables.current_game_state == 'Game': rnd = random.randint(1,4)
         if Variables.missiles_enabled == True:
             match rnd:
                 case 1:
@@ -170,9 +178,14 @@ class Ship:
                 case 4:
                     Functions.missilepew(
                         keys=keys,
-                        target=Graphicgroups.bossmodeincorrectkana
+                        target=Graphicgroups.debris
                     )
                 case 5:
+                    Functions.missilepew(
+                        keys=keys,
+                        target=Graphicgroups.bossmodeincorrectkana
+                    )
+                case 6:
                     Functions.missilepew(
                         keys=keys,
                         target=Graphicgroups.bosses
@@ -227,13 +240,13 @@ class Ship:
 
         #region LASER PowerUp
         if self.lasersight and self.lasersightcounter > 256:                                    # Lasersight activated
-            self.laser = pygame.Surface((self.laserlength,2))
+            self.laser = pygame.Surface((self.laserlength,3)).convert_alpha()
             self.laser.set_alpha(128)
             self.laser.fill((255,0,0))
             self.lasersightcounter -= 100 * Variables.delta_time
             self.laserlength += 3000 * Variables.delta_time
         elif self.lasersight and self.lasersightcounter <= 256 and self.lasersightcounter > 0:  # Lasersight maintain
-            self.laser = pygame.Surface((Constants.WIDTH,2))
+            self.laser = pygame.Surface((Constants.WIDTH,2)).convert_alpha()
             self.laser.fill((self.lasersightcounter/2,0,0))
             self.lasersightcounter -= 100 * Variables.delta_time
         elif self.lasersight and self.lasersightcounter <= 0:                                   # Lasersight has ended
@@ -264,16 +277,29 @@ class Ship:
         #endregion KANASWITCH PowerUp
 
     def update(self):
+
+        self.healthdisplay = self.spaceship_rect.width/self.maxhealth*self.health
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        self.curhealth_grapic = Constants.UI_FONT.render(str(self.health), True, 'yellow')
+
         self.animate()
         self.move()
         self.respawn_checker()
         self.apply_powerups()
+        self.x, self.y = self.location[0], self.location[1]
+        if self.health <= 0: self.respawn()
 
         # self.laserpower = int(Variables.score) + 1
         self.laserpower = int(Variables.score) * Constants.ARRAY_PLAYER_PEW[player.pewtype]["laserpower"] + 1
         self.power_grapic = Constants.UI_FONT.render(str(self.laserpower), True, 'green')
 
     def draw(self,screen):
+
+        screen.blit(self.healthbar, (self.spaceship_rect.left,self.spaceship_rect.top+74,self.spaceship_rect.width,10))
+        self.healthbar.fill((0,0,0,0))
+        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        except: pass
+
         self.movement()
         if self.shipcollision == False:
             if int(self.respawn_timer*100) % 3 == 0: self.image.set_alpha(200)
@@ -313,8 +339,10 @@ class Ship:
 
     def respawn(self):
         self.lives -= 1
+        self.health = 9
         self.respawn_timer = 3
         player.pewtype = 0
+        Variables.missiles_enabled = False
 
 
 
@@ -365,7 +393,6 @@ class Pew:
 class HomingMissile:
     def __init__(self,x,y,target,targetgroup,ypos,image):
         self.spritearray = image
-        # self.image = pygame.transform.scale(self.image,(32, 32))
         self.x, self.y = x, y
         self.type = 0
         self.animindex = 0
@@ -376,7 +403,7 @@ class HomingMissile:
         self.targetgroup = targetgroup
         self.velocity = 1000
         self.hitradius = 16
-        self.originx, self.originy = player.location[0], player.location[1]
+        self.originx, self.originy = self.x, self.y
         self.hitbox = [0,0,0,0]
         self.rotate = 0
         self.direction = 0
@@ -431,6 +458,47 @@ class HomingMissile:
             pygame.draw.circle(screen,'red',(self.x,self.y),self.hitradius,2)
 
     def collide(self,rect):
+        x = abs(self.x - (rect[0] + rect[2] / 2))
+        y = abs(self.y - (rect[1] + rect[3] / 2))
+
+        if x > (rect[2] / 2 + self.hitbox[2]/2): return False
+        if y > (rect[3] / 2 + self.hitbox[3]/2): return False
+
+        if x <= (rect[2] / 2): return True
+        if y <= (rect[3] / 2): return True
+
+        corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
+        return corner_distance <= self.hitradius**2
+
+
+
+#region Crosshair
+class Crosshair:
+    def __init__(self,targetgroup,target):
+        self.image = Constants.SURF_CORSSHAIR
+        self.targetgroup = targetgroup
+        self.target = target
+        self.x, self.y = self.targetgroup[self.target].x, self.targetgroup[self.target].y
+        self.crosshair_rect = self.image.get_rect(center=(self.x, self.y))
+        self.hitbox = self.crosshair_rect
+        self.hitradius = self.image.get_rect().centerx
+
+    def update(self):
+        try:
+            self.x, self.y = self.targetgroup[self.target].x, self.targetgroup[self.target].y
+            self.crosshair_rect = self.image.get_rect(center=(self.x, self.y))
+        except: Graphicgroups.crosshair.pop(Graphicgroups.crosshair.index(self))
+
+
+    def draw(self,screen):
+        screen.blit(self.image,self.crosshair_rect)
+        self.hitbox = self.crosshair_rect
+        if Variables.hitboxshow:
+            pygame.draw.circle(screen,(0,0,255),(self.x,self.y), 4)
+            pygame.draw.circle(screen,'red',(self.x,self.y),self.hitradius,2)
+
+
+    def collide(self, rect):
         x = abs(self.x - (rect[0] + rect[2] / 2))
         y = abs(self.y - (rect[1] + rect[3] / 2))
 
@@ -907,6 +975,7 @@ class BorderScenery:
                 Variables.scenerytype = random.randint(0,1)
                 Variables.sceneryheight = random.randint(1,1)
             case 1:
+                Variables.scenerywaittime = .5
                 match self.height:
                     case 1:
                         max = len(Constants.SURF_SCENERY_OPEN_1H.images)-1
@@ -1215,6 +1284,7 @@ class AnimatedPowerUp:
                 Graphicgroups.animatedpowerup.pop(Graphicgroups.animatedpowerup.index(self))
                 if player.pewtype < len(Constants.ARRAY_PLAYER_PEW)-1:
                     player.pewtype += 1
+                    Variables.missiles_enabled = Constants.ARRAY_PLAYER_PEW[player.pewtype]["missiles"]
                     pygame.mixer.Sound.play(Constants.SOUND_POWER_UP)
                 else: player.pewtype = 0
 
@@ -1265,8 +1335,10 @@ class GroundTurret:
         self.spritearray = Constants.SURF_TURRET #Sprite Animation
         self.animindex = 0  #Sprite Animation
         self.animspeed = 20 #Sprite Animation
+        self.missilechance = 5
         self.image = self.spritearray[self.type].images[self.animindex] #Sprite Animation
         self.x, self.y = x, y-32
+        self.turretopening = self.image.get_rect(topleft = (self.x, self.y))
         self.xvelocity = 120
         self.last_turret_pew = 0
         self.hitbox = [0,0,0,0]
@@ -1292,15 +1364,33 @@ class GroundTurret:
             angle = self.findobjectangle(player)
             if pygame.time.get_ticks() - self.last_turret_pew >= random.randint(2000,10000):
                 self.turretfiring = True
-                pygame.mixer.Sound.play(Constants.SOUND_TURRET_FIRING)
-                try: Graphicgroups.enemyprojectiles.append(EnemyProjectiles(self.x, self.y-10,angle,Graphicgroups.turrets.index(self)))
-                except: pass
+                rnd = (random.randint(1,self.missilechance))
+                if rnd != self.missilechance:
+                    pygame.mixer.Sound.play(Constants.SOUND_TURRET_FIRING)
+                    try: Graphicgroups.enemyprojectiles.append(EnemyProjectiles(
+                        x=self.turretopening[0],
+                        y=self.turretopening[1],
+                        direction=angle,
+                        origin=Graphicgroups.turrets.index(self)
+                    ))
+                    except: pass
+                if rnd == self.missilechance:
+                    pygame.mixer.Sound.play(Constants.SOUND_MISSILE_LAUNCHED)
+                    try: Graphicgroups.enemymissiles.append(EnemyHomingMissile(
+                        x=self.turretopening[0],
+                        y=self.turretopening[1],
+                        playerloc= player,
+                        ypos=1,
+                        image=Constants.SURF_ENEMY_MISSILE[0]
+                    ))
+                    except: pass
                 self.last_turret_pew = pygame.time.get_ticks()
 
     def update(self):
         self.animate()
         if self.x < -64: Graphicgroups.turrets.pop(Graphicgroups.turrets.index(self))
         self.x -= self.xvelocity * Variables.delta_time
+        self.turretopening = self.image.get_rect(topleft = (self.x, self.y))
         self.shoot(player)
 
     def draw(self,screen):
@@ -1316,6 +1406,88 @@ class GroundTurret:
             if rect[1] + rect[3] > self.hitbox[1] and rect[1] < self.hitbox[1] + self.hitbox[3]:
                 return True
         return False
+
+
+
+#region Enemy Homing Misile
+class EnemyHomingMissile:
+    def __init__(self,x,y,playerloc,ypos,image):
+        self.spritearray = image
+        self.x, self.y = x, y
+        self.target = playerloc
+        self.type = 0
+        self.animindex = 0
+        self.animspeed = 10
+        self.image = self.spritearray.images[int(self.animindex)]
+        self.missile_rect = self.image.get_rect(center = (self.x, self.y))
+        self.velocity = 600
+        self.hitradius = 16
+        self.originx, self.originy = self.x, self.y
+        self.hitbox = [0,0,0,0]
+        self.rotate = 0
+        self.direction = 0
+        self.directionoffset = 0
+        self.rotated_image = pygame.transform.rotate(self.image,self.direction*180/3.14)
+
+    def findobjectangle(self,thing):
+            # Find angle of thing
+            dx = self.originx - thing.x
+            dy = self.originy - thing.y
+            self.theta = math.atan2(-dy,dx)
+            return self.theta
+
+    def objectdirection(self,direction):
+        pewdir = direction - math.pi/2
+        sin_a = math.sin(pewdir)
+        cos_a = math.cos(pewdir)
+        self.x += self.velocity * sin_a * Variables.delta_time
+        self.y += self.velocity * cos_a * Variables.delta_time
+        return self.x, self.y
+
+    def animate(self):
+        import Functions
+        Functions.soanimate(self)
+
+    def update(self):
+        self.animate()
+        try:
+            self.direction = self.findobjectangle(self.target) - self.directionoffset
+            if self.directionoffset > 0: self.directionoffset -= self.velocity/125*Variables.delta_time
+            elif self.directionoffset < 0: self.directionoffset += self.velocity/125*Variables.delta_time
+        except: pass
+        orig_rect = self.image.get_rect()
+        self.rotated_image = pygame.transform.rotate(self.image,self.direction*180/3.14)
+        rot_rect = orig_rect.copy()
+        rot_rect.center = self.rotated_image.get_rect().center
+        self.rotated_image = self.rotated_image.subsurface(rot_rect).copy()
+
+        self.velocity * Variables.delta_time
+        # self.originx, self.originy = self.x, self.y
+        self.x, self.y = self.objectdirection(self.direction)
+        self.missile_rect = self.image.get_rect(center = (self.x, self.y))
+        if self.x > Constants.WIDTH+32 or self.y < 0 or self.y > Constants.PAHEIGHT:
+            Graphicgroups.enemymissiles.pop(Graphicgroups.enemymissiles.index(self))
+
+    def draw(self,screen):
+        screen.blit(self.rotated_image, self.missile_rect)
+
+        self.hitbox = self.missile_rect
+        if Variables.hitboxshow:
+            # pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
+            pygame.draw.circle(screen,'red',(self.x,self.y),self.hitradius,2)
+
+    def collide(self,rect):
+        x = abs(self.x - (rect[0] + rect[2] / 2))
+        y = abs(self.y - (rect[1] + rect[3] / 2))
+
+        if x > (rect[2] / 2 + self.hitbox[2]/2): return False
+        if y > (rect[3] / 2 + self.hitbox[3]/2): return False
+
+        if x <= (rect[2] / 2): return True
+        if y <= (rect[3] / 2): return True
+
+        corner_distance = (x - rect[2] / 2)**2 + (y - rect[3] / 2)**2
+        return corner_distance <= self.hitradius**2
 
 
 
@@ -1336,13 +1508,12 @@ class Enemies:
         self.knockbacky = 0
         self.last_enemy_pew = 0
 
-        # self.maxhealth = random.randint(int((Variables.enemy_health_multiplier * enemy_health)*0.8) + 1,Variables.enemy_health_multiplier * enemy_health + 1)
         self.maxhealth = Variables.generatedcorrectkanacounter + 1
         self.health = self.maxhealth
         self.maxhealth_grapic = Constants.UI_FONT.render(str(self.maxhealth), True, 'green')
         self.curhealth_grapic = Constants.UI_FONT.render(str(self.health), True, 'yellow')
         self.healthbar_height = 5
-        self.healthbar = pygame.Surface((self.enemy_rect.width,5))
+        self.healthbar = pygame.Surface((self.enemy_rect.width,5)).convert_alpha()
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
 
     def calculate_angles(self,number_of_angles):
@@ -1401,7 +1572,7 @@ class Enemies:
         import Functions
         screen.blit(self.image, self.enemy_rect)
         screen.blit(self.healthbar, (self.enemy_rect.left,self.enemy_rect.top-20,self.enemy_rect.width,10))
-        self.healthbar.fill('black')
+        self.healthbar.fill((0,0,0,0))
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
         self.hitbox = self.enemy_rect
@@ -1466,12 +1637,12 @@ class Bosses:
         self.maxhealth_grapic = Constants.UI_FONT.render(str(self.maxhealth), True, 'green')
         self.curhealth_grapic = Constants.UI_FONT.render(str(self.health), True, 'yellow')
         self.healthbar_height = 5
-        self.healthbar = pygame.Surface((self.boss_rect.width,self.healthbar_height))
+        self.healthbar = pygame.Surface((self.boss_rect.width,self.healthbar_height)).convert_alpha()
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
 
         # Shield Settings
         self.shieldbar_height = 5
-        self.shieldbar = pygame.Surface((500,self.shieldbar_height))
+        self.shieldbar = pygame.Surface((500,self.shieldbar_height)).convert_alpha()
         self.shieldbar_Color = 'cyan'
 
     def calculate_angles(self,number_of_angles):
@@ -1561,7 +1732,7 @@ class Bosses:
             10                          # Height
             )
         )
-        self.healthbar.fill('black')
+        self.healthbar.fill((0,0,0,0))
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
 
@@ -1574,7 +1745,7 @@ class Bosses:
             barwidth,
             10
         ))
-        self.shieldbar.fill('black')
+        self.shieldbar.fill((0,0,0,0))
         try: pygame.draw.rect(self.shieldbar,'cyan',(0,0,barwidth/100 * (Constants.ARRAY_BOSSES[Variables.level]["shield"]),self.healthbar_height))
         except: pass
 
@@ -1717,6 +1888,7 @@ class Debris:
         self.origin = origin
 
     def objectdirection(self,direction):
+        direction = math.radians(direction)
         pewdir = direction - math.pi/2 + self.directionskew
         sin_a = math.sin(pewdir)
         cos_a = math.cos(pewdir)
@@ -1761,11 +1933,66 @@ class Debris:
 
     def spawn(x,y,mindir,maxdir,minvel,maxvel,image,origin,numdebris=random.randint(1,3)):
         for _ in range(numdebris):
-            Graphicgroups.debris.append(Debris(x,y,random.randint(mindir,maxdir),random.randint(minvel,maxvel),image,origin))
+            Graphicgroups.debris.append(Debris(
+                x=x,
+                y=y,
+                direction=random.randint(mindir,maxdir),
+                velocity=random.randint(minvel,maxvel),
+                image=image,
+                origin=origin
+            ))
 
 
 
 #region THINGS
+
+
+
+
+#region Star Wars Scroller
+class StarWarsScroll:
+    def __init__(self,image,x,y,width,height,speed,ix,iy,offset,fade):
+        self.offset = offset
+        self.fade = fade
+        self.x, self.y, self.w, self.h = x, y, width, height
+        self.ix, self.iy = ix, iy
+        self.speed = speed
+        self.image = image
+        self.image_rect = self.image.get_rect()
+        self.image = pygame.transform.scale(self.image,(self.w, self.image_rect.h))
+        self.segment = pygame.Surface((self.w, self.h)).convert_alpha()
+
+    def update(self):
+        self.iy -= self.speed * Variables.delta_time
+
+    def draw(self,screen):
+        self.segment.fill((0,0,0,0))
+        self.segment.set_alpha(255-(self.offset*self.fade))
+        self.segment.blit(self.image,(self.ix, self.iy+(self.h*self.offset), self.w, self.h))
+        screen.blit(self.segment,(self.x,self.y,self.w,self.h))
+
+
+
+#region Health Bar
+class Healthbar:        # Work In Progress
+    def __init__(self,maxhealth,health,barheight,rect):
+        self.maxhealth = maxhealth
+        self.health = health
+        self.healthbar_height = barheight
+        self.rect = rect
+        self.healthbar = pygame.Surface((self.rect.width,self.healthbar_height)).convert_alpha()
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
+    def update(self):
+        self.healthdisplay = self.rect.width/self.maxhealth*self.health
+        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        self.curhealth_grapic = Constants.UI_FONT.render(str(self.health), True, 'yellow')
+
+    def draw(self,screen):
+        screen.blit(self.healthbar, (self.rect.left,self.rect.top-5,self.rect.width,10))
+        self.healthbar.fill((0,0,0,0))
+        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        except: pass
 
 
 
@@ -1981,6 +2208,18 @@ class Timers:
             self.powerup_thresh = random.randint(30,40)
         self.powerup_timer += 1 * Variables.delta_time
 
+    def weaponupgrade(self):
+        if self.powerup_timer >= self.powerup_thresh:
+            powerup_type = 3
+            AnimatedPowerUp.spawn(
+                Constants.ARRAY_POWERUP[powerup_type]["xvel"],
+                Constants.ARRAY_POWERUP[powerup_type]["surfindx"],
+                Constants.ARRAY_POWERUP[powerup_type]["pueffect"],
+                )
+            self.powerup_timer = 0
+            self.powerup_thresh = random.randint(110,130)
+        self.powerup_timer += 1 * Variables.delta_time
+
     def bridge(self, frequency):
         if self.bridge_timer > frequency:
             Bridge.spawn()
@@ -1995,7 +2234,7 @@ class Timers:
             self.WoD_thresh = random.randint(30,60)
         self.WoD_timer += 1 * Variables.delta_time
 
-    def scenery(self,frequency):
+    def scenery(self,frequency=.5):
         if self.scenery_timer > frequency:
             BorderScenery(Variables.scenerytype).picknext()
             self.scenery_timer = 0
@@ -2012,10 +2251,10 @@ class Buttons:
 
 
     #region Start
-    def start(self,screen,x=Constants.WCENTER,y=Constants.HCENTER+200):
+    def start(self,screen,x=0,y=200):
         self.start_button = Constants.SURF_START_BUTTON[0]                                  # Select Start button image from array
         self.start_button = pygame.transform.scale(self.start_button,(256,128))             # Scale the image to x,y dimensions
-        self.start_button_rect = self.start_button.get_rect(center=(x,y))                   # Get rect dimensions from the x,y arguments to center graphic
+        self.start_button_rect = self.start_button.get_rect(center=(Constants.WCENTER+x,Constants.HCENTER+y))                   # Get rect dimensions from the x,y arguments to center graphic
         if self.start_button_rect.collidepoint(pygame.mouse.get_pos()):                     # check to see if the mouse position is in the rect dimensions
             self.start_button = Constants.SURF_START_BUTTON[1]                              # replace start button image with another image from the array
             self.start_button = pygame.transform.scale(self.start_button,(256,128))         # Scale the image to x,y dimensions
@@ -2044,15 +2283,15 @@ class Buttons:
 
 
     #region Starting Level
-    def startinglevel(self,screen,x=Constants.WCENTER-500,y=Constants.HCENTER):
+    def startinglevel(self,screen,x=-500,y=0):
         self.startinglevel_graphic = Constants.SURF_STARTING_LEVEL
         self.startinglevel_graphic = pygame.transform.scale(self.startinglevel_graphic,(256,256))           # Scale the image to x,y dimensions
-        self.startinglevel_rect = self.startinglevel_graphic.get_rect(center=(x,y))                         # Get rect dimensions from the x,y arguments to center graphic
+        self.startinglevel_rect = self.startinglevel_graphic.get_rect(center=(Constants.WCENTER+x,Constants.HCENTER+y))                         # Get rect dimensions from the x,y arguments to center graphic
         screen.blit(self.startinglevel_graphic, self.startinglevel_rect)                                    # Finally draw the image to the screen at the rect position
         num_text = Constants.STARTING_LEVEL_FONT.render(str(Variables.level+1), True, 'white')
         num_text_shadow = Constants.STARTING_LEVEL_FONT.render(str(Variables.level+1), True, 'black')
-        num_text_rect = num_text.get_rect(center=(x,y))                                                     # Get rect dimensions from the x,y arguments to center graphic
-        num_text_shadow_rect = num_text_shadow.get_rect(center=(x+5,y+5))                                   # Get rect dimensions from the x,y arguments to center graphic
+        num_text_rect = num_text.get_rect(center=(Constants.WCENTER+x,Constants.HCENTER+y))                                                     # Get rect dimensions from the x,y arguments to center graphic
+        num_text_shadow_rect = num_text_shadow.get_rect(center=(Constants.WCENTER+x+5,Constants.HCENTER+y+5))                                   # Get rect dimensions from the x,y arguments to center graphic
         num_text_shadow.set_alpha(128)
         screen.blit(num_text_shadow,num_text_shadow_rect)
         screen.blit(num_text,num_text_rect)

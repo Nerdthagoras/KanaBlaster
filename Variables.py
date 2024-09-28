@@ -58,6 +58,7 @@ generatedincorrectkanacounter = 0
 brewanimindex = 0
 scenerytype = 0
 sceneryheight = 1
+scenerywaittime = 0.5
 RGB = [0,0,0]
 theta = 0
 #endregion TRACKABLES
