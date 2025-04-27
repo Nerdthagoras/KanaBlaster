@@ -1,6 +1,6 @@
 from sys import exit
 
-import Graphicgroups, Constants, Functions, Game_Objects, Settings, Variables
+import Graphicgroups, CONST, Functions, Game_Objects, Settings, Variables
 import os, random, time, pygame
 
 #region INTRO STATE
@@ -13,24 +13,25 @@ class IntroState:
         self.boss = False
 
         # Star Wars Scroll Test
-        Surf_Width, Surf_Height = 800, 3200
+        Surf_Width, Surf_Height = 900, 3200
         SWOrange = (255,200,0)
         Text_delay_offset = 100
         self.SWSurface = pygame.Surface((Surf_Width, Surf_Height)).convert_alpha()
         self.SWSurface.fill((0,0,0,0))
-        TITLE_text = Constants.STARWARS_TITLE_FONT.render('KANA BLASTER', True, SWOrange)
-        TITLE_shadow_text = Constants.STARWARS_TITLE_FONT.render('KANA BLASTER', True, SWOrange)
+        TITLE_text = CONST.STARWARS_TITLE_FONT.render('KANA BLASTER', True, SWOrange)
+        TITLE_shadow_text = CONST.STARWARS_TITLE_FONT.render('KANA BLASTER', True, SWOrange)
         TITLE_shadow_text.set_alpha(128)
         Title_rect = TITLE_text.get_rect(center = (0, 0))
         self.SWSurface.blit(TITLE_shadow_text, ((Title_rect[0]+Surf_Width//2, Text_delay_offset+10)))
         self.SWSurface.blit(TITLE_text, (Title_rect[0]+Surf_Width//2, Text_delay_offset))
-        text = "According to all known laws of aviation, there is no way that a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway because bees don't care what humans think is impossible.\n\n\nCut to Barry's room, where he's picking out what to wear.\n\n\nYellow, black. Yellow, black. Yellow, black. Yellow, black. Ooh, black and yellow! Yeah, let's shake it up a little.\n\nBarry uses honey from a dispenser to style his hair, rinse his mouth, and then applies it to his armpits."
+        # text = "According to all known laws of aviation, there is no way that a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway because bees don't care what humans think is impossible.\n\n\nCut to Barry's room, where he's picking out what to wear.\n\n\nYellow, black. Yellow, black. Yellow, black. Yellow, black. Ooh, black and yellow! Yeah, let's shake it up a little.\n\nBarry uses honey from a dispenser to style his hair, rinse his mouth, and then applies it to his armpits."
+        text = "You seek company with the emperor of the Galaxy, but before you do, you have been tasked with writing a letter of proof of your love.\n\nThroughout the galaxy a vast array of characters have been scattered and you are to collect the correct characters in each of the zones.\n\nAs further proof of your devotion to the Galaxy's finest entity you are to learn which symbols are required by first observing their phonetics in your common language.\n\nAt first you will be guided by the colouring of what is required and which should be disposed of, but as you correctly collect enough of any character, you will have to rely on the memory of thier shape as their colour will have been washed out.\n\nBeware, for it seems you are not the only one that seeks the company of the emperor, others have been summoned to give resistance to your task, and will only get more intense as you continue.\n\nYes, they do resemble Earth Japanese, but I assure you this is just a weird coincidence."
         Functions.display_text(
             surface=self.SWSurface,
             text=text,
             pos=(0,Text_delay_offset+250),
             linespacing=15,
-            font=Constants.STARWARS_FONT,
+            font=CONST.STARWARS_FONT,
             color=SWOrange
         )
 
@@ -42,8 +43,8 @@ class IntroState:
             Graphicgroups.starwarsscroll.append(Game_Objects.StarWarsScroll(
                 image=self.SWSurface,
                 x=x+(i*10//(width*2)),
-                y=Constants.HEIGHT-(i*height),
-                width=Constants.WIDTH-(i*10//width),
+                y=CONST.HEIGHT-(i*height),
+                width=CONST.WIDTH-(i*10//width),
                 height=height,
                 speed=20,
                 ix=0,
@@ -86,8 +87,8 @@ class MenuState:
         self.boss = False
         self.startbuttonsoundplayed = False
         from Game_Objects import AnimCenterWarning
-        Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.SURF_SPACESHIP,Game_Objects.player.type,4,fade=False))
-        for _ in range(100): Graphicgroups.starfield_group.add(Game_Objects.Star(0,random.randrange(0,Constants.WIDTH+1000))) # Preload screen full of stars
+        Graphicgroups.animcenterwarning.append(AnimCenterWarning("",CONST.SURF_SPACESHIP,Game_Objects.player.type,4,fade=False))
+        for _ in range(100): Graphicgroups.starfield_group.add(Game_Objects.Star(0,random.randrange(0,CONST.WIDTH+1000))) # Preload screen full of stars
 
     def manifest(self):
         Game_Objects.timer.stars(frequency=Settings.star_frequency,velocity=0)                      # Stars Timer
@@ -99,7 +100,7 @@ class MenuState:
     def update(self):
         Variables.current_game_state = "Menu"
         pygame.mouse.set_visible(True)
-        Variables.maxshiptype = int(len(Constants.SURF_SPACESHIP)*Functions.getmaxship())
+        Variables.maxshiptype = int(len(CONST.SURF_SPACESHIP)*Functions.getmaxship())
 
         for junk in Graphicgroups.spacejunk: junk.update(Game_Objects.player)                       # RANDOM JUNK
         Graphicgroups.starfield_group.update(Game_Objects.player)                                   # STARS
@@ -137,23 +138,23 @@ class MenuState:
         for segment in Graphicgroups.scenery: segment.draw(screen)
         Functions.kanalist(screen,256)
         
-        if Variables.debugwindow: Debug.draw(Constants.DEBUG_LOC_X,Constants.DEBUG_LOC_Y)   # DEBUG
+        if Variables.debugwindow: Debug.draw(CONST.DEBUG_LOC_X,CONST.DEBUG_LOC_Y)   # DEBUG
 
         #region Game Title
-        TITLE_text = Constants.GAME_OVER_FONT.render('KANA BLASTER', True, 'white')
-        screen.blit(TITLE_text, (10, Constants.PAHEIGHT/7))
-        TITLE_shadow_text = Constants.GAME_OVER_FONT.render('KANA BLASTER', True, 'white')
+        TITLE_text = CONST.GAME_OVER_FONT.render('KANA BLASTER', True, 'white')
+        screen.blit(TITLE_text, (10, CONST.PAHEIGHT/7))
+        TITLE_shadow_text = CONST.GAME_OVER_FONT.render('KANA BLASTER', True, 'white')
         TITLE_shadow_text.set_alpha(100)
         offset = 8
-        screen.blit(TITLE_shadow_text, (10+offset, Constants.PAHEIGHT/7+offset))
+        screen.blit(TITLE_shadow_text, (10+offset, CONST.PAHEIGHT/7+offset))
 
-        ship_num_shadow = Constants.UI_FONT.render(str(Game_Objects.player.type+1) + '/' + str(Variables.maxshiptype+1), True, 'black')
-        ship_num_shadow_rect = ship_num_shadow.get_rect(center=(Constants.WCENTER+15,Constants.HCENTER+5))
+        ship_num_shadow = CONST.UI_FONT.render(str(Game_Objects.player.type+1) + '/' + str(Variables.maxshiptype+1), True, 'black')
+        ship_num_shadow_rect = ship_num_shadow.get_rect(center=(CONST.WCENTER+15,CONST.HCENTER+5))
         ship_num_shadow.set_alpha(128)
-        ship_num = Constants.UI_FONT.render(str(Game_Objects.player.type+1) + '/' + str(Variables.maxshiptype+1), True, 'white')
-        ship_num_rect = ship_num.get_rect(center=(Constants.WCENTER+10,Constants.HCENTER))
-        Constants.SCREEN.blit(ship_num_shadow,ship_num_shadow_rect)   
-        Constants.SCREEN.blit(ship_num,ship_num_rect)
+        ship_num = CONST.UI_FONT.render(str(Game_Objects.player.type+1) + '/' + str(Variables.maxshiptype+1), True, 'white')
+        ship_num_rect = ship_num.get_rect(center=(CONST.WCENTER+10,CONST.HCENTER))
+        CONST.SCREEN.blit(ship_num_shadow,ship_num_shadow_rect)   
+        CONST.SCREEN.blit(ship_num,ship_num_rect)
         #endregion Game Title
 
 
@@ -206,29 +207,29 @@ class MenuState:
 
                 #region Select Ship
                 if Graphicgroups.animcenterwarning[0].centered_image.collidepoint(event.pos) and event.button == 1:
-                    if Game_Objects.player.type >= Variables.maxshiptype or Game_Objects.player.type >= len(Constants.SURF_SPACESHIP)-1:
+                    if Game_Objects.player.type >= Variables.maxshiptype or Game_Objects.player.type >= len(CONST.SURF_SPACESHIP)-1:
                         Game_Objects.player.type = 0
                     else:
                         Game_Objects.player.type +=1
                     from Game_Objects import AnimCenterWarning
                     Graphicgroups.animcenterwarning.clear()
-                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.SURF_SPACESHIP,Game_Objects.player.type,4,False))
+                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",CONST.SURF_SPACESHIP,Game_Objects.player.type,4,False))
                 elif Graphicgroups.animcenterwarning[0].centered_image.collidepoint(event.pos) and event.button == 3:
                     if Game_Objects.player.type <= 0:
-                        if Variables.maxshiptype < len(Constants.SURF_SPACESHIP)-1:
+                        if Variables.maxshiptype < len(CONST.SURF_SPACESHIP)-1:
                             Game_Objects.player.type = Variables.maxshiptype
                         else:
-                            Game_Objects.player.type = len(Constants.SURF_SPACESHIP)-1
+                            Game_Objects.player.type = len(CONST.SURF_SPACESHIP)-1
                     else:
                         Game_Objects.player.type -= 1
                     from Game_Objects import AnimCenterWarning
                     Graphicgroups.animcenterwarning.clear()
-                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.SURF_SPACESHIP,Game_Objects.player.type,4,False))
+                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",CONST.SURF_SPACESHIP,Game_Objects.player.type,4,False))
                 elif Graphicgroups.animcenterwarning[0].centered_image.collidepoint(event.pos) and event.button == 2:
                     Game_Objects.player.type = 0
                     from Game_Objects import AnimCenterWarning
                     Graphicgroups.animcenterwarning.clear()
-                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",Constants.SURF_SPACESHIP,Game_Objects.player.type,4,False))
+                    Graphicgroups.animcenterwarning.append(AnimCenterWarning("",CONST.SURF_SPACESHIP,Game_Objects.player.type,4,False))
 
 
 
@@ -257,8 +258,8 @@ class MenuState:
                         Variables.hitboxshow = True
                         Variables.debugwindow = True
                 if event.key == ord('i'): 
-                    for h in range(int(Constants.PAHEIGHT/32)):
-                        Game_Objects.WallOfDeath.spawn(Constants.WIDTH,h*32)
+                    for h in range(int(CONST.PAHEIGHT/32)):
+                        Game_Objects.WallOfDeath.spawn(CONST.WIDTH,h*32)
                 if event.key == ord('f'): pygame.display.toggle_fullscreen()
                 if event.key == ord('e'): Game_Objects.Enemies.spawn()
                 if event.key == ord('r'): Game_Objects.BigLaserWarning.spawn(Game_Objects.player)
@@ -270,12 +271,12 @@ class MenuState:
                 if event.key == ord('u'):
                     powerup_type = random.randint(1,2)
                     Game_Objects.AnimatedPowerUp.spawn(
-                        Constants.ARRAY_POWERUP[powerup_type]["xvel"],
-                        Constants.ARRAY_POWERUP[powerup_type]["surfindx"],
-                        Constants.ARRAY_POWERUP[powerup_type]["pueffect"],
+                        CONST.ARRAY_POWERUP[powerup_type]["xvel"],
+                        CONST.ARRAY_POWERUP[powerup_type]["surfindx"],
+                        CONST.ARRAY_POWERUP[powerup_type]["pueffect"],
                         )
                 if event.key == ord('t'):
-                    Graphicgroups.turrets.append(Game_Objects.GroundTurret(Constants.WIDTH+32,Constants.PAHEIGHT-64,0))
+                    Graphicgroups.turrets.append(Game_Objects.GroundTurret(CONST.WIDTH+32,CONST.PAHEIGHT-64,0))
 
 
 
@@ -341,11 +342,11 @@ class GameState:
 
     def warningmessages(self):
         if Variables.level == Settings.enemy_start_level and self.prev_level < Settings.enemy_start_level:
-            Game_Objects.CenterWarning.spawn('Enemies Active',Constants.SURF_ENEMY[0].images[0],3)
+            Game_Objects.CenterWarning.spawn('Enemies Active',CONST.SURF_ENEMY[0].images[0],3)
             self.enemy_wait_timer = 3
             self.prev_level = Settings.enemy_start_level
         if Variables.level == Settings.biglaser_start_level and self.prev_level < Settings.biglaser_start_level:
-            Game_Objects.CenterWarning.spawn('Big Laser Active',Constants.SURF_BIG_LASER[0].images[0])
+            Game_Objects.CenterWarning.spawn('Big Laser Active',CONST.SURF_BIG_LASER[0].images[0])
             self.enemy_wait_timer = 3
             self.prev_level = Settings.biglaser_start_level
 
@@ -353,9 +354,9 @@ class GameState:
         #region Extra Life
         if Variables.score >= self.extralife:
             Game_Objects.AnimatedPowerUp.spawn(
-                Constants.ARRAY_POWERUP[0]["xvel"],
-                Constants.ARRAY_POWERUP[0]["surfindx"],
-                Constants.ARRAY_POWERUP[0]["pueffect"],
+                CONST.ARRAY_POWERUP[0]["xvel"],
+                CONST.ARRAY_POWERUP[0]["surfindx"],
+                CONST.ARRAY_POWERUP[0]["pueffect"],
                 )
             self.extralife += Settings.ship_extra_life_increment
         #endregion
@@ -457,7 +458,7 @@ class GameState:
         for segment in Graphicgroups.scenery: segment.draw(screen)
         Functions.kanalist(screen,128)
 
-        if Variables.debugwindow: Debug.draw(Constants.DEBUG_LOC_X,Constants.DEBUG_LOC_Y)   # DEBUG
+        if Variables.debugwindow: Debug.draw(CONST.DEBUG_LOC_X,CONST.DEBUG_LOC_Y)   # DEBUG
 
     def handle_events(self, events):
         for event in events:
@@ -498,7 +499,7 @@ class BossFight:
         Game_Objects.timer.biglaser(enemywaittimer=self.enemy_wait_timer)       # Big Laser Timer
         Game_Objects.timer.planet()                                             # PLANET Timer
         Game_Objects.timer.junk()                                               # JUNK Timer
-        if Constants.ARRAY_BOSSES[Variables.level]["shield"] > 0:
+        if CONST.ARRAY_BOSSES[Variables.level]["shield"] > 0:
             Game_Objects.timer.bosskana(frequency=10)                           # Boss Kana
         # Game_Objects.timer.scenery(frequency=.5)
         # Game_Objects.timer.wallofdeath()                                        # Wall of Death Timer
@@ -527,7 +528,7 @@ class BossFight:
                 if time.time() - self.bonus_timer >= 0.05:
                     self.bonus_score -= 1
                     Variables.score += 1
-                    pygame.mixer.Sound.play(Constants.SOUND_CORRECT_KANA_LOSING)
+                    pygame.mixer.Sound.play(CONST.SOUND_CORRECT_KANA_LOSING)
                     self.bonus_timer = time.time()
         #endregion add bonus to score
 
@@ -562,11 +563,11 @@ class BossFight:
 
     def warningmessages(self):
         if Variables.level == Settings.enemy_start_level and self.prev_level < Settings.enemy_start_level:
-            Game_Objects.CenterWarning.spawn('Enemies Active',Constants.SURF_ENEMY[0].images[0],3)
+            Game_Objects.CenterWarning.spawn('Enemies Active',CONST.SURF_ENEMY[0].images[0],3)
             self.enemy_wait_timer = 3
             self.prev_level = Settings.enemy_start_level
         if Variables.level == Settings.biglaser_start_level and self.prev_level < Settings.biglaser_start_level:
-            Game_Objects.CenterWarning.spawn('Big Laser Active',Constants.SURF_BIG_LASER[0].images[0])
+            Game_Objects.CenterWarning.spawn('Big Laser Active',CONST.SURF_BIG_LASER[0].images[0])
             self.enemy_wait_timer = 3
             self.prev_level = Settings.biglaser_start_level
 
@@ -574,9 +575,9 @@ class BossFight:
         #region Extra Life
         if Variables.score >= self.extralife:
             Game_Objects.AnimatedPowerUp.spawn(
-                Constants.ARRAY_POWERUP[0]["xvel"],
-                Constants.ARRAY_POWERUP[0]["surfindx"],
-                Constants.ARRAY_POWERUP[0]["pueffect"],
+                CONST.ARRAY_POWERUP[0]["xvel"],
+                CONST.ARRAY_POWERUP[0]["surfindx"],
+                CONST.ARRAY_POWERUP[0]["pueffect"],
                 )
             self.extralife += Settings.ship_extra_life_increment
         #endregion
@@ -644,9 +645,9 @@ class BossFight:
         #region Kana List
         for f in range(int(Variables.levels[Variables.level])): Graphicgroups.kanalist.append(Variables.commasep[f])
         for f in range(int(Variables.levels[Variables.level])):
-            if Variables.gamemode == 0: kanalistthing = Constants.UI_FONT.render(Graphicgroups.kanalist[f][0], True, (20,20,20))
-            else: kanalistthing = Constants.UI_FONT.render(Graphicgroups.kanalist[f][1], True, (20,20,20))
-            screen.blit(kanalistthing,(25+(27*f),Constants.PAHEIGHT-30))
+            if Variables.gamemode == 0: kanalistthing = CONST.UI_FONT.render(Graphicgroups.kanalist[f][0], True, (20,20,20))
+            else: kanalistthing = CONST.UI_FONT.render(Graphicgroups.kanalist[f][1], True, (20,20,20))
+            screen.blit(kanalistthing,(25+(27*f),CONST.PAHEIGHT-30))
         #endregion
 
         Graphicgroups.planet_group.draw(screen)                                         # PLANETS
@@ -680,7 +681,7 @@ class BossFight:
         for turret in Graphicgroups.turrets: turret.draw(screen)
         for segment in Graphicgroups.scenery: segment.draw(screen)
         
-        if Variables.debugwindow: Debug.draw(Constants.DEBUG_LOC_X,Constants.DEBUG_LOC_Y)   # DEBUG
+        if Variables.debugwindow: Debug.draw(CONST.DEBUG_LOC_X,CONST.DEBUG_LOC_Y)   # DEBUG
 
     def handle_events(self, events):
         for event in events:
@@ -776,14 +777,14 @@ class GameOverState:
         #endregion
         #region UI Text
         if Variables.score <=0: Variables.score = 0
-        scoretext = Constants.UI_FONT.render("Score: " + str(Variables.score), True, 'white')
-        screen.blit(scoretext, (Constants.WIDTH-200, 10))
+        scoretext = CONST.UI_FONT.render("Score: " + str(Variables.score), True, 'white')
+        screen.blit(scoretext, (CONST.WIDTH-200, 10))
 
-        livestext = Constants.UI_FONT.render("Lives: " + str(Game_Objects.player.lives), True, 'white')
-        screen.blit(livestext, (Constants.WIDTH-400, 10))
+        livestext = CONST.UI_FONT.render("Lives: " + str(Game_Objects.player.lives), True, 'white')
+        screen.blit(livestext, (CONST.WIDTH-400, 10))
 
-        leveltext = Constants.UI_FONT.render("Level: " + str(Variables.level), True, 'white')
-        screen.blit(leveltext, (Constants.WIDTH-600, 10))
+        leveltext = CONST.UI_FONT.render("Level: " + str(Variables.level), True, 'white')
+        screen.blit(leveltext, (CONST.WIDTH-600, 10))
 
         for centerwarn in Graphicgroups.centerwarning:
             centerwarn.draw()
@@ -793,21 +794,21 @@ class GameOverState:
         for segment in Graphicgroups.scenery: segment.draw(screen)
 
         #region DEBUG                                                                   # DEBUG
-        if Variables.debugwindow: Debug.draw(Constants.DEBUG_LOC_X,Constants.DEBUG_LOC_Y)
+        if Variables.debugwindow: Debug.draw(CONST.DEBUG_LOC_X,CONST.DEBUG_LOC_Y)
         #endregion
 
 
         # Game Over 
-        GAME_OVER_text = Constants.GAME_OVER_FONT.render('GAME OVER', True, 'white')
-        screen.blit(GAME_OVER_text, (10, Constants.PAHEIGHT/2))
+        GAME_OVER_text = CONST.GAME_OVER_FONT.render('GAME OVER', True, 'white')
+        screen.blit(GAME_OVER_text, (10, CONST.PAHEIGHT/2))
 
-        GAME_OVER_Shadow_text = Constants.GAME_OVER_FONT.render('GAME OVER', True, 'white')
+        GAME_OVER_Shadow_text = CONST.GAME_OVER_FONT.render('GAME OVER', True, 'white')
         GAME_OVER_Shadow_text.set_alpha(100)
-        screen.blit(GAME_OVER_Shadow_text, (15, Constants.PAHEIGHT/2+5))
+        screen.blit(GAME_OVER_Shadow_text, (15, CONST.PAHEIGHT/2+5))
 
         # Score
-        Score_text = Constants.QUESTION_FONT.render('Score: ' + str(Variables.score), True, 'white')
-        screen.blit(Score_text, (400, Constants.PAHEIGHT/8))
+        Score_text = CONST.QUESTION_FONT.render('Score: ' + str(Variables.score), True, 'white')
+        screen.blit(Score_text, (400, CONST.PAHEIGHT/8))
 
     def handle_events(self, events):
         for event in events:

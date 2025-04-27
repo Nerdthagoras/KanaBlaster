@@ -1,4 +1,4 @@
-import Constants
+import CONST
 
 #region KANA
 num_to_shoot_new_kana = 10
@@ -85,11 +85,11 @@ biglaser_start_level = 3
 #region USER INTERFACE
 uitop = 30
 maxmusicvolume = 0.2
-score_position = (0, Constants.HEIGHT-uitop)
-lives_position = (200, Constants.HEIGHT-uitop)
-level_position = (400, Constants.HEIGHT-uitop)
-bonus_position = (Constants.WCENTER-60, 80)
-question_position = (Constants.WCENTER+60, 20)
-shieldtext_position = (Constants.WCENTER-80,120)
+score_position = (0, CONST.HEIGHT-uitop)
+lives_position = (200, CONST.HEIGHT-uitop)
+level_position = (400, CONST.HEIGHT-uitop)
+bonus_position = (CONST.WCENTER-60, 80)
+question_position = (CONST.WCENTER+60, 20)
+shieldtext_position = (CONST.WCENTER-80,120)
 boss_shield_bar = 150
 #endregion
