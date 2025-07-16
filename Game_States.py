@@ -76,6 +76,9 @@ class IntroState:
             # KEYDOWN
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN: self.done = True
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
 
 
 
@@ -125,7 +128,7 @@ class MenuState:
         Graphicgroups.starfield_group.draw(screen)                                                  # STARS
         for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                                          # Kana
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                               # Enemy Projectiles
-        for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)                  # Enemies
+        for enemy in Graphicgroups.enemies: enemy.draw(screen)                                      # Enemies
         for bullet in Graphicgroups.enemymissiles: bullet.draw(screen)                              # Enemy Missiles
         for warning in Graphicgroups.warnings: warning.draw(screen)                                 # Warning for BIG LASER
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                              # BIG LASER
@@ -434,7 +437,7 @@ class GameState:
         for cutoff in Graphicgroups.cuttoffline: cutoff.draw(screen)                    # CUTOFF LINE
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
         for bits in Graphicgroups.debris: bits.draw(screen)                             # Bits debris
-        for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
+        for enemy in Graphicgroups.enemies: enemy.draw(screen)                          # ENEMIES
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
         for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                     # WRONG KANA
         for kana in Graphicgroups.bossmodecorrectkana: kana.draw(screen)

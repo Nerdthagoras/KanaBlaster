@@ -296,7 +296,7 @@ class Ship:
     def draw(self,screen):
 
         screen.blit(self.healthbar, (self.spaceship_rect.left,self.spaceship_rect.top+74,self.spaceship_rect.width,10))
-        self.healthbar.fill((0,0,0,0))
+        self.healthbar.fill(Variables.invisible)
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
 
@@ -1512,6 +1512,7 @@ class Enemies:
         self.health = self.maxhealth
         self.maxhealth_grapic = CONST.UI_FONT.render(str(self.maxhealth), True, 'green')
         self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
+        
         self.healthbar_height = 5
         self.healthbar = pygame.Surface((self.enemy_rect.width,5)).convert_alpha()
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
@@ -1568,11 +1569,11 @@ class Enemies:
             self.theta = math.atan2(-dy,dx)
             return self.theta
 
-    def draw(self,screen,player):
+    def draw(self,screen):
         import Functions
         screen.blit(self.image, self.enemy_rect)
         screen.blit(self.healthbar, (self.enemy_rect.left,self.enemy_rect.top-20,self.enemy_rect.width,10))
-        self.healthbar.fill((0,0,0,0))
+        self.healthbar.fill(Variables.invisible)
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
         self.hitbox = self.enemy_rect
@@ -1592,6 +1593,7 @@ class Enemies:
     def spawn():
         # enemies.append(Enemies(random.randint(0,2)))
         Graphicgroups.enemies.append(Enemies(random.randint(0,3)))
+
 
 
 
@@ -1732,7 +1734,7 @@ class Bosses:
             10                          # Height
             )
         )
-        self.healthbar.fill((0,0,0,0))
+        self.healthbar.fill(Variables.invisible)
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
 
@@ -1745,7 +1747,7 @@ class Bosses:
             barwidth,
             10
         ))
-        self.shieldbar.fill((0,0,0,0))
+        self.shieldbar.fill(Variables.invisible)
         try: pygame.draw.rect(self.shieldbar,'cyan',(0,0,barwidth/100 * (CONST.ARRAY_BOSSES[Variables.level]["shield"]),self.healthbar_height))
         except: pass
 
@@ -1990,7 +1992,7 @@ class Healthbar:        # Work In Progress
 
     def draw(self,screen):
         screen.blit(self.healthbar, (self.rect.left,self.rect.top-5,self.rect.width,10))
-        self.healthbar.fill((0,0,0,0))
+        self.healthbar.fill(Variables.invisible)
         try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
         except: pass
 

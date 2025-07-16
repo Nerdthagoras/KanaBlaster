@@ -60,5 +60,6 @@ scenerytype = 0
 sceneryheight = 1
 scenerywaittime = 0.5
 RGB = [0,0,0]
+invisible = (0,0,0,0)
 theta = 0
 #endregion TRACKABLES
