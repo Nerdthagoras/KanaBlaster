@@ -1,12 +1,12 @@
 import Variables, CONST, Settings, Graphicgroups
 import pygame, math, random, os
 
-#region PLAYER THINGS
+#region -        PLAYER THINGS
 
 
 
 
-#region ship
+#region Ship
 class Ship:
     def __init__(self,x,y):
         self.type = 0
@@ -52,13 +52,21 @@ class Ship:
         self.xflame_rect = self.xflameimage.get_rect(center = self.location)
         self.yflameimage = pygame.transform.rotate(self.flamearray.images[self.yflameindex],90)
         self.yflame_rect = self.yflameimage.get_rect(center = self.location)
-
-        # Healthbar stuff
         self.maxhealth = 9
         self.health = self.maxhealth
+
+        # Healthbar
         self.healthbar_height = 2
         self.healthbar = pygame.Surface((self.spaceship_rect.width,self.healthbar_height)).convert_alpha()
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        self.healthdisplay = self.spaceship_rect.width/self.maxhealth*self.health
+
+        # Healthbar Fade
+        self.health_damage_bar_alpha = 255
+        self.healthbar_damage_fadeout_rate = 400
+        self.healthbar_damage = pygame.Surface((self.spaceship_rect.width,self.healthbar_height)).convert_alpha()
+        self.healthbar_damage_fade_Color = (255,0,0,self.health_damage_bar_alpha)
+        self.healthbar_damage_prev_health = self.spaceship_rect.width/self.maxhealth*self.health
 
         #region Powerups
         self.poweruptimelength = 1000
@@ -278,8 +286,9 @@ class Ship:
 
     def update(self):
 
-        self.healthdisplay = self.spaceship_rect.width/self.maxhealth*self.health
-        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        #self.healthdisplay = self.spaceship_rect.width/self.maxhealth*self.health
+        #self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        Healthbar.update(self,self.spaceship_rect)
         self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
 
         self.animate()
@@ -287,19 +296,22 @@ class Ship:
         self.respawn_checker()
         self.apply_powerups()
         self.x, self.y = self.location[0], self.location[1]
-        if self.health <= 0: self.respawn()
+        if self.health <= 0:
+            ship_explosion = Explosion(self.spaceship_rect.center[0], self.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
+            Graphicgroups.explosion_group.add(ship_explosion)
+            self.respawn()
 
         # self.laserpower = int(Variables.score) + 1
         self.laserpower = int(Variables.score) * CONST.ARRAY_PLAYER_PEW[player.pewtype]["laserpower"] + 1
         self.power_grapic = CONST.UI_FONT.render(str(self.laserpower), True, 'green')
 
     def draw(self,screen):
+        # screen.blit(self.healthbar, (self.spaceship_rect.left,self.spaceship_rect.top+74,self.spaceship_rect.width,10))
+        # self.healthbar.fill(Variables.invisible)
+        # try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        # except: pass
 
-        screen.blit(self.healthbar, (self.spaceship_rect.left,self.spaceship_rect.top+74,self.spaceship_rect.width,10))
-        self.healthbar.fill(Variables.invisible)
-        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
-        except: pass
-
+        Healthbar.draw(self,screen,self.spaceship_rect,74)
         self.movement()
         if self.shipcollision == False:
             if int(self.respawn_timer*100) % 3 == 0: self.image.set_alpha(200)
@@ -575,7 +587,13 @@ class DynamicPew:
 
 
 
-#region ENVIRONMENT
+
+
+
+
+
+
+#region -        ENVIRONMENT
 
 
 
@@ -1054,7 +1072,14 @@ class BorderScenery:
 
 
 
-#region INTERACTABLES
+
+
+
+
+
+
+
+#region -        INTERACTABLES
 
 
 
@@ -1510,12 +1535,23 @@ class Enemies:
 
         self.maxhealth = Variables.generatedcorrectkanacounter + 1
         self.health = self.maxhealth
+        
+        # Debug Text Values
         self.maxhealth_grapic = CONST.UI_FONT.render(str(self.maxhealth), True, 'green')
         self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
-        
+
+        # Healthbar
         self.healthbar_height = 5
-        self.healthbar = pygame.Surface((self.enemy_rect.width,5)).convert_alpha()
+        self.healthbar = pygame.Surface((self.enemy_rect.width,self.healthbar_height)).convert_alpha()
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        self.healthdisplay = self.enemy_rect.width/self.maxhealth*self.health
+
+        # Healthbar Fade
+        self.health_damage_bar_alpha = 255
+        self.healthbar_damage_fadeout_rate = 400
+        self.healthbar_damage = pygame.Surface((self.enemy_rect.width,self.healthbar_height)).convert_alpha()
+        self.healthbar_damage_fade_Color = (255,0,0,self.health_damage_bar_alpha)
+        self.healthbar_damage_prev_health = self.enemy_rect.width/self.maxhealth*self.health
 
     def calculate_angles(self,number_of_angles):
         if number_of_angles < 1:
@@ -1546,14 +1582,17 @@ class Enemies:
             self.last_enemy_pew = pygame.time.get_ticks()
 
     def update(self):
-        self.healthdisplay = self.enemy_rect.width/self.maxhealth*self.health
-        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
-        self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
         self.animate()
-        if self.type%3 == 0 or self.type%3 == 1:
-            self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))
-        elif self.type%3 == 2:
-            self.enemy_rect = self.image.get_rect(center = (self.x, self.y))
+
+        # Debug Text
+        self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
+
+        Healthbar.update(self,self.enemy_rect)
+
+        # Set Coordinate for where enemy bullets spawn from.
+        if self.type%3 == 0 or self.type%3 == 1: self.enemy_rect = self.image.get_rect(midleft = (self.x, self.y))      # Forward shooting ships
+        elif self.type%3 == 2: self.enemy_rect = self.image.get_rect(center = (self.x, self.y))                         # AOE shooting Ships
+
         self.x -= (self.velocity - self.knockbackx) * Variables.delta_time
         self.y -= (self.Yvelocity - self.knockbacky) * Variables.delta_time
         if self.knockbackx > 0: self.knockbackx -= Settings.enemy_knockback_recoveryx * Variables.delta_time
@@ -1571,11 +1610,35 @@ class Enemies:
 
     def draw(self,screen):
         import Functions
+        # Draw Enemy
         screen.blit(self.image, self.enemy_rect)
-        screen.blit(self.healthbar, (self.enemy_rect.left,self.enemy_rect.top-20,self.enemy_rect.width,10))
-        self.healthbar.fill(Variables.invisible)
-        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+
+        #region Draw Enemy previous health bar for fading out
+        screen.blit(
+            self.healthbar_damage, 
+            (
+                self.enemy_rect.left,       # X Coordinate
+                self.enemy_rect.top-20,     # Y Coordinate 
+                self.enemy_rect.width,      # Width
+                10
+            )
+        )
+        try: pygame.draw.rect(
+            self.healthbar_damage,                          # Surface to draw onto
+            self.healthbar_damage_fade_Color,               # Rectangle color
+            (
+                0,                                          # X Coordinate
+                0,                                          # Y Coordinate
+                self.healthbar_damage_prev_health,          # Bar length
+                self.healthbar_height                       # Bar height
+            )
+        )
         except: pass
+        #endregion Draw Enemy previous health bar for fading out
+
+        Healthbar.draw(self,screen,self.enemy_rect,-20)
+
+        #region Define and draw Hotbox if debug is active
         self.hitbox = self.enemy_rect
         self.hitbox = Functions.shrink_hitbox(self.enemy_rect,5)
         if Variables.hitboxshow:
@@ -1583,6 +1646,7 @@ class Enemies:
             screen.blit(self.curhealth_grapic, self.enemy_rect.topleft)
             pygame.draw.rect(screen, (255,0,0),self.hitbox, 2)
             # pygame.draw.line(screen, (255,255,0), (self.x, self.y),player.spaceship_rect.center)
+        #endregion Define and draw Hotbox if debug is active
 
     def collide(self,rect):
         if rect[0] + rect[2] > self.hitbox[0] and rect[0] < self.hitbox[0] + self.hitbox[2]:
@@ -1593,7 +1657,6 @@ class Enemies:
     def spawn():
         # enemies.append(Enemies(random.randint(0,2)))
         Graphicgroups.enemies.append(Enemies(random.randint(0,3)))
-
 
 
 
@@ -1638,9 +1701,18 @@ class Bosses:
         self.health = self.maxhealth
         self.maxhealth_grapic = CONST.UI_FONT.render(str(self.maxhealth), True, 'green')
         self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
+        
+        # Healthbar
         self.healthbar_height = 5
         self.healthbar = pygame.Surface((self.boss_rect.width,self.healthbar_height)).convert_alpha()
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
+        # Healthbar Fade
+        self.health_damage_bar_alpha = 255
+        self.healthbar_damage_fadeout_rate = 400
+        self.healthbar_damage = pygame.Surface((self.boss_rect.width,self.healthbar_height)).convert_alpha()
+        self.healthbar_damage_fade_Color = (255,0,0,self.health_damage_bar_alpha)
+        self.healthbar_damage_prev_health = self.boss_rect.width/self.maxhealth*self.health
 
         # Shield Settings
         self.shieldbar_height = 5
@@ -1694,17 +1766,9 @@ class Bosses:
             self.last_boss_pew = pygame.time.get_ticks()
 
     def update(self):
-        if self.flash > 0: self.flash -= 3
-        if self.flash < 0: self.flash = 0
-        shieldalpha = CONST.ARRAY_BOSSES[Variables.level]["shield"]/100*200
-        self.shield.set_alpha(shieldalpha)
-        self.cp = self.image.copy()
-        self.cp.fill((self.flash,self.flash,self.flash,0),None, pygame.BLEND_RGBA_ADD)
-        self.healthdisplay = self.boss_rect.width/self.maxhealth*self.health
-        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        # Movement
         self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
         self.animate()
-        self.animateshield()
         if self.type%3 == 0 or self.type%3 == 1: self.boss_rect = self.image.get_rect(midleft = (self.x, self.y))
         elif self.type%3 == 2: self.boss_rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.delta_time
@@ -1714,6 +1778,22 @@ class Bosses:
         if self.x <= 3*CONST.WIDTH/5: self.velocity *= -1
         if self.x > CONST.WIDTH-256 and self.enter_screen == True: self.velocity *= -1
         self.shoot(player)
+
+        # Flash when shot
+        if self.flash > 0: self.flash -= 3 # TODO: Delta_time
+        if self.flash < 0: self.flash = 0
+        self.cp = self.image.copy()
+        self.cp.fill((self.flash,self.flash,self.flash,0),None, pygame.BLEND_RGBA_ADD)
+
+        # Healthbar
+        Healthbar.update(self,self.boss_rect)
+        # self.healthdisplay = self.boss_rect.width/self.maxhealth*self.health
+        # self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+
+        # Shield
+        shieldalpha = CONST.ARRAY_BOSSES[Variables.level]["shield"]/100*200
+        self.shield.set_alpha(shieldalpha)
+        self.animateshield()
 
     def findobjectangle(self,player):
             # Find angle of player
@@ -1727,16 +1807,17 @@ class Bosses:
         screen.blit(self.shield, (self.boss_rect[0]-64,self.boss_rect[1]-64))
         
         # Health Bar
-        screen.blit(self.healthbar, (
-            self.boss_rect.left,        # X
-            self.boss_rect.top-20,      # Y
-            self.boss_rect.width,       # Width
-            10                          # Height
-            )
-        )
-        self.healthbar.fill(Variables.invisible)
-        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
-        except: pass
+        Healthbar.draw(self,screen,self.boss_rect,-20)
+        # screen.blit(self.healthbar, (
+        #     self.boss_rect.left,        # X
+        #     self.boss_rect.top-20,      # Y
+        #     self.boss_rect.width,       # Width
+        #     10                          # Height
+        #     )
+        # )
+        # self.healthbar.fill(Variables.invisible)
+        # try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+        # except: pass
 
         # Shield
         x = Settings.boss_shield_bar
@@ -1946,7 +2027,14 @@ class Debris:
 
 
 
-#region THINGS
+
+
+
+
+
+
+
+#region -        THINGS
 
 
 
@@ -1977,24 +2065,68 @@ class StarWarsScroll:
 
 #region Health Bar
 class Healthbar:        # Work In Progress
-    def __init__(self,maxhealth,health,barheight,rect):
-        self.maxhealth = maxhealth
-        self.health = health
-        self.healthbar_height = barheight
-        self.rect = rect
-        self.healthbar = pygame.Surface((self.rect.width,self.healthbar_height)).convert_alpha()
+    def update(self,rect):
+        #region healthbar
+        self.healthdisplay = rect.width/self.maxhealth*self.health
         self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
+        #endregion healthbar
 
-    def update(self):
-        self.healthdisplay = self.rect.width/self.maxhealth*self.health
-        self.healthbar_Color = (255-(255/self.maxhealth*self.health),255/self.maxhealth*self.health,0)
-        self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
+        #region health damage Fadeout timer
+        if self.health_damage_bar_alpha < 0:
+            self.health_damage_bar_alpha = 0
+            self.healthbar_damage_prev_health = rect.width/self.maxhealth*self.health
+        else:
+            self.health_damage_bar_alpha = self.health_damage_bar_alpha - self.healthbar_damage_fadeout_rate * Variables.delta_time
+        self.healthbar_damage_fade_Color = (255,0,0,self.health_damage_bar_alpha)
+        #endregion health damage Fadeout timer
 
-    def draw(self,screen):
-        screen.blit(self.healthbar, (self.rect.left,self.rect.top-5,self.rect.width,10))
-        self.healthbar.fill(Variables.invisible)
-        try: pygame.draw.rect(self.healthbar,self.healthbar_Color,(0,0,self.healthdisplay,self.healthbar_height))
+    def draw(self,screen,rect,pos):
+        #region Draw previous health bar for fading out
+        screen.blit(
+            self.healthbar_damage, 
+            (
+                rect.left,       # X Coordinate
+                rect.top+pos,     # Y Coordinate 
+                rect.width,      # Width
+                10
+            )
+        )
+        try: pygame.draw.rect(
+            self.healthbar_damage,                          # Surface to draw onto
+            self.healthbar_damage_fade_Color,               # Rectangle color
+            (
+                0,                                          # X Coordinate
+                0,                                          # Y Coordinate
+                self.healthbar_damage_prev_health,          # Bar length
+                self.healthbar_height                       # Bar height
+            )
+        )
         except: pass
+        #endregion Draw previous health bar for fading out
+
+        #region Draw Healthbar
+        screen.blit(
+            self.healthbar, 
+            (
+                rect.left,                  # X Coordinate
+                rect.top+pos,               # Y Coordinate 
+                rect.width,                 # Width
+                10                          # I don't know what this is?
+            )
+        )
+        self.healthbar.fill(Variables.invisible)
+        try: pygame.draw.rect(
+            self.healthbar,
+            self.healthbar_Color,
+            (
+                0,                          # X Coordinate
+                0,                          # Y Coordinate
+                self.healthdisplay,         # Bar length
+                self.healthbar_height       # Bar height
+            )   
+        )
+        except: pass
+        #endregion Draw Enemy Healthbar
 
 
 
@@ -2328,7 +2460,14 @@ class Achievements:
 
 
 
-#region INSTANCING
+
+
+
+
+
+
+
+#region -INSTANCING
 player = Ship(0,CONST.HCENTER)              # Instance player to center left of screen
 timer = Timers()                                # Create a timer object
 menu_buttons = Buttons()                        # Create a button object

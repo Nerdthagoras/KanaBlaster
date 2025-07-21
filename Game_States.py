@@ -108,17 +108,18 @@ class MenuState:
         for junk in Graphicgroups.spacejunk: junk.update(Game_Objects.player)                       # RANDOM JUNK
         Graphicgroups.starfield_group.update(Game_Objects.player)                                   # STARS
         Graphicgroups.explosion_group.update()                                                      # EXPLOSION
-        for kana in Graphicgroups.incorrectkanas:  kana.update(Game_Objects.player)                          # Kana
+        for kana in Graphicgroups.incorrectkanas:  kana.update(Game_Objects.player)                 # Kana
         for bullet in Graphicgroups.enemymissiles: bullet.update()                                  # Enemy Missiles
         for warning in Graphicgroups.warnings: warning.update()                                     # Warning for BIG LASER
         for biglaser in Graphicgroups.biglasers: biglaser.update()                                  # BIG LASER
         for enemy in Graphicgroups.enemies: enemy.update();enemy.shoot(Game_Objects.player)         # Enemies
+        for healthbar in Graphicgroups.healthbars: healthbar.update()                               # Healthbars
         for epew in Graphicgroups.enemyprojectiles: epew.update()                                   # Enemy Projectiles
         for wod in Graphicgroups.wallsegments: wod.update()                                         # Wall of Death
         for centerwarn in Graphicgroups.animcenterwarning: centerwarn.update()                      # Center Warning
         for powerup in Graphicgroups.animatedpowerup: powerup.update()                              # Powerups
-        for segment in Graphicgroups.scenery: segment.update()
-        for turret in Graphicgroups.turrets: turret.update()
+        for segment in Graphicgroups.scenery: segment.update()                                      # Ground parts
+        for turret in Graphicgroups.turrets: turret.update()                                        # Ground Enemies
 
     def draw(self,screen):
         # Must be in order of Top/Bottom = Background/Foreground
@@ -749,9 +750,9 @@ class GameOverState:
         for bullet in Graphicgroups.bullets: bullet.draw(screen)                        # BULLETS
         for cutoff in Graphicgroups.cuttoffline: cutoff.draw(screen)                    # CUTOFF LINE
         for epew in Graphicgroups.enemyprojectiles: epew.draw(screen)                   # ENEMY PEW
-        for enemy in Graphicgroups.enemies: enemy.draw(screen,Game_Objects.player)      # ENEMIES
+        for enemy in Graphicgroups.enemies: enemy.draw(screen)                          # ENEMIES
         for kana in Graphicgroups.correctkanas: kana.draw(screen)                       # CORRECT KANA
-        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                              # WRONG KANA
+        for kana in Graphicgroups.incorrectkanas: kana.draw(screen)                     # WRONG KANA
         for powerup in Graphicgroups.animatedpowerup: powerup.draw(screen)              # Powerup
         for biglaser in Graphicgroups.biglasers: biglaser.draw(screen)                  # BIG LASER
         for wod in Graphicgroups.wallsegments: wod.draw(screen)                         # Wall of Death

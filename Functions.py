@@ -178,6 +178,7 @@ def collision():
                 pygame.mixer.Sound.play(CONST.SOUND_GOODHIT)
                 damage = 1 + random.randint(int(Game_Objects.player.laserpower/5),Game_Objects.player.laserpower)
                 enemy.health -= damage
+                enemy.health_damage_bar_alpha = 255
                 Game_Objects.Debris.spawn(
                     x=enemy.enemy_rect.centerx,
                     y=enemy.y,
@@ -206,13 +207,9 @@ def collision():
         for boss in Graphicgroups.bosses:
             if boss.collide(bullet.hitbox):
                 pygame.mixer.Sound.play(CONST.SOUND_GOODHIT)
-                # damage = random.randint(
-                #     int(Game_Objects.player.laserpower / 10),           # Minimum
-                #     int(Game_Objects.player.laserpower)                 # Maximum
-                # )
                 damage = int(Game_Objects.player.laserpower / (CONST.ARRAY_BOSSES[Variables.level]["shield"]+1))
                 boss.health -= damage
-                # boss.bossalpha = 50
+                enemy.health_damage_bar_alpha = 255
                 boss.flash = 255
                 CONST.ARRAY_BOSSES[Variables.level]["shield"] -= 1
                 if CONST.ARRAY_BOSSES[Variables.level]["shield"] < 0: CONST.ARRAY_BOSSES[Variables.level]["shield"] = 0
@@ -768,8 +765,9 @@ def collision():
                 Graphicgroups.enemyprojectiles.pop(Graphicgroups.enemyprojectiles.index(epew))
                 explosion = Game_Objects.Explosion(epew.x, epew.y,CONST.SURF_EXPLOSION,0.5,False)
                 ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
-                Graphicgroups.explosion_group.add(explosion)
-                Graphicgroups.explosion_group.add(ship_explosion)
+                #Graphicgroups.explosion_group.add(explosion)
+                #Graphicgroups.explosion_group.add(ship_explosion)
+                Game_Objects.player.health_damage_bar_alpha = 255
                 pygame.mixer.Sound.play(CONST.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.health -= 3
                 # Game_Objects.player.respawn()
@@ -1022,9 +1020,9 @@ def collision():
             if kana.collide(Game_Objects.player.hitbox):
                 Graphicgroups.incorrectkanas.pop(Graphicgroups.incorrectkanas.index(kana))
                 explosion = Game_Objects.Explosion(kana.x, kana.y,CONST.SURF_EXPLOSION,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
-                Graphicgroups.explosion_group.add(explosion)
-                Graphicgroups.explosion_group.add(ship_explosion)
+                # ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
+                # Graphicgroups.explosion_group.add(explosion)
+                # Graphicgroups.explosion_group.add(ship_explosion)
                 pygame.mixer.Sound.play(CONST.SOUND_SHIP_WAS_HIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
@@ -1037,9 +1035,9 @@ def collision():
             if kana.collide(Game_Objects.player.hitbox):
                 Graphicgroups.bossmodeincorrectkana.pop(Graphicgroups.bossmodeincorrectkana.index(kana))
                 explosion = Game_Objects.Explosion(kana.x, kana.y,CONST.SURF_EXPLOSION,0.5,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
-                Graphicgroups.explosion_group.add(explosion)
-                Graphicgroups.explosion_group.add(ship_explosion)
+                # ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
+                # Graphicgroups.explosion_group.add(explosion)
+                # Graphicgroups.explosion_group.add(ship_explosion)
                 pygame.mixer.Sound.play(CONST.SOUND_SHIP_WAS_HIT)
                 kana_sound = pygame.mixer.Sound(os.path.join('sounds','kana', Variables.gamekana[Variables.level][kana.kana][2] + '.wav'))
                 pygame.mixer.Sound.play(kana_sound)
@@ -1076,9 +1074,9 @@ def collision():
             if bits.collide(Game_Objects.player.hitbox):
                 Graphicgroups.debris.pop(Graphicgroups.debris.index(bits))
                 explosion = Game_Objects.Explosion(bits.x, bits.y,CONST.SURF_EXPLOSION,0.25,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
-                Graphicgroups.explosion_group.add(explosion)
-                Graphicgroups.explosion_group.add(ship_explosion)
+                #ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
+                #Graphicgroups.explosion_group.add(explosion)
+                #Graphicgroups.explosion_group.add(ship_explosion)
                 pygame.mixer.Sound.play(CONST.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.health -= 1
                 # Game_Objects.player.respawn()
@@ -1098,9 +1096,9 @@ def collision():
             if emissile.collide(Game_Objects.player.hitbox):
                 Graphicgroups.enemymissiles.pop(Graphicgroups.enemymissiles.index(emissile))
                 explosion = Game_Objects.Explosion(emissile.x, emissile.y,CONST.SURF_EXPLOSION,0.25,False)
-                ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
-                Graphicgroups.explosion_group.add(explosion)
-                Graphicgroups.explosion_group.add(ship_explosion)
+                # ship_explosion = Game_Objects.Explosion(Game_Objects.player.spaceship_rect.center[0], Game_Objects.player.spaceship_rect.center[1],CONST.SURF_EXPLOSION,1,False)
+                # Graphicgroups.explosion_group.add(explosion)
+                # Graphicgroups.explosion_group.add(ship_explosion)
                 pygame.mixer.Sound.play(CONST.SOUND_SHIP_WAS_HIT)
                 Game_Objects.player.health -= 5
 
