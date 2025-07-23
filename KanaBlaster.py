@@ -33,12 +33,13 @@ class Game:
             CONST.CLOCK.tick(CONST.FPS)
             Variables.delta_time = time.time() - Variables.previous_time; Variables.previous_time = time.time()
 
-            if not Variables.paused: self.current_state.manifest()                                       # Bring objects into existance 
-            if not Variables.paused: self.current_state.update()                                         # Update existing objects
-            self.current_state.draw(CONST.SCREEN)                                                    # Draw existing objects
-            if not Variables.paused: pygame.display.flip()                                          # Update the screen
-            if not Variables.paused: Functions.collision()                                          # Global Collision detections
-            self.current_state.handle_events(pygame.event.get())                                         # Check for events such as key presses
+            if not Variables.paused: 
+                self.current_state.manifest()                                  # Bring objects into existance 
+                self.current_state.update()                                    # Update existing objects
+                self.current_state.draw(CONST.SCREEN)                          # Draw existing objects
+                pygame.display.flip()                                          # Update the screen
+                Functions.collision()                                          # Global Collision detections
+            self.current_state.handle_events(pygame.event.get())               # Check for events such as key presses
 
             #region Handle state changes when state is done
             if self.current_state.done:          
@@ -78,7 +79,7 @@ if __name__ == "__main__":
     game = Game()
     game.run()
 
-#region OLD_MAIN
+#region OLD_MAIN◙
 # if __name__ == "__main__":
 #     # Set the beginning state
 #     current_state = Game_States.intro_state

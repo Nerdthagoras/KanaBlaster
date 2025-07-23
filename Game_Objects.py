@@ -1681,12 +1681,15 @@ class Bosses:
         # Animation Settings
         self.animspeed = animspeed
         self.bossimage = bossimage
-        self.animindex = 0
         self.spritearray = CONST.SURF_BOSS
-        self.image = self.spritearray[self.bossimage].images[self.animindex]
-        self.shieldanimindex = 0
         self.shieldarray = CONST.SURF_SHIELD
+        self.totalframes = int(len(self.spritearray[self.bossimage].images)/2)
+        #self.animindex = 0
+        self.animindex = int(self.totalframes/2)
+        self.shieldanimindex = 0
+        self.image = self.spritearray[self.bossimage].images[self.animindex]
         self.shield = self.shieldarray.images[self.shieldanimindex]
+        #self.middleframe = int(self.totalframes/2)
 
         # Movement Settings
         self.enter_screen = False
@@ -1729,7 +1732,18 @@ class Bosses:
 
     def animate(self):
         self.animindex += self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
-        if self.animindex > len(self.spritearray[self.bossimage].images)-1: self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
+        if self.animindex > self.totalframes-1: self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
+        self.image = self.spritearray[self.bossimage].images[int(self.animindex)] # update the current frame
+
+    def betteranimate(self):
+        if self.Yvelocity > 0:
+            self.animindex += self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
+            if self.animindex > self.totalframes-1: self.animindex = self.totalframes-1 # reset the frame to 0 if we try to go beyond the array
+        if self.Yvelocity < 0:
+            self.animindex -= self.animspeed * Variables.delta_time #length of ime before we advance the animation frame
+            if self.animindex < 0: self.animindex = 0 # reset the frame to 0 if we try to go beyond the array
+        if self.Yvelocity == 0:
+            pass
         self.image = self.spritearray[self.bossimage].images[int(self.animindex)] # update the current frame
 
     def animateshield(self):
@@ -1768,7 +1782,8 @@ class Bosses:
     def update(self):
         # Movement
         self.curhealth_grapic = CONST.UI_FONT.render(str(self.health), True, 'yellow')
-        self.animate()
+        #self.animate()
+        self.betteranimate()
         if self.type%3 == 0 or self.type%3 == 1: self.boss_rect = self.image.get_rect(midleft = (self.x, self.y))
         elif self.type%3 == 2: self.boss_rect = self.image.get_rect(center = (self.x, self.y))
         self.x -= self.velocity * Variables.delta_time

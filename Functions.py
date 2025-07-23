@@ -209,7 +209,7 @@ def collision():
                 pygame.mixer.Sound.play(CONST.SOUND_GOODHIT)
                 damage = int(Game_Objects.player.laserpower / (CONST.ARRAY_BOSSES[Variables.level]["shield"]+1))
                 boss.health -= damage
-                enemy.health_damage_bar_alpha = 255
+                boss.health_damage_bar_alpha = 255
                 boss.flash = 255
                 CONST.ARRAY_BOSSES[Variables.level]["shield"] -= 1
                 if CONST.ARRAY_BOSSES[Variables.level]["shield"] < 0: CONST.ARRAY_BOSSES[Variables.level]["shield"] = 0
